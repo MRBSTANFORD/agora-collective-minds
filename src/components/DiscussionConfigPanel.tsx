@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -75,8 +76,6 @@ const defaultExperts = [
   }
 ];
 
-const defaultApiKey = ""; // Leave empty = use HuggingFace
-
 export interface DiscussionConfig {
   rounds: number;
   experts: ExpertConfig[];
@@ -141,42 +140,63 @@ export function DiscussionConfigPanel({
           Symposium Settings
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="max-w-2xl mx-auto p-6">
+      <DrawerContent className="max-w-4xl mx-auto h-[90vh]">
         <DrawerHeader>
           <DrawerTitle>Symposium Configuration</DrawerTitle>
           <DrawerDescription>
-            Set number of rounds and configure experts' cognitive style, LLM provider, and API keys.<br />
-            (Leave API Key blank to use default free HuggingFace, or add your OpenAI/Perplexity/etc key)
+            Configure the discussion rounds and each expert's cognitive profile, AI provider, and API credentials.<br />
+            <span className="text-amber-600">Leave API Key blank to use free HuggingFace models by default.</span>
           </DrawerDescription>
         </DrawerHeader>
-        <div className="space-y-8">
-          <div>
-            <Label htmlFor="rounds">Number of Rounds</Label>
-            <Slider
-              value={[rounds]}
-              min={3}
-              max={10}
-              step={1}
-              onValueChange={([v]) => handleRounds(v)}
-              className="mt-2 w-full"
-            />
-            <span className="ml-2 text-sm font-light text-slate-600">{rounds} discussion rounds</span>
-          </div>
-          <div className="relative">
-            {/* Scroll for expert list */}
-            <ScrollArea className="max-h-[420px] md:max-h-[560px] rounded-lg border border-slate-100 pr-2">
-              <ExpertCardList
-                experts={experts}
-                onTraitChange={handleTrait}
-                onApiKeyChange={handleApiKey}
-                onProviderChange={handleProvider}
-              />
-            </ScrollArea>
-          </div>
-          <div className="flex w-full justify-end">
-            <Button onClick={handleSave} className="bg-amber-600 text-white">
-              Save Symposium Settings
-            </Button>
+        <div className="flex-1 overflow-hidden p-6">
+          <div className="space-y-6 h-full">
+            {/* Rounds Configuration */}
+            <Card className="border-amber-100">
+              <CardHeader>
+                <CardTitle className="text-lg text-slate-800">Discussion Parameters</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label htmlFor="rounds">Number of Rounds (3-10)</Label>
+                  <Slider
+                    value={[rounds]}
+                    min={3}
+                    max={10}
+                    step={1}
+                    onValueChange={([v]) => handleRounds(v)}
+                    className="mt-2 w-full"
+                  />
+                  <span className="ml-2 text-sm font-light text-slate-600">{rounds} discussion rounds</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Expert Configuration */}
+            <Card className="border-amber-100 flex-1">
+              <CardHeader>
+                <CardTitle className="text-lg text-slate-800">Expert Configuration</CardTitle>
+                <CardDescription>
+                  Customize each expert's cognitive traits and AI provider settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[500px]">
+                <ScrollArea className="h-full w-full">
+                  <ExpertCardList
+                    experts={experts}
+                    onTraitChange={handleTrait}
+                    onApiKeyChange={handleApiKey}
+                    onProviderChange={handleProvider}
+                  />
+                </ScrollArea>
+              </CardContent>
+            </Card>
+
+            {/* Save Button */}
+            <div className="flex w-full justify-end pt-4">
+              <Button onClick={handleSave} className="bg-amber-600 hover:bg-amber-700 text-white px-8">
+                Save Symposium Settings
+              </Button>
+            </div>
           </div>
         </div>
       </DrawerContent>

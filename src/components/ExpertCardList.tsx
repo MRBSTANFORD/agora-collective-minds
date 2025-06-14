@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 
@@ -27,17 +28,19 @@ type ExpertCardListProps = {
 };
 
 const EXPERT_PROVIDERS = [
-  { label: "HuggingFace (Free)", value: "HuggingFace" },
-  { label: "OpenAI (API Key Required)", value: "OpenAI" },
-  { label: "Perplexity (API Key Required)", value: "Perplexity" },
+  { label: "HuggingFace (Free)", value: "HuggingFace", description: "Free models via HuggingFace Inference API" },
+  { label: "OpenAI", value: "OpenAI", description: "GPT models (API key required)" },
+  { label: "Anthropic Claude", value: "Anthropic", description: "Claude models (API key required)" },
+  { label: "Perplexity", value: "Perplexity", description: "Perplexity AI models (API key required)" },
+  { label: "Groq", value: "Groq", description: "Fast inference with Groq (API key required)" },
 ];
 
 const traitDocs: Record<string, string> = {
-  creativity: "How divergent and imaginative the expert is. Higher values mean bolder, more inventive ideas.",
-  skepticism: "How much the expert questions assumptions and challenges points. Higher values means more critical thinking.",
-  optimism: "How positively the expert frames possibilities and outcomes. Higher values mean a focus on hope and opportunity.",
-  provider: "Choose which AI model or service this expert uses for answers. OpenAI & Perplexity require your own API key.",
-  apiKey: "Insert your personal API key for the selected provider (leave blank for free HuggingFace). Never share your private API key with others.",
+  creativity: "How divergent and imaginative the expert is. Higher values mean bolder, more inventive ideas and unconventional approaches.",
+  skepticism: "How much the expert questions assumptions and challenges points. Higher values means more critical thinking and analytical rigor.",
+  optimism: "How positively the expert frames possibilities and outcomes. Higher values mean a focus on hope, opportunity, and constructive solutions.",
+  provider: "Choose which AI model or service this expert uses for responses. Each provider has different strengths and characteristics.",
+  apiKey: "Your personal API key for the selected provider. Leave blank to use free HuggingFace models. Keep your API keys secure and never share them.",
 };
 
 const ExpertCardList: React.FC<ExpertCardListProps> = ({
@@ -47,117 +50,149 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
   onProviderChange,
 }) => (
   <TooltipProvider>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2 px-2">
-      {experts.map((ex) => (
-        <Card key={ex.id} className="mb-4 bg-slate-50 border-amber-100">
-          <CardHeader>
-            <CardTitle className="text-base font-medium">{ex.name}</CardTitle>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pr-4">
+      {experts.map((expert) => (
+        <Card key={expert.id} className="bg-slate-50/80 border-amber-100 hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-medium text-slate-800 flex items-center gap-2">
+              <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+              {expert.name}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="mb-2">
-              <Label className="flex items-center gap-2">
-                Creativity
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-pointer">
-                      <Info size={14} className="text-amber-400 hover:text-amber-600" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{traitDocs.creativity}</TooltipContent>
-                </Tooltip>
-              </Label>
-              <Slider
-                value={[ex.cognitive.creativity]}
-                min={0}
-                max={100}
-                onValueChange={([v]) => onTraitChange(ex.id, "creativity", v)}
-                className="mt-1"
-              />
-              <span className="text-xs text-slate-500 ml-2">{ex.cognitive.creativity}%</span>
+          <CardContent className="space-y-4">
+            {/* Cognitive Traits */}
+            <div className="space-y-3">
+              <div>
+                <Label className="flex items-center gap-2 text-sm">
+                  Creativity
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-pointer">
+                        <Info size={12} className="text-amber-500 hover:text-amber-600" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs">
+                      {traitDocs.creativity}
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <Slider
+                  value={[expert.cognitive.creativity]}
+                  min={0}
+                  max={100}
+                  onValueChange={([v]) => onTraitChange(expert.id, "creativity", v)}
+                  className="mt-1"
+                />
+                <span className="text-xs text-slate-500">{expert.cognitive.creativity}%</span>
+              </div>
+
+              <div>
+                <Label className="flex items-center gap-2 text-sm">
+                  Skepticism
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-pointer">
+                        <Info size={12} className="text-slate-500 hover:text-amber-600" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs">
+                      {traitDocs.skepticism}
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <Slider
+                  value={[expert.cognitive.skepticism]}
+                  min={0}
+                  max={100}
+                  onValueChange={([v]) => onTraitChange(expert.id, "skepticism", v)}
+                  className="mt-1"
+                />
+                <span className="text-xs text-slate-500">{expert.cognitive.skepticism}%</span>
+              </div>
+
+              <div>
+                <Label className="flex items-center gap-2 text-sm">
+                  Optimism
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="cursor-pointer">
+                        <Info size={12} className="text-rose-500 hover:text-amber-600" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs">
+                      {traitDocs.optimism}
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <Slider
+                  value={[expert.cognitive.optimism]}
+                  min={0}
+                  max={100}
+                  onValueChange={([v]) => onTraitChange(expert.id, "optimism", v)}
+                  className="mt-1"
+                />
+                <span className="text-xs text-slate-500">{expert.cognitive.optimism}%</span>
+              </div>
             </div>
-            <div className="mb-2">
-              <Label className="flex items-center gap-2">
-                Skepticism
+
+            {/* AI Provider Selection */}
+            <div>
+              <Label className="flex items-center gap-2 text-sm">
+                AI Provider
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="cursor-pointer">
-                      <Info size={14} className="text-slate-400 hover:text-amber-600" />
+                      <Info size={12} className="text-blue-500 hover:text-amber-600" />
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="right">{traitDocs.skepticism}</TooltipContent>
+                  <TooltipContent side="right" className="max-w-xs">
+                    {traitDocs.provider}
+                  </TooltipContent>
                 </Tooltip>
               </Label>
-              <Slider
-                value={[ex.cognitive.skepticism]}
-                min={0}
-                max={100}
-                onValueChange={([v]) => onTraitChange(ex.id, "skepticism", v)}
-                className="mt-1"
-              />
-              <span className="text-xs text-slate-500 ml-2">{ex.cognitive.skepticism}%</span>
-            </div>
-            <div className="mb-2">
-              <Label className="flex items-center gap-2">
-                Optimism
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-pointer">
-                      <Info size={14} className="text-rose-400 hover:text-amber-600" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{traitDocs.optimism}</TooltipContent>
-                </Tooltip>
-              </Label>
-              <Slider
-                value={[ex.cognitive.optimism]}
-                min={0}
-                max={100}
-                onValueChange={([v]) => onTraitChange(ex.id, "optimism", v)}
-                className="mt-1"
-              />
-              <span className="text-xs text-slate-500 ml-2">{ex.cognitive.optimism}%</span>
-            </div>
-            <div className="mt-2">
-              <Label className="flex items-center gap-2">
-                Provider
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-pointer">
-                      <Info size={14} className="text-blue-400 hover:text-amber-600" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">{traitDocs.provider}</TooltipContent>
-                </Tooltip>
-              </Label>
-              <select
-                className="mt-1 w-full border rounded px-2 py-1 bg-white text-slate-700"
-                value={ex.provider || "HuggingFace"}
-                onChange={e => onProviderChange(ex.id, e.target.value)}
+              <Select
+                value={expert.provider || "HuggingFace"}
+                onValueChange={(value) => onProviderChange(expert.id, value)}
               >
-                {EXPERT_PROVIDERS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select AI Provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPERT_PROVIDERS.map((provider) => (
+                    <SelectItem key={provider.value} value={provider.value}>
+                      <div>
+                        <div className="font-medium">{provider.label}</div>
+                        <div className="text-xs text-slate-500">{provider.description}</div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="mt-2">
-              <Label className="flex items-center gap-2">
+
+            {/* API Key Input */}
+            <div>
+              <Label className="flex items-center gap-2 text-sm">
                 API Key
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="cursor-pointer">
-                      <Info size={14} className="text-slate-400 hover:text-amber-600" />
+                      <Info size={12} className="text-slate-500 hover:text-amber-600" />
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="right">{traitDocs.apiKey}</TooltipContent>
+                  <TooltipContent side="right" className="max-w-xs">
+                    {traitDocs.apiKey}
+                  </TooltipContent>
                 </Tooltip>
               </Label>
               <Input
-                placeholder="Leave blank for HuggingFace"
+                placeholder={expert.provider === "HuggingFace" ? "Not required for HuggingFace" : "Enter your API key"}
                 type="password"
-                value={ex.apiKey}
-                onChange={e => onApiKeyChange(ex.id, e.target.value)}
+                value={expert.apiKey}
+                onChange={(e) => onApiKeyChange(expert.id, e.target.value)}
                 className="mt-1"
                 autoComplete="off"
+                disabled={expert.provider === "HuggingFace"}
               />
             </div>
           </CardContent>
