@@ -10,7 +10,7 @@ export interface DiscussionMessage {
   timestamp: Date;
 }
 
-export { AIProvider } from './aiProviders';
+export type { AIProvider } from './aiProviders';
 
 // Main discussion orchestrator with enhanced validation and error handling
 export class DiscussionOrchestrator {
