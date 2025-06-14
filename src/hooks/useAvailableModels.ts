@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
 
-// Structure for a model option
 export type LLMModel = {
   value: string;
   label: string;
@@ -11,16 +10,13 @@ export type LLMModel = {
   note?: string;
 };
 
-// Simulate simple dynamic APIs for demo (extend with real endpoints if you have keys)
 async function fetchOpenAIModels(apiKey?: string): Promise<LLMModel[]> {
-  // OpenAI public models (hardcode for demo, can fetch live if apiKey is set).
   return [
     { value: "gpt-4.1-2025-04-14", label: "GPT-4.1", provider: "OpenAI", free: false },
     { value: "gpt-4o", label: "GPT-4o", provider: "OpenAI", free: false },
     { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo", provider: "OpenAI", free: false },
   ];
 }
-
 async function fetchAnthropicModels(apiKey?: string): Promise<LLMModel[]> {
   return [
     { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4", provider: "Anthropic", free: false },
@@ -28,7 +24,6 @@ async function fetchAnthropicModels(apiKey?: string): Promise<LLMModel[]> {
     { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku", provider: "Anthropic", free: false },
   ];
 }
-
 async function fetchGroqModels(apiKey?: string): Promise<LLMModel[]> {
   return [
     { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B", provider: "Groq", free: true },
@@ -36,11 +31,7 @@ async function fetchGroqModels(apiKey?: string): Promise<LLMModel[]> {
     { value: "gemma-7b-it", label: "Gemma 7B", provider: "Groq", free: true },
   ];
 }
-
-// Demo: can call HuggingFace hub API; for prod, enhance with actual user API key discovery
 async function fetchHuggingFaceModels(apiKey?: string): Promise<LLMModel[]> {
-  // Example: Call the HuggingFace API to list models with 'chat' tag, etc.
-  // For now, hardcoded commonly available public/free ones:
   return [
     { value: "HuggingFaceH4/zephyr-7b-beta", label: "Zephyr 7B (Free)", provider: "HuggingFace", free: true },
     { value: "meta-llama/Llama-2-7b-chat-hf", label: "Llama 2 7B (Free)", provider: "HuggingFace", free: true },
@@ -52,43 +43,84 @@ async function fetchHuggingFaceModels(apiKey?: string): Promise<LLMModel[]> {
   ];
 }
 
-// Add more fetchXYZModels functions as needed...
-
 const fetchers: Record<string, (apiKey?: string) => Promise<LLMModel[]>> = {
   "OpenAI": fetchOpenAIModels,
   "Anthropic": fetchAnthropicModels,
   "Groq": fetchGroqModels,
   "HuggingFace": fetchHuggingFaceModels,
-  // Add Cohere, Gemini, etc.
 };
 
-// Hook for available models
+/**
+ * Helper to create a stable dependencies array
+ */
+function useStableProviders(providers: string[]) {
+  const [stable, setStable] = useState<string[]>([]);
+  useEffect(() => {
+    // Only update if changed
+    if (
+      providers.length !== stable.length ||
+      !providers.every((val, idx) => stable[idx] === val)
+    ) {
+      setStable(providers);
+    }
+    // eslint-disable-next-line
+  }, [providers.join(',')]);
+  return stable;
+}
+
 export function useAvailableModels(providers: string[], apiKeys?: Record<string, string>) {
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState<Record<string, LLMModel[]>>({});
   const [error, setError] = useState<string | null>(null);
 
+  // Stable dependency to avoid unnecessary re-runs
+  const stableProviders = useStableProviders(providers);
+
   useEffect(() => {
     let cancelled = false;
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        setLoading(false);
+        setError("Model loading timed out. Please retry.");
+      }
+    }, 8000);
+
     async function load() {
       setLoading(true);
       setError(null);
       const results: Record<string, LLMModel[]> = {};
-      for (const provider of providers) {
+
+      for (const provider of stableProviders) {
         try {
+          // Prevent infinite loop by catching unexpected errors
           const modelsList = await fetchers[provider]?.(apiKeys?.[provider]);
           results[provider] = modelsList || [];
         } catch (e) {
           setError(`Failed to fetch models for ${provider}`);
           results[provider] = [];
         }
+        // Defensive: if cancelled during long fetch, bail out early
+        if (cancelled) return;
       }
-      if (!cancelled) setModels(results);
+      if (!cancelled) {
+        setModels(results);
+        setLoading(false);
+      }
+      clearTimeout(timeoutId);
+    }
+    if (stableProviders.length > 0) {
+      load();
+    } else {
+      setModels({});
       setLoading(false);
     }
-    load();
-    return () => { cancelled = true; };
-  }, [providers, JSON.stringify(apiKeys || {})]);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+    // Dep ONLY on stableProviders (array is already stable), and apiKeys keys
+  }, [stableProviders, apiKeys && Object.keys(apiKeys).sort().join(',')]);
 
   return { loading, models, error };
 }
