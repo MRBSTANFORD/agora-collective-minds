@@ -6,6 +6,7 @@ export interface AIProvider {
 
 // API call functions for different providers
 export async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
+  console.log('🔵 Calling OpenAI API...');
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -21,14 +22,21 @@ export async function callOpenAI(prompt: string, apiKey: string): Promise<string
   });
 
   if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.status}`);
+    const errorText = await response.text();
+    console.error('❌ OpenAI API error:', response.status, errorText);
+    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
-  return data.choices[0]?.message?.content || 'No response generated';
+  const content = data.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No content in OpenAI response');
+  }
+  return content;
 }
 
 export async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
+  console.log('🟣 Calling Anthropic API...');
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -45,14 +53,21 @@ export async function callAnthropic(prompt: string, apiKey: string): Promise<str
   });
 
   if (!response.ok) {
-    throw new Error(`Anthropic API error: ${response.status}`);
+    const errorText = await response.text();
+    console.error('❌ Anthropic API error:', response.status, errorText);
+    throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
-  return data.content[0]?.text || 'No response generated';
+  const content = data.content[0]?.text;
+  if (!content) {
+    throw new Error('No content in Anthropic response');
+  }
+  return content;
 }
 
 export async function callPerplexity(prompt: string, apiKey: string): Promise<string> {
+  console.log('🟢 Calling Perplexity API...');
   const response = await fetch('https://api.perplexity.ai/chat/completions', {
     method: 'POST',
     headers: {
@@ -68,14 +83,21 @@ export async function callPerplexity(prompt: string, apiKey: string): Promise<st
   });
 
   if (!response.ok) {
-    throw new Error(`Perplexity API error: ${response.status}`);
+    const errorText = await response.text();
+    console.error('❌ Perplexity API error:', response.status, errorText);
+    throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
-  return data.choices[0]?.message?.content || 'No response generated';
+  const content = data.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No content in Perplexity response');
+  }
+  return content;
 }
 
 export async function callGroq(prompt: string, apiKey: string): Promise<string> {
+  console.log('🟡 Calling Groq API...');
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -91,24 +113,36 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
   });
 
   if (!response.ok) {
-    throw new Error(`Groq API error: ${response.status}`);
+    const errorText = await response.text();
+    console.error('❌ Groq API error:', response.status, errorText);
+    throw new Error(`Groq API error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
-  return data.choices[0]?.message?.content || 'No response generated';
+  const content = data.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No content in Groq response');
+  }
+  return content;
 }
 
 // Enhanced HuggingFace integration with multiple model fallbacks
 export async function callHuggingFaceWithFallback(prompt: string, expertId: string): Promise<string> {
+  console.log(`🤗 Calling HuggingFace API for expert ${expertId}...`);
+  
   const models = [
     'microsoft/DialoGPT-medium',
     'facebook/blenderbot-400M-distill',
     'microsoft/DialoGPT-small'
   ];
   
-  for (const model of models) {
+  for (let i = 0; i < models.length; i++) {
+    const model = models[i];
     try {
-      console.log(`Trying HuggingFace model ${model} for expert ${expertId}`);
+      console.log(`🔄 [${i + 1}/${models.length}] Trying HuggingFace model ${model} for expert ${expertId}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
       
       const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
         method: 'POST',
@@ -124,21 +158,42 @@ export async function callHuggingFaceWithFallback(prompt: string, expertId: stri
             do_sample: true,
           },
         }),
+        signal: controller.signal,
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data[0]?.generated_text) {
-          console.log(`Successfully generated response using ${model} for expert ${expertId}`);
-          return data[0].generated_text.trim();
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`⚠️ HuggingFace model ${model} returned ${response.status}: ${errorText}`);
+        continue;
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        console.warn(`⚠️ HuggingFace model ${model} returned error:`, data.error);
+        continue;
+      }
+      
+      if (data && data[0]?.generated_text) {
+        const content = data[0].generated_text.trim();
+        if (content.length > 10) { // Ensure we have meaningful content
+          console.log(`✅ Successfully generated response using ${model} for expert ${expertId}: ${content.slice(0, 50)}...`);
+          return content;
         }
       }
       
-      console.warn(`Model ${model} did not return valid response for expert ${expertId}`);
+      console.warn(`⚠️ Model ${model} did not return valid response for expert ${expertId}`, data);
     } catch (error) {
-      console.warn(`HuggingFace model ${model} failed for expert ${expertId}:`, error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn(`⏰ HuggingFace model ${model} timed out for expert ${expertId}`);
+      } else {
+        console.warn(`💥 HuggingFace model ${model} failed for expert ${expertId}:`, error);
+      }
     }
   }
   
+  console.error(`❌ All HuggingFace models failed for expert ${expertId}`);
   throw new Error('All HuggingFace models failed');
 }
