@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +16,7 @@ const experts = [
     values: ['Curiosity', 'Harmony', 'Innovation'],
     style: 'Visionary, interdisciplinary, analogical',
     description: 'The ultimate Renaissance mind, blending art and science with poetic imagination and precise observation.',
-    imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop&crop=face',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Leonardo_self.jpg/400px-Leonardo_self.jpg',
     color: 'from-orange-500 to-red-500',
     traits: {
       creativity: 95,
@@ -33,7 +32,7 @@ const experts = [
     values: ['Integrity', 'Perseverance', 'Truth'],
     style: 'Empirical, methodical, persistent',
     description: 'Pioneer scientist who broke barriers with rigorous methodology and unwavering dedication to discovery.',
-    imageUrl: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=400&fit=crop&crop=face',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Marie_Curie_c._1920s.jpg/400px-Marie_Curie_c._1920s.jpg',
     color: 'from-blue-500 to-cyan-500',
     traits: {
       creativity: 70,
@@ -49,7 +48,7 @@ const experts = [
     values: ['Wisdom', 'Truth-seeking', 'Humility'],
     style: 'Dialectical, questioning, ethical',
     description: 'Master of inquiry who reveals truth through persistent questioning and ethical reflection.',
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Socrates_Louvre.jpg/400px-Socrates_Louvre.jpg',
     color: 'from-purple-500 to-indigo-500',
     traits: {
       creativity: 60,
@@ -65,7 +64,7 @@ const experts = [
     values: ['Rationality', 'Equality', 'Knowledge'],
     style: 'Logical, rational, inclusive',
     description: 'Brilliant mathematician and philosopher who championed reason and equality in ancient Alexandria.',
-    imageUrl: 'https://images.unsplash.com/photo-1594736797933-d0d2e1386346?w=400&h=400&fit=crop&crop=face',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Hypatia_portrait.png/400px-Hypatia_portrait.png',
     color: 'from-emerald-500 to-teal-500',
     traits: {
       creativity: 75,
@@ -81,7 +80,7 @@ const experts = [
     values: ['Imagination', 'Simplicity', 'Curiosity'],
     style: 'Conceptual, imaginative, norm-challenging',
     description: 'Revolutionary physicist who reimagined reality through thought experiments and elegant theories.',
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Albert_Einstein_Head.jpg/400px-Albert_Einstein_Head.jpg',
     color: 'from-violet-500 to-purple-500',
     traits: {
       creativity: 100,
@@ -97,7 +96,7 @@ const experts = [
     values: ['Harmony', 'Respect', 'Responsibility'],
     style: 'Practical wisdom, social harmony',
     description: 'Wise teacher whose ethical philosophy shaped civilizations through practical moral guidance.',
-    imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Konfuzius-1770.jpg/400px-Konfuzius-1770.jpg',
     color: 'from-amber-500 to-orange-500',
     traits: {
       creativity: 65,
@@ -113,7 +112,7 @@ const experts = [
     values: ['Innovation', 'Foresight', 'Creativity'],
     style: 'Analytical, visionary, algorithmic',
     description: 'Visionary mathematician who foresaw the creative potential of computing beyond mere calculation.',
-    imageUrl: 'https://images.unsplash.com/photo-1494790108755-2616c9c7b123?w=400&h=400&fit=crop&crop=face',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ada_Lovelace_portrait.jpg/400px-Ada_Lovelace_portrait.jpg',
     color: 'from-pink-500 to-rose-500',
     traits: {
       creativity: 90,
@@ -129,7 +128,7 @@ const experts = [
     values: ['Pragmatism', 'Strategy', 'Realism'],
     style: 'Strategic, realistic, power-aware',
     description: 'Sharp political strategist who analyzed power dynamics with unflinching realism and practical wisdom.',
-    imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Santi_di_Tito_-_Niccolo_Machiavelli%27s_portrait_headcrop.jpg/400px-Santi_di_Tito_-_Niccolo_Machiavelli%27s_portrait_headcrop.jpg',
     color: 'from-red-500 to-pink-500',
     traits: {
       creativity: 80,
@@ -183,6 +182,10 @@ const ExpertProfiles = () => {
                   src={expert.imageUrl} 
                   alt={expert.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to a placeholder if Wikipedia image fails
+                    e.target.src = `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face`;
+                  }}
                 />
               </div>
               <CardTitle className="text-lg text-slate-800">{expert.name}</CardTitle>
