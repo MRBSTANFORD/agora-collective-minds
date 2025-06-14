@@ -66,12 +66,13 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// AGORA Brand Colors
+				// AGORA Brand Colors - Based on uploaded logo
 				agora: {
-					indigo: '#3F51B5',
-					golden: '#DAA520',
-					'indigo-light': '#5C6BC0',
-					'golden-light': '#F4D03F'
+					navy: '#1e293b',      // Dark blue from logo
+					golden: '#DAA520',    // Golden from logo
+					'navy-light': '#334155',
+					'golden-light': '#F4D03F',
+					cream: '#f8fafc'      // Light cream background
 				}
 			},
 			borderRadius: {
@@ -115,16 +116,30 @@ export default {
 						transform: 'scale(1)',
 						opacity: '1'
 					}
+				},
+				'pentagon-pulse': {
+					'0%, 100%': {
+						transform: 'scale(1) rotate(0deg)',
+						opacity: '1'
+					},
+					'50%': {
+						transform: 'scale(1.05) rotate(2deg)',
+						opacity: '0.9'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'scale-in': 'scale-in 0.2s ease-out'
+				'scale-in': 'scale-in 0.2s ease-out',
+				'pentagon-pulse': 'pentagon-pulse 2s ease-in-out infinite'
 			},
 			spacing: {
 				'golden': '1.618rem', // Golden ratio spacing
+			},
+			backdropBlur: {
+				xs: '2px',
 			}
 		}
 	},

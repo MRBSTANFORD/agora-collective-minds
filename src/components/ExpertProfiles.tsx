@@ -17,7 +17,7 @@ const experts = [
     values: ['Curiosity', 'Harmony', 'Innovation'],
     style: 'Visionary, interdisciplinary, analogical',
     description: 'The ultimate Renaissance mind, blending art and science with poetic imagination and precise observation.',
-    avatar: '🎨',
+    imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop&crop=face',
     color: 'from-orange-500 to-red-500',
     traits: {
       creativity: 95,
@@ -33,7 +33,7 @@ const experts = [
     values: ['Integrity', 'Perseverance', 'Truth'],
     style: 'Empirical, methodical, persistent',
     description: 'Pioneer scientist who broke barriers with rigorous methodology and unwavering dedication to discovery.',
-    avatar: '⚛️',
+    imageUrl: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=400&fit=crop&crop=face',
     color: 'from-blue-500 to-cyan-500',
     traits: {
       creativity: 70,
@@ -49,7 +49,7 @@ const experts = [
     values: ['Wisdom', 'Truth-seeking', 'Humility'],
     style: 'Dialectical, questioning, ethical',
     description: 'Master of inquiry who reveals truth through persistent questioning and ethical reflection.',
-    avatar: '🏛️',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
     color: 'from-purple-500 to-indigo-500',
     traits: {
       creativity: 60,
@@ -65,7 +65,7 @@ const experts = [
     values: ['Rationality', 'Equality', 'Knowledge'],
     style: 'Logical, rational, inclusive',
     description: 'Brilliant mathematician and philosopher who championed reason and equality in ancient Alexandria.',
-    avatar: '📐',
+    imageUrl: 'https://images.unsplash.com/photo-1594736797933-d0d2e1386346?w=400&h=400&fit=crop&crop=face',
     color: 'from-emerald-500 to-teal-500',
     traits: {
       creativity: 75,
@@ -81,7 +81,7 @@ const experts = [
     values: ['Imagination', 'Simplicity', 'Curiosity'],
     style: 'Conceptual, imaginative, norm-challenging',
     description: 'Revolutionary physicist who reimagined reality through thought experiments and elegant theories.',
-    avatar: '🌌',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
     color: 'from-violet-500 to-purple-500',
     traits: {
       creativity: 100,
@@ -97,7 +97,7 @@ const experts = [
     values: ['Harmony', 'Respect', 'Responsibility'],
     style: 'Practical wisdom, social harmony',
     description: 'Wise teacher whose ethical philosophy shaped civilizations through practical moral guidance.',
-    avatar: '☯️',
+    imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
     color: 'from-amber-500 to-orange-500',
     traits: {
       creativity: 65,
@@ -113,7 +113,7 @@ const experts = [
     values: ['Innovation', 'Foresight', 'Creativity'],
     style: 'Analytical, visionary, algorithmic',
     description: 'Visionary mathematician who foresaw the creative potential of computing beyond mere calculation.',
-    avatar: '💻',
+    imageUrl: 'https://images.unsplash.com/photo-1494790108755-2616c9c7b123?w=400&h=400&fit=crop&crop=face',
     color: 'from-pink-500 to-rose-500',
     traits: {
       creativity: 90,
@@ -129,7 +129,7 @@ const experts = [
     values: ['Pragmatism', 'Strategy', 'Realism'],
     style: 'Strategic, realistic, power-aware',
     description: 'Sharp political strategist who analyzed power dynamics with unflinching realism and practical wisdom.',
-    avatar: '👑',
+    imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face',
     color: 'from-red-500 to-pink-500',
     traits: {
       creativity: 80,
@@ -161,7 +161,14 @@ const ExpertProfiles = () => {
   return (
     <div className="space-y-8">
       <div className="text-center py-8">
-        <h2 className="text-4xl font-bold text-indigo-900 mb-4">Meet Your AI Experts</h2>
+        <div className="flex items-center justify-center mb-6">
+          <img 
+            src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+            alt="AGORA Logo" 
+            className="w-10 h-10 object-contain mr-4 opacity-80"
+          />
+          <h2 className="text-4xl font-bold text-slate-800">Meet Your AI Experts</h2>
+        </div>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Eight brilliant minds from history, each bringing unique perspectives and expertise to your challenges.
         </p>
@@ -169,12 +176,16 @@ const ExpertProfiles = () => {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {experts.map((expert) => (
-          <Card key={expert.id} className="group hover:shadow-xl transition-all duration-300 border border-indigo-100 hover:border-indigo-300">
+          <Card key={expert.id} className="group hover:shadow-xl transition-all duration-300 border border-slate-200 hover:border-amber-300 bg-white">
             <CardHeader className="text-center pb-4">
-              <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${expert.color} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform`}>
-                {expert.avatar}
+              <div className="w-20 h-20 mx-auto rounded-full overflow-hidden mb-4 group-hover:scale-110 transition-transform border-2 border-slate-200">
+                <img 
+                  src={expert.imageUrl} 
+                  alt={expert.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <CardTitle className="text-lg text-indigo-900">{expert.name}</CardTitle>
+              <CardTitle className="text-lg text-slate-800">{expert.name}</CardTitle>
               <CardDescription className="text-sm text-gray-600">
                 {expert.era} • {expert.domain}
               </CardDescription>
@@ -188,7 +199,7 @@ const ExpertProfiles = () => {
                 <Label className="text-xs font-semibold text-gray-600">Core Values</Label>
                 <div className="flex flex-wrap gap-1">
                   {expert.values.map((value, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs bg-indigo-50 text-indigo-700">
+                    <Badge key={index} variant="secondary" className="text-xs bg-slate-100 text-slate-700">
                       {value}
                     </Badge>
                   ))}
@@ -206,7 +217,7 @@ const ExpertProfiles = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="w-full border-indigo-200 hover:bg-indigo-50"
+                      className="w-full border-slate-300 hover:bg-slate-50 hover:border-amber-400"
                       onClick={() => setSelectedExpert(expert)}
                     >
                       <Settings className="w-4 h-4 mr-2" />
@@ -215,8 +226,14 @@ const ExpertProfiles = () => {
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <span className="text-2xl">{expert.avatar}</span>
+                      <DialogTitle className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-300">
+                          <img 
+                            src={expert.imageUrl} 
+                            alt={expert.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                         Customize {expert.name}
                       </DialogTitle>
                       <DialogDescription>
@@ -284,35 +301,42 @@ const ExpertProfiles = () => {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-8 mt-12">
-        <h3 className="text-2xl font-bold text-indigo-900 mb-6 text-center">Expert Collaboration Process</h3>
+      <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mt-12">
+        <div className="flex items-center justify-center mb-6">
+          <img 
+            src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+            alt="AGORA Logo" 
+            className="w-8 h-8 object-contain mr-3 opacity-80"
+          />
+          <h3 className="text-2xl font-bold text-slate-800">Expert Collaboration Process</h3>
+        </div>
         <div className="grid md:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Users className="w-6 h-6 text-indigo-600" />
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Users className="w-6 h-6 text-slate-600" />
             </div>
-            <h4 className="font-semibold text-indigo-900 mb-2">Initial Perspectives</h4>
+            <h4 className="font-semibold text-slate-800 mb-2">Initial Perspectives</h4>
             <p className="text-sm text-gray-600">Each expert provides their unique viewpoint on your challenge</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Brain className="w-6 h-6 text-amber-600" />
             </div>
-            <h4 className="font-semibold text-indigo-900 mb-2">Cross-Pollination</h4>
+            <h4 className="font-semibold text-slate-800 mb-2">Cross-Pollination</h4>
             <p className="text-sm text-gray-600">Experts build upon and challenge each other's ideas</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Zap className="w-6 h-6 text-emerald-600" />
             </div>
-            <h4 className="font-semibold text-indigo-900 mb-2">Synthesis</h4>
+            <h4 className="font-semibold text-slate-800 mb-2">Synthesis</h4>
             <p className="text-sm text-gray-600">Ideas merge and evolve through iterative discussion rounds</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Heart className="w-6 h-6 text-purple-600" />
             </div>
-            <h4 className="font-semibold text-indigo-900 mb-2">Consensus</h4>
+            <h4 className="font-semibold text-slate-800 mb-2">Consensus</h4>
             <p className="text-sm text-gray-600">Final insights emerge with actionable recommendations</p>
           </div>
         </div>

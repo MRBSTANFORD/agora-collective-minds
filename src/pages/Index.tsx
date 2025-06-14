@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,48 +23,56 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-indigo-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-amber-50">
       {/* Header */}
-      <header className="border-b border-indigo-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-amber-500 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <img 
+                  src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+                  alt="AGORA Logo" 
+                  className="w-12 h-12 object-contain"
+                />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-indigo-900">AGORA</h1>
-                <p className="text-sm text-indigo-600">The Timeless Space for Collective Wisdom</p>
+                <h1 className="text-2xl font-bold" style={{ color: '#1e293b' }}>AGORA</h1>
+                <p className="text-sm" style={{ color: '#DAA520' }}>The Timeless Space for Collective Wisdom</p>
               </div>
             </div>
             <nav className="flex space-x-6">
               <Button 
                 variant={activeTab === 'home' ? 'default' : 'ghost'} 
                 onClick={() => setActiveTab('home')}
-                className="text-indigo-700 hover:text-indigo-900"
+                className="text-slate-700 hover:text-slate-900"
+                style={activeTab === 'home' ? { backgroundColor: '#1e293b', color: 'white' } : {}}
               >
                 Home
               </Button>
               <Button 
                 variant={activeTab === 'experts' ? 'default' : 'ghost'} 
                 onClick={() => setActiveTab('experts')}
-                className="text-indigo-700 hover:text-indigo-900"
+                className="text-slate-700 hover:text-slate-900"
+                style={activeTab === 'experts' ? { backgroundColor: '#1e293b', color: 'white' } : {}}
               >
                 Experts
               </Button>
               <Button 
                 variant={activeTab === 'discussion' ? 'default' : 'ghost'} 
                 onClick={() => setActiveTab('discussion')}
-                className="text-indigo-700 hover:text-indigo-900"
+                className="text-slate-700 hover:text-slate-900"
                 disabled={!discussionStarted}
+                style={activeTab === 'discussion' ? { backgroundColor: '#1e293b', color: 'white' } : {}}
               >
                 Discussion
               </Button>
               <Button 
                 variant={activeTab === 'reports' ? 'default' : 'ghost'} 
                 onClick={() => setActiveTab('reports')}
-                className="text-indigo-700 hover:text-indigo-900"
+                className="text-slate-700 hover:text-slate-900"
                 disabled={!discussionStarted}
+                style={activeTab === 'reports' ? { backgroundColor: '#1e293b', color: 'white' } : {}}
               >
                 Reports
               </Button>
@@ -82,16 +89,23 @@ const Index = () => {
               {/* Hero Section */}
               <section className="text-center py-16">
                 <div className="max-w-4xl mx-auto">
-                  <h2 className="text-5xl font-bold text-indigo-900 mb-6 leading-tight">
+                  <div className="flex justify-center mb-8">
+                    <img 
+                      src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+                      alt="AGORA Logo" 
+                      className="w-24 h-24 object-contain opacity-90"
+                    />
+                  </div>
+                  <h2 className="text-5xl font-bold mb-6 leading-tight" style={{ color: '#1e293b' }}>
                     Where Timeless Wisdom Meets
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-amber-500"> Modern Challenges</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-amber-500"> Modern Challenges</span>
                   </h2>
                   <p className="text-xl text-gray-600 mb-8 leading-relaxed">
                     Engage 8 AI experts modeled after history's greatest minds in collaborative discussions 
                     to unlock innovative solutions to complex problems.
                   </p>
                   <div className="flex justify-center space-x-4">
-                    <Badge variant="secondary" className="px-4 py-2 bg-indigo-100 text-indigo-700">
+                    <Badge variant="secondary" className="px-4 py-2 bg-slate-100 text-slate-700">
                       <Brain className="w-4 h-4 mr-2" />
                       AI-Powered Insights
                     </Badge>
@@ -99,7 +113,7 @@ const Index = () => {
                       <Lightbulb className="w-4 h-4 mr-2" />
                       Collective Intelligence
                     </Badge>
-                    <Badge variant="secondary" className="px-4 py-2 bg-indigo-100 text-indigo-700">
+                    <Badge variant="secondary" className="px-4 py-2 bg-slate-100 text-slate-700">
                       <BookOpen className="w-4 h-4 mr-2" />
                       Historical Wisdom
                     </Badge>
@@ -108,11 +122,18 @@ const Index = () => {
               </section>
 
               {/* Challenge Input Section */}
-              <section className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-8">
+              <section className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
                 <div className="max-w-3xl mx-auto">
-                  <h3 className="text-2xl font-bold text-indigo-900 mb-6 text-center">
-                    Present Your Challenge
-                  </h3>
+                  <div className="flex items-center justify-center mb-6">
+                    <img 
+                      src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+                      alt="AGORA Logo" 
+                      className="w-8 h-8 object-contain mr-3 opacity-80"
+                    />
+                    <h3 className="text-2xl font-bold text-slate-800">
+                      Present Your Challenge
+                    </h3>
+                  </div>
                   <div className="space-y-6">
                     <div>
                       <label htmlFor="challenge-title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -121,7 +142,7 @@ const Index = () => {
                       <Input
                         id="challenge-title"
                         placeholder="e.g., Sustainable Urban Development in the 21st Century"
-                        className="w-full border-indigo-200 focus:border-indigo-500"
+                        className="w-full border-slate-300 focus:border-amber-500 focus:ring-amber-500"
                       />
                     </div>
                     <div>
@@ -133,13 +154,14 @@ const Index = () => {
                         value={challenge}
                         onChange={(e) => setChallenge(e.target.value)}
                         placeholder="Describe your challenge in detail. What are the key issues, constraints, and goals you want the experts to address?"
-                        className="w-full h-32 border-indigo-200 focus:border-indigo-500"
+                        className="w-full h-32 border-slate-300 focus:border-amber-500 focus:ring-amber-500"
                       />
                     </div>
                     <div className="flex justify-center">
                       <Button
                         onClick={handleStartDiscussion}
-                        className="bg-gradient-to-r from-indigo-600 to-amber-500 hover:from-indigo-700 hover:to-amber-600 text-white px-8 py-3 text-lg font-medium"
+                        className="px-8 py-3 text-lg font-medium text-white"
+                        style={{ backgroundColor: '#1e293b' }}
                         disabled={!challenge.trim()}
                       >
                         Begin Discussion
@@ -152,14 +174,21 @@ const Index = () => {
 
               {/* How It Works */}
               <section className="py-16">
-                <h3 className="text-3xl font-bold text-indigo-900 mb-12 text-center">How AGORA Works</h3>
+                <div className="flex items-center justify-center mb-12">
+                  <img 
+                    src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+                    alt="AGORA Logo" 
+                    className="w-8 h-8 object-contain mr-3 opacity-80"
+                  />
+                  <h3 className="text-3xl font-bold text-slate-800">How AGORA Works</h3>
+                </div>
                 <div className="grid md:grid-cols-3 gap-8">
-                  <Card className="border-indigo-100 hover:shadow-lg transition-shadow">
+                  <Card className="border-slate-200 hover:shadow-lg transition-shadow">
                     <CardHeader className="text-center">
-                      <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#1e293b' }}>
                         <span className="text-2xl font-bold text-white">1</span>
                       </div>
-                      <CardTitle className="text-indigo-900">Submit Challenge</CardTitle>
+                      <CardTitle className="text-slate-800">Submit Challenge</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <CardDescription className="text-center text-gray-600">
@@ -168,12 +197,12 @@ const Index = () => {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-amber-100 hover:shadow-lg transition-shadow">
+                  <Card className="border-amber-200 hover:shadow-lg transition-shadow">
                     <CardHeader className="text-center">
-                      <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#DAA520' }}>
                         <span className="text-2xl font-bold text-white">2</span>
                       </div>
-                      <CardTitle className="text-amber-700">Expert Discussion</CardTitle>
+                      <CardTitle style={{ color: '#DAA520' }}>Expert Discussion</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <CardDescription className="text-center text-gray-600">
@@ -182,12 +211,12 @@ const Index = () => {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-indigo-100 hover:shadow-lg transition-shadow">
+                  <Card className="border-slate-200 hover:shadow-lg transition-shadow">
                     <CardHeader className="text-center">
-                      <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #DAA520 100%)' }}>
                         <span className="text-2xl font-bold text-white">3</span>
                       </div>
-                      <CardTitle className="text-indigo-900">Comprehensive Reports</CardTitle>
+                      <CardTitle className="text-slate-800">Comprehensive Reports</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <CardDescription className="text-center text-gray-600">
@@ -215,18 +244,25 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-indigo-900 text-white py-12 mt-16">
+      <footer className="text-white py-12 mt-16" style={{ backgroundColor: '#1e293b' }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-3 gap-8">
             <div>
-              <h4 className="text-xl font-bold mb-4">AGORA</h4>
-              <p className="text-indigo-200">
+              <div className="flex items-center mb-4">
+                <img 
+                  src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+                  alt="AGORA Logo" 
+                  className="w-8 h-8 object-contain mr-3"
+                />
+                <h4 className="text-xl font-bold">AGORA</h4>
+              </div>
+              <p className="text-slate-300">
                 The Timeless Space for Collective Wisdom - Where history's greatest minds collaborate to solve today's challenges.
               </p>
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">Features</h4>
-              <ul className="space-y-2 text-indigo-200">
+              <ul className="space-y-2 text-slate-300">
                 <li>8 Historical AI Experts</li>
                 <li>Iterative Discussions</li>
                 <li>Comprehensive Reports</li>
@@ -235,12 +271,12 @@ const Index = () => {
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">Mission</h4>
-              <p className="text-indigo-200">
+              <p className="text-slate-300">
                 To enable transformative collective intelligence by merging timeless wisdom with AI innovation.
               </p>
             </div>
           </div>
-          <div className="border-t border-indigo-800 mt-8 pt-8 text-center text-indigo-200">
+          <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-300">
             <p>&copy; 2025 AGORA. Empowering wisdom through AI collaboration.</p>
           </div>
         </div>
