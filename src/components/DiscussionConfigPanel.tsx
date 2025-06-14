@@ -69,8 +69,6 @@ const defaultExperts = [
 
 const defaultApiKey = ""; // Leave empty = use HuggingFace
 
-type ExpertConfig = typeof defaultExperts[0];
-
 export interface DiscussionConfig {
   rounds: number;
   experts: ExpertConfig[];
