@@ -27,6 +27,14 @@ export class DiscussionOrchestrator {
       maxRounds 
     });
     
+    // Log detailed expert configuration
+    if (experts && experts.length > 0) {
+      console.log('🏗️ Expert configurations:');
+      experts.forEach(expert => {
+        console.log(`  - ${expert.name} (${expert.id}): ${expert.provider}, API Key: ${expert.apiKey ? expert.apiKey.slice(0, 8) + '...' : 'none'}`);
+      });
+    }
+    
     this.experts = experts || [];
     this.challenge = challenge || '';
     this.maxRounds = maxRounds || 5;
@@ -60,10 +68,17 @@ export class DiscussionOrchestrator {
     for (let i = 0; i < this.experts.length; i++) {
       const expert = this.experts[i];
       console.log(`🎯 [${i + 1}/${this.experts.length}] Generating response for expert: ${expert.name} (${expert.id})`);
+      console.log(`🔧 Expert config: Provider=${expert.provider}, API Key=${expert.apiKey ? expert.apiKey.slice(0, 8) + '...' : 'none'}`);
       
       try {
         const expertPrompt = this.buildExpertPrompt(expert);
         console.log(`📝 Built prompt for ${expert.name}: ${expertPrompt.slice(0, 100)}...`);
+        
+        // Validate expert configuration before making API call
+        if (!expert.provider) {
+          console.warn(`⚠️ Expert ${expert.name} has no provider, defaulting to HuggingFace`);
+          expert.provider = 'HuggingFace';
+        }
         
         // Add timeout wrapper for AI response generation
         const response = await Promise.race([
@@ -74,7 +89,7 @@ export class DiscussionOrchestrator {
             expert.id
           ),
           new Promise<string>((_, reject) => 
-            setTimeout(() => reject(new Error('Response timeout')), 30000)
+            setTimeout(() => reject(new Error('Response timeout')), 45000) // Increased timeout
           )
         ]);
 
@@ -99,7 +114,7 @@ export class DiscussionOrchestrator {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       } catch (error) {
-        console.error(`💥 Error generating response for expert ${expert.name}:`, error);
+        console.error(`💥 Error generating response for expert ${expert.name} (${expert.provider}):`, error);
         
         // Add fallback message even on error to keep discussion flowing
         const fallbackContent = generatePersonalizedFallbackResponse(expert.id, this.challenge);

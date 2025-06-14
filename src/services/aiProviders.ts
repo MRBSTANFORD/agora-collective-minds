@@ -97,7 +97,12 @@ export async function callPerplexity(prompt: string, apiKey: string): Promise<st
 }
 
 export async function callGroq(prompt: string, apiKey: string): Promise<string> {
-  console.log('🟡 Calling Groq API...');
+  console.log('🟡 Calling Groq API with key:', apiKey ? `${apiKey.slice(0, 8)}...` : 'NO KEY');
+  
+  if (!apiKey || apiKey.trim() === '') {
+    throw new Error('Groq API key is required but not provided');
+  }
+
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -119,22 +124,41 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
   }
 
   const data = await response.json();
+  console.log('🟡 Groq response structure:', Object.keys(data));
+  
   const content = data.choices[0]?.message?.content;
   if (!content) {
+    console.error('❌ Groq response missing content:', data);
     throw new Error('No content in Groq response');
   }
+  
+  console.log('✅ Groq response received:', content.slice(0, 50) + '...');
   return content;
 }
 
-// Enhanced HuggingFace integration with multiple model fallbacks
-export async function callHuggingFaceWithFallback(prompt: string, expertId: string): Promise<string> {
-  console.log(`🤗 Calling HuggingFace API for expert ${expertId}...`);
+// Enhanced HuggingFace integration with API key support and better models
+export async function callHuggingFaceWithFallback(prompt: string, expertId: string, apiKey?: string): Promise<string> {
+  console.log(`🤗 Calling HuggingFace API for expert ${expertId}, has API key: ${!!apiKey}`);
   
+  // Use more reliable and current models
   const models = [
     'microsoft/DialoGPT-medium',
     'facebook/blenderbot-400M-distill',
+    'HuggingFaceH4/zephyr-7b-beta',
     'microsoft/DialoGPT-small'
   ];
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  // Add authorization if API key is provided
+  if (apiKey && apiKey.trim() !== '') {
+    headers['Authorization'] = `Bearer ${apiKey}`;
+    console.log(`🔑 Using HuggingFace API key for expert ${expertId}`);
+  } else {
+    console.log(`🆓 Using free HuggingFace inference for expert ${expertId}`);
+  }
   
   for (let i = 0; i < models.length; i++) {
     const model = models[i];
@@ -142,13 +166,11 @@ export async function callHuggingFaceWithFallback(prompt: string, expertId: stri
       console.log(`🔄 [${i + 1}/${models.length}] Trying HuggingFace model ${model} for expert ${expertId}`);
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
       
       const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           inputs: prompt,
           parameters: {
@@ -156,7 +178,12 @@ export async function callHuggingFaceWithFallback(prompt: string, expertId: stri
             temperature: 0.8,
             return_full_text: false,
             do_sample: true,
+            top_p: 0.9,
+            repetition_penalty: 1.1,
           },
+          options: {
+            wait_for_model: true,
+          }
         }),
         signal: controller.signal,
       });
@@ -166,25 +193,40 @@ export async function callHuggingFaceWithFallback(prompt: string, expertId: stri
       if (!response.ok) {
         const errorText = await response.text();
         console.warn(`⚠️ HuggingFace model ${model} returned ${response.status}: ${errorText}`);
+        
+        // If we get a 503 (model loading), wait a bit longer for this model
+        if (response.status === 503 && i < 2) {
+          console.log(`⏳ Model ${model} is loading, waiting 5 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          continue;
+        }
         continue;
       }
       
       const data = await response.json();
+      console.log(`🤗 HuggingFace response for ${model}:`, data);
       
       if (data.error) {
         console.warn(`⚠️ HuggingFace model ${model} returned error:`, data.error);
         continue;
       }
       
-      if (data && data[0]?.generated_text) {
-        const content = data[0].generated_text.trim();
-        if (content.length > 10) { // Ensure we have meaningful content
-          console.log(`✅ Successfully generated response using ${model} for expert ${expertId}: ${content.slice(0, 50)}...`);
-          return content;
-        }
+      // Handle different response formats
+      let content = '';
+      if (Array.isArray(data) && data[0]?.generated_text) {
+        content = data[0].generated_text.trim();
+      } else if (data.generated_text) {
+        content = data.generated_text.trim();
+      } else if (typeof data === 'string') {
+        content = data.trim();
       }
       
-      console.warn(`⚠️ Model ${model} did not return valid response for expert ${expertId}`, data);
+      if (content.length > 10) { // Ensure we have meaningful content
+        console.log(`✅ Successfully generated response using ${model} for expert ${expertId}: ${content.slice(0, 50)}...`);
+        return content;
+      }
+      
+      console.warn(`⚠️ Model ${model} returned insufficient content for expert ${expertId}:`, content);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         console.warn(`⏰ HuggingFace model ${model} timed out for expert ${expertId}`);

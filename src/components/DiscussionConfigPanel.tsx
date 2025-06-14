@@ -103,6 +103,7 @@ export function DiscussionConfigPanel({
   };
 
   const handleApiKey = (id: string, value: string) => {
+    console.log(`🔧 Setting API key for expert ${id}: ${value ? value.slice(0, 8) + '...' : 'empty'}`);
     setExperts((current) =>
       current.map((expert) =>
         expert.id === id
@@ -113,6 +114,7 @@ export function DiscussionConfigPanel({
   };
 
   const handleProvider = (id: string, value: string) => {
+    console.log(`🔧 Setting provider for expert ${id}: ${value}`);
     setExperts((current) =>
       current.map((expert) =>
         expert.id === id
@@ -125,6 +127,16 @@ export function DiscussionConfigPanel({
   const handleRounds = (value: number) => setRounds(value);
 
   const handleSave = () => {
+    console.log('💾 Saving symposium configuration:', {
+      rounds,
+      experts: experts.map(e => ({
+        id: e.id,
+        name: e.name,
+        provider: e.provider,
+        hasApiKey: !!e.apiKey
+      }))
+    });
+    
     onChange({
       rounds,
       experts,
@@ -145,7 +157,7 @@ export function DiscussionConfigPanel({
           <DrawerTitle>Symposium Configuration</DrawerTitle>
           <DrawerDescription>
             Configure the discussion rounds and each expert's cognitive profile, AI provider, and API credentials.<br />
-            <span className="text-amber-600">Leave API Key blank to use free HuggingFace models by default.</span>
+            <span className="text-blue-600">💡 HuggingFace works without API keys (free tier) but may be slower. Other providers require API keys.</span>
           </DrawerDescription>
         </DrawerHeader>
         
@@ -178,7 +190,8 @@ export function DiscussionConfigPanel({
                 <CardHeader>
                   <CardTitle className="text-lg text-slate-800">Expert Configuration</CardTitle>
                   <CardDescription>
-                    Customize each expert's cognitive traits and AI provider settings
+                    Customize each expert's cognitive traits and AI provider settings. 
+                    <strong className="text-green-600"> HuggingFace is recommended for testing without API keys.</strong>
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -191,7 +204,7 @@ export function DiscussionConfigPanel({
                 </CardContent>
               </Card>
 
-              {/* Save Button - now inside scrollable area */}
+              {/* Save Button */}
               <div className="flex w-full justify-end pt-4 pb-6">
                 <Button onClick={handleSave} className="bg-amber-600 hover:bg-amber-700 text-white px-8">
                   Save Symposium Settings

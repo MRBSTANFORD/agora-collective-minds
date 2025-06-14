@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
 import { useToast } from "@/hooks/use-toast";
@@ -19,10 +20,14 @@ const DiscussionInterface = ({
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
   const [discussionSpeed, setDiscussionSpeed] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Use refs to track state that needs to be accessed in async operations
+  const isRunningRef = useRef(false);
+  const isGeneratingRef = useRef(false);
 
   // Initialize orchestrator when config changes
   useEffect(() => {
-    console.log('DiscussionInterface: Config or challenge changed', { 
+    console.log('🔧 DiscussionInterface: Config changed', { 
       hasConfig: !!config, 
       hasExperts: !!config?.experts, 
       expertsCount: config?.experts?.length,
@@ -33,10 +38,10 @@ const DiscussionInterface = ({
     setMaxRounds(config?.rounds || 5);
     
     if (config?.experts && challenge?.trim()) {
-      console.log('Creating new orchestrator with experts:', config.experts.map(e => e.name));
+      console.log('🔧 Creating orchestrator with configured experts:', config.experts.map(e => ({ name: e.name, provider: e.provider, hasApiKey: !!e.apiKey })));
       const newOrchestrator = new DiscussionOrchestrator(config.experts, challenge, config.rounds || 5);
       setOrchestrator(newOrchestrator);
-      console.log('✅ Orchestrator created successfully');
+      console.log('✅ Orchestrator created with actual expert config');
     } else {
       console.log('❌ Cannot create orchestrator - missing config or challenge');
       setOrchestrator(null);
@@ -54,86 +59,36 @@ const DiscussionInterface = ({
   const [roundProgress, setRoundProgress] = useState<number[]>([]);
   const [hasError, setHasError] = useState(false);
 
-  // Enhanced expert data with historical images
-  const experts = [
-    { 
-      id: 'leonardo', 
-      name: 'Leonardo da Vinci', 
-      image: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Leonardo_self.jpg',
-      domain: 'Renaissance Polymath',
-      color: 'bg-orange-100 text-orange-700 border-orange-200',
-      participation: 0
-    },
-    { 
-      id: 'curie', 
-      name: 'Marie Curie', 
-      image: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Marie_Curie_c1920.jpg',
-      domain: 'Physics & Chemistry',
-      color: 'bg-blue-100 text-blue-700 border-blue-200',
-      participation: 0
-    },
-    { 
-      id: 'socrates', 
-      name: 'Socrates', 
-      image: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Socrates_Louvre.jpg',
-      domain: 'Classical Philosophy',
-      color: 'bg-purple-100 text-purple-700 border-purple-200',
-      participation: 0
-    },
-    { 
-      id: 'hypatia', 
-      name: 'Hypatia of Alexandria', 
-      image: '/lovable-uploads/7fa67e56-1a42-4648-be84-9213f73f953c.png',
-      domain: 'Mathematics & Astronomy',
-      color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-      participation: 0
-    },
-    { 
-      id: 'einstein', 
-      name: 'Albert Einstein', 
-      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Einstein_1921_by_F_Schmutzer_-_restoration.jpg',
-      domain: 'Theoretical Physics',
-      color: 'bg-violet-100 text-violet-700 border-violet-200',
-      participation: 0
-    },
-    { 
-      id: 'confucius', 
-      name: 'Confucius', 
-      image: '/lovable-uploads/439f1d74-152a-43a7-9aac-9aa5efa8e31d.png',
-      domain: 'Ethics & Governance',
-      color: 'bg-amber-100 text-amber-700 border-amber-200',
-      participation: 0
-    },
-    { 
-      id: 'lovelace', 
-      name: 'Ada Lovelace', 
-      image: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Ada_Lovelace_portrait.jpg',
-      domain: 'Computing & Mathematics',
-      color: 'bg-pink-100 text-pink-700 border-pink-200',
-      participation: 0
-    },
-    { 
-      id: 'machiavelli', 
-      name: 'Niccolò Machiavelli', 
-      image: '/lovable-uploads/d1f7c4e9-a220-4971-a95f-c627572fd57f.png',
-      domain: 'Political Philosophy',
-      color: 'bg-red-100 text-red-700 border-red-200',
-      participation: 0
-    }
-  ];
+  // Use configured experts instead of hardcoded ones
+  const experts = config?.experts?.map(expert => ({
+    id: expert.id,
+    name: expert.name,
+    image: getExpertImage(expert.id),
+    domain: getExpertDomain(expert.id),
+    color: getExpertColor(expert.id),
+    participation: 0
+  })) || [];
+
+  // Sync refs with state
+  useEffect(() => {
+    isRunningRef.current = isRunning;
+  }, [isRunning]);
+
+  useEffect(() => {
+    isGeneratingRef.current = isGenerating;
+  }, [isGenerating]);
 
   const startDiscussion = useCallback(async () => {
     console.log('🚀 Starting discussion...', { 
       hasOrchestrator: !!orchestrator, 
       challenge: challenge?.slice(0, 50),
       expertsCount: config?.experts?.length,
-      currentIsRunning: isRunning,
-      currentIsGenerating: isGenerating
+      currentIsRunning: isRunningRef.current,
+      currentIsGenerating: isGeneratingRef.current
     });
     
-    // Enhanced validation
     if (!orchestrator) {
-      console.error('❌ No orchestrator available - cannot start discussion');
+      console.error('❌ No orchestrator available');
       toast({
         title: "Cannot Start Discussion",
         description: "Please configure experts and enter a challenge first.",
@@ -162,9 +117,21 @@ const DiscussionInterface = ({
       return;
     }
 
-    console.log('✅ Validation passed, initializing discussion state...');
+    // Validate expert configurations
+    const expertsWithoutProviders = config.experts.filter(e => !e.provider);
+    const expertsWithoutApiKeys = config.experts.filter(e => e.provider !== 'HuggingFace' && !e.apiKey);
     
-    // Reset all state first
+    if (expertsWithoutProviders.length > 0) {
+      console.warn('⚠️ Experts without providers:', expertsWithoutProviders.map(e => e.name));
+    }
+    
+    if (expertsWithoutApiKeys.length > 0) {
+      console.warn('⚠️ Experts without API keys for paid providers:', expertsWithoutApiKeys.map(e => `${e.name} (${e.provider})`));
+    }
+
+    console.log('✅ Validation passed, starting discussion...');
+    
+    // Reset state
     setCurrentRound(0);
     setMessages([]);
     setProgress(0);
@@ -174,8 +141,9 @@ const DiscussionInterface = ({
     setTypingMessage('');
     setIsGenerating(false);
     
-    // Set running state LAST and immediately call generateNextRound
+    // Set running state and start immediately
     setIsRunning(true);
+    isRunningRef.current = true;
     
     console.log(`✅ Starting symposium with ${config.experts.length} experts for ${maxRounds} rounds`);
     
@@ -184,18 +152,15 @@ const DiscussionInterface = ({
       description: `The symposium has begun with ${config.experts.length} experts. Watch as they share their wisdom...`,
     });
     
-    // Add a small delay to ensure state is updated
-    setTimeout(() => {
-      console.log('🎯 Calling generateNextRound after state update...');
-      generateNextRound();
-    }, 100);
-  }, [orchestrator, challenge, config?.experts, maxRounds, isRunning, isGenerating, toast]);
+    // Start generation immediately without setTimeout
+    generateNextRound();
+  }, [orchestrator, challenge, config?.experts, maxRounds, toast]);
 
   const generateNextRound = useCallback(async () => {
     console.log('🔄 generateNextRound called with state:', {
       hasOrchestrator: !!orchestrator,
-      isRunning,
-      isGenerating,
+      isRunning: isRunningRef.current,
+      isGenerating: isGeneratingRef.current,
       currentRound: orchestrator?.getCurrentRound() || 0
     });
 
@@ -203,6 +168,7 @@ const DiscussionInterface = ({
       console.error('❌ generateNextRound: No orchestrator available');
       setHasError(true);
       setIsRunning(false);
+      isRunningRef.current = false;
       toast({
         title: "Discussion Error",
         description: "Discussion orchestrator is not available. Please restart the discussion.",
@@ -211,18 +177,19 @@ const DiscussionInterface = ({
       return;
     }
 
-    if (!isRunning) {
-      console.error('❌ generateNextRound: Discussion is not running');
+    if (!isRunningRef.current) {
+      console.log('⏹️ generateNextRound: Discussion not running, stopping');
       return;
     }
 
-    if (isGenerating) {
+    if (isGeneratingRef.current) {
       console.warn('⚠️ generateNextRound: Already generating, skipping...');
       return;
     }
 
     console.log(`🎬 Generating round ${orchestrator.getCurrentRound() + 1}...`);
     setIsGenerating(true);
+    isGeneratingRef.current = true;
     
     try {
       const startTime = Date.now();
@@ -237,11 +204,13 @@ const DiscussionInterface = ({
         setHasError(true);
         toast({
           title: "Discussion Issue",
-          description: "No responses were generated this round. The discussion may have encountered issues.",
+          description: "No responses were generated this round. Check expert configurations and API keys.",
           variant: "destructive",
         });
         setIsRunning(false);
+        isRunningRef.current = false;
         setIsGenerating(false);
+        isGeneratingRef.current = false;
         return;
       }
       
@@ -280,17 +249,21 @@ const DiscussionInterface = ({
         return updated;
       });
 
-      // Continue to next round if not complete
-      if (!orchestrator.isComplete() && isRunning) {
+      // Continue to next round if not complete and still running
+      if (!orchestrator.isComplete() && isRunningRef.current) {
         console.log(`🔄 Preparing for round ${newRound + 1}`);
         setTimeout(() => {
-          console.log('🎯 Calling generateNextRound for next round...');
-          generateNextRound();
+          if (isRunningRef.current) {
+            console.log('🎯 Calling generateNextRound for next round...');
+            generateNextRound();
+          }
         }, 2000 / discussionSpeed);
       } else {
         console.log('🏁 Discussion completed or stopped');
         setIsRunning(false);
+        isRunningRef.current = false;
         setIsGenerating(false);
+        isGeneratingRef.current = false;
         if (orchestrator.isComplete()) {
           console.log('✅ Discussion completed successfully');
           toast({
@@ -303,20 +276,23 @@ const DiscussionInterface = ({
       console.error('💥 Error generating round:', error);
       setHasError(true);
       setIsRunning(false);
+      isRunningRef.current = false;
       setIsGenerating(false);
+      isGeneratingRef.current = false;
       toast({
         title: "Discussion Error",
-        description: "An error occurred during the discussion. Please try restarting the symposium.",
+        description: "An error occurred during the discussion. Please check your API keys and try again.",
         variant: "destructive",
       });
     }
     
     setIsGenerating(false);
-  }, [orchestrator, isRunning, isGenerating, maxRounds, discussionSpeed, toast]);
+    isGeneratingRef.current = false;
+  }, [orchestrator, maxRounds, discussionSpeed, toast]);
 
   const simulateTyping = useCallback(async (text: string) => {
     const words = text.split(' ');
-    const typingSpeed = 50 / discussionSpeed; // ms per word, adjusted by speed
+    const typingSpeed = 50 / discussionSpeed;
     
     for (let i = 0; i <= words.length; i++) {
       setTypingMessage(words.slice(0, i).join(' '));
@@ -331,7 +307,9 @@ const DiscussionInterface = ({
   const pauseDiscussion = useCallback(() => {
     console.log('⏸️ Pausing discussion...');
     setIsRunning(false);
+    isRunningRef.current = false;
     setIsGenerating(false);
+    isGeneratingRef.current = false;
     setCurrentSpeaker(null);
     setTypingMessage('');
   }, []);
@@ -339,7 +317,9 @@ const DiscussionInterface = ({
   const resetDiscussion = useCallback(() => {
     console.log('🔄 Resetting discussion...');
     setIsRunning(false);
+    isRunningRef.current = false;
     setIsGenerating(false);
+    isGeneratingRef.current = false;
     setCurrentRound(0);
     setProgress(0);
     setMessages([]);
@@ -429,5 +409,48 @@ const DiscussionInterface = ({
     </div>
   );
 };
+
+// Helper functions for expert data
+function getExpertImage(id: string): string {
+  const images: Record<string, string> = {
+    leonardo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Leonardo_self.jpg',
+    curie: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Marie_Curie_c1920.jpg',
+    socrates: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Socrates_Louvre.jpg',
+    hypatia: '/lovable-uploads/7fa67e56-1a42-4648-be84-9213f73f953c.png',
+    einstein: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Einstein_1921_by_F_Schmutzer_-_restoration.jpg',
+    confucius: '/lovable-uploads/439f1d74-152a-43a7-9aac-9aa5efa8e31d.png',
+    lovelace: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Ada_Lovelace_portrait.jpg',
+    machiavelli: '/lovable-uploads/d1f7c4e9-a220-4971-a95f-c627572fd57f.png'
+  };
+  return images[id] || '';
+}
+
+function getExpertDomain(id: string): string {
+  const domains: Record<string, string> = {
+    leonardo: 'Renaissance Polymath',
+    curie: 'Physics & Chemistry',
+    socrates: 'Classical Philosophy',
+    hypatia: 'Mathematics & Astronomy',
+    einstein: 'Theoretical Physics',
+    confucius: 'Ethics & Governance',
+    lovelace: 'Computing & Mathematics',
+    machiavelli: 'Political Philosophy'
+  };
+  return domains[id] || '';
+}
+
+function getExpertColor(id: string): string {
+  const colors: Record<string, string> = {
+    leonardo: 'bg-orange-100 text-orange-700 border-orange-200',
+    curie: 'bg-blue-100 text-blue-700 border-blue-200',
+    socrates: 'bg-purple-100 text-purple-700 border-purple-200',
+    hypatia: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    einstein: 'bg-violet-100 text-violet-700 border-violet-200',
+    confucius: 'bg-amber-100 text-amber-700 border-amber-200',
+    lovelace: 'bg-pink-100 text-pink-700 border-pink-200',
+    machiavelli: 'bg-red-100 text-red-700 border-red-200'
+  };
+  return colors[id] || 'bg-gray-100 text-gray-700 border-gray-200';
+}
 
 export default DiscussionInterface;
