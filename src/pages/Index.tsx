@@ -124,7 +124,7 @@ const Index = () => {
             <div className="flex items-center space-x-6">
               <div className="relative">
                 <img 
-                  src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+                  src="/lovable-uploads/7c086ec5-9c76-4818-bcd0-24ba342a765b.png" 
                   alt="AGORA Logo" 
                   className="w-16 h-16 object-contain drop-shadow-lg"
                 />
@@ -223,7 +223,7 @@ const Index = () => {
             <div>
               <div className="flex items-center mb-6">
                 <img 
-                  src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+                  src="/lovable-uploads/7c086ec5-9c76-4818-bcd0-24ba342a765b.png" 
                   alt="AGORA Logo" 
                   className="w-12 h-12 object-contain mr-4"
                 />

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Brain, Lightbulb, BookOpen } from 'lucide-react';
@@ -9,7 +10,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="relative">
           <img 
-            src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+            src="/lovable-uploads/7c086ec5-9c76-4818-bcd0-24ba342a765b.png" 
             alt="AGORA Logo Background" 
             className="w-40 h-40 object-contain opacity-10 blur-sm"
           />
@@ -29,7 +30,7 @@ const HeroSection = () => {
         <div className="flex justify-center mb-12">
           <div className="relative">
             <img 
-              src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+              src="/lovable-uploads/7c086ec5-9c76-4818-bcd0-24ba342a765b.png" 
               alt="AGORA Logo" 
               className="w-32 h-32 object-contain drop-shadow-2xl"
             />
