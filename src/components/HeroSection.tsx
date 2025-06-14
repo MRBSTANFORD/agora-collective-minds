@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Brain, Lightbulb, BookOpen } from 'lucide-react';
@@ -6,15 +5,27 @@ import { Brain, Lightbulb, BookOpen } from 'lucide-react';
 const HeroSection = () => {
   return (
     <section className="py-24 relative overflow-hidden">
+      {/* Large Background Logo */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="relative">
+          <img 
+            src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
+            alt="AGORA Logo Background" 
+            className="w-40 h-40 object-contain opacity-10 blur-sm"
+          />
+          <div className="absolute -inset-8 bg-gradient-to-r from-slate-200/10 via-amber-200/15 to-slate-200/10 rounded-full blur-2xl"></div>
+        </div>
+      </div>
+
       {/* Geometric Greek patterns */}
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 opacity-5 z-10">
         <div className="absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-slate-400 to-transparent"></div>
         <div className="absolute bottom-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
         <div className="absolute left-1/6 top-0 w-0.5 h-full bg-gradient-to-b from-transparent via-slate-300 to-transparent"></div>
         <div className="absolute right-1/6 top-0 w-0.5 h-full bg-gradient-to-b from-transparent via-slate-300 to-transparent"></div>
       </div>
 
-      <div className="relative z-10 text-center max-w-5xl mx-auto">
+      <div className="relative z-20 text-center max-w-5xl mx-auto">
         <div className="flex justify-center mb-12">
           <div className="relative">
             <img 
