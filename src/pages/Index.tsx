@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, Users, Brain, Lightbulb, BookOpen, Columns, Flame, Scroll } from 'lucide-react';
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { ArrowRight, Users, Brain, Lightbulb, BookOpen, Columns, Flame, Scroll, Settings, AlertCircle } from 'lucide-react';
 import ExpertProfiles from '@/components/ExpertProfiles';
 import DiscussionInterface from '@/components/DiscussionInterface';
 import ReportsModule from '@/components/ReportsModule';
@@ -13,18 +15,99 @@ import { DiscussionConfigPanel, DiscussionConfig } from "@/components/Discussion
 
 const Index = () => {
   const [challenge, setChallenge] = useState('');
+  const [rounds, setRounds] = useState(5);
   const [activeTab, setActiveTab] = useState('home');
   const [discussionStarted, setDiscussionStarted] = useState(false);
 
-  // Symposium config state (see new panel)
-  const [discussionConfig, setDiscussionConfig] = useState<DiscussionConfig | undefined>(undefined);
+  // Default experts configuration
+  const defaultExperts = [
+    {
+      id: 'leonardo',
+      name: 'Leonardo da Vinci',
+      cognitive: { creativity: 95, skepticism: 40, optimism: 85 },
+      apiKey: "",
+      provider: "HuggingFace",
+    },
+    {
+      id: 'curie',
+      name: 'Marie Curie',
+      cognitive: { creativity: 70, skepticism: 85, optimism: 60 },
+      apiKey: "",
+      provider: "HuggingFace",
+    },
+    {
+      id: 'socrates',
+      name: 'Socrates',
+      cognitive: { creativity: 60, skepticism: 90, optimism: 55 },
+      apiKey: "",
+      provider: "HuggingFace",
+    },
+    {
+      id: 'hypatia',
+      name: 'Hypatia of Alexandria',
+      cognitive: { creativity: 75, skepticism: 70, optimism: 80 },
+      apiKey: "",
+      provider: "HuggingFace",
+    },
+    {
+      id: 'einstein',
+      name: 'Albert Einstein',
+      cognitive: { creativity: 100, skepticism: 60, optimism: 75 },
+      apiKey: "",
+      provider: "HuggingFace",
+    },
+    {
+      id: 'confucius',
+      name: 'Confucius',
+      cognitive: { creativity: 65, skepticism: 45, optimism: 85 },
+      apiKey: "",
+      provider: "HuggingFace",
+    },
+    {
+      id: 'lovelace',
+      name: 'Ada Lovelace',
+      cognitive: { creativity: 90, skepticism: 50, optimism: 90 },
+      apiKey: "",
+      provider: "HuggingFace",
+    },
+    {
+      id: 'machiavelli',
+      name: 'Niccolò Machiavelli',
+      cognitive: { creativity: 80, skepticism: 95, optimism: 40 },
+      apiKey: "",
+      provider: "HuggingFace",
+    }
+  ];
+
+  // Initialize with default configuration
+  const [discussionConfig, setDiscussionConfig] = useState<DiscussionConfig>({
+    rounds: rounds,
+    experts: defaultExperts
+  });
+
+  // Update config when rounds change
+  const handleRoundsChange = (newRounds: number) => {
+    setRounds(newRounds);
+    setDiscussionConfig(prev => ({
+      ...prev,
+      rounds: newRounds
+    }));
+  };
+
+  // Update config from advanced settings
+  const handleConfigChange = (newConfig: DiscussionConfig) => {
+    setDiscussionConfig(newConfig);
+    setRounds(newConfig.rounds);
+  };
 
   const handleStartDiscussion = () => {
-    if (challenge.trim() && discussionConfig) {
+    if (challenge.trim()) {
       setDiscussionStarted(true);
       setActiveTab('discussion');
     }
   };
+
+  const canStart = challenge.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
@@ -132,19 +215,12 @@ const Index = () => {
                 </div>
               </section>
 
-              {/* Challenge Input Section - Temple-inspired */}
+              {/* Challenge Input Section - Enhanced with rounds selector */}
               <section className="relative">
                 <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-slate-200/50 p-12 relative overflow-hidden">
                   {/* Subtle Greek key pattern */}
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-400 to-transparent"></div>
-                  
-                  <div className="flex justify-end mb-2">
-                    <DiscussionConfigPanel
-                      initialConfig={discussionConfig}
-                      onChange={setDiscussionConfig}
-                    />
-                  </div>
                   
                   <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
@@ -185,17 +261,73 @@ const Index = () => {
                           className="w-full h-40 border-slate-200 focus:border-amber-400 focus:ring-amber-400/30 bg-white/80 font-light text-base leading-relaxed"
                         />
                       </div>
+
+                      {/* Prominent Rounds Selector */}
+                      <div className="bg-amber-50/50 rounded-xl p-6 border border-amber-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <Label className="text-sm font-medium text-slate-700 tracking-wide uppercase">
+                              Discussion Rounds
+                            </Label>
+                            <p className="text-xs text-slate-500 mt-1">
+                              Number of iterative exchanges between the experts
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                            {rounds} rounds
+                          </Badge>
+                        </div>
+                        <Slider
+                          value={[rounds]}
+                          min={3}
+                          max={10}
+                          step={1}
+                          onValueChange={([value]) => handleRoundsChange(value)}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-slate-500 mt-2">
+                          <span>3 (Quick)</span>
+                          <span>5 (Balanced)</span>
+                          <span>10 (Deep)</span>
+                        </div>
+                      </div>
+
+                      {/* Configuration Status & Advanced Settings */}
+                      <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 border border-slate-200">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-700">
+                              Ready to Begin • 8 Experts Configured
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Using free HuggingFace models. Configure API keys for enhanced responses.
+                            </p>
+                          </div>
+                        </div>
+                        <DiscussionConfigPanel
+                          initialConfig={discussionConfig}
+                          onChange={handleConfigChange}
+                        />
+                      </div>
                       
                       <div className="flex justify-center pt-4">
                         <Button
                           onClick={handleStartDiscussion}
                           className="px-12 py-4 text-lg font-light tracking-wider text-white bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 shadow-lg hover:shadow-xl transition-all duration-300 rounded-full"
-                          disabled={!challenge.trim() || !discussionConfig}
+                          disabled={!canStart}
                         >
-                          Convene the Symposium
+                          {canStart ? 'Convene the Symposium' : 'Enter Your Challenge Above'}
                           <ArrowRight className="w-5 h-5 ml-3" />
                         </Button>
                       </div>
+
+                      {!canStart && (
+                        <div className="flex items-center justify-center space-x-2 text-amber-600">
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="text-sm">Please describe your challenge to begin the symposium</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
