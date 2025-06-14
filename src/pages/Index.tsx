@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight, Users, Brain, Lightbulb, BookOpen, Columns, Flame, Scroll, Settings, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ExpertProfiles from '@/components/ExpertProfiles';
 import DiscussionInterface from '@/components/DiscussionInterface';
 import ReportsModule from '@/components/ReportsModule';
