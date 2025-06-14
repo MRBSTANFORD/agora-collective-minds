@@ -44,7 +44,10 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({
 
   // For identity, let's use a hash of all messages and current experts as a key
   const discussionId = React.useMemo(() => {
-    const raw = JSON.stringify({ messages: messages.map(m => m.id || m.content), experts: experts.map(e => e.id) });
+    const raw = JSON.stringify({
+      messages: messages.map(m => [m.speaker, m.content, m.round, m.timestamp].join('_')),
+      experts: experts.map(e => e.id)
+    });
     let hash = 0;
     for (let i = 0; i < raw.length; i++) hash = ((hash << 5) - hash) + raw.charCodeAt(i);
     return `discussion_${hash}`;
