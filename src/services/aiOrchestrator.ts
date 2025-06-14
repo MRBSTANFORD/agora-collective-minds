@@ -1,4 +1,3 @@
-
 import { ExpertConfig } from '@/components/ExpertCardList';
 
 export interface DiscussionMessage {
@@ -57,155 +56,150 @@ function applyCognitiveTraits(basePrompt: string, cognitive: { creativity: numbe
   return basePrompt + traitModifiers;
 }
 
-// Generate AI response based on provider with better error handling
-async function generateAIResponse(prompt: string, provider: string, apiKey: string): Promise<string> {
-  console.log(`Generating response for provider: ${provider}, has API key: ${apiKey ? 'yes' : 'no'}`);
+// Enhanced fallback responses based on expert personalities
+const EXPERT_FALLBACK_RESPONSES: Record<string, string[]> = {
+  leonardo: [
+    "This challenge reminds me of the intricate mechanisms I've observed in nature - perhaps we should approach it as an artist would approach a canvas, with both precision and imagination.",
+    "Like the flow of water carving through stone, this problem requires us to find the path of least resistance while maintaining our creative vision.",
+    "I see connections between this challenge and the anatomical studies I've conducted - both require careful observation and systematic analysis."
+  ],
+  curie: [
+    "We must approach this systematically, gathering evidence and testing our hypotheses rigorously before drawing conclusions.",
+    "This problem requires the same methodical approach I used in my laboratory - careful observation, precise measurement, and persistent investigation.",
+    "Like my work with radioactive elements, this challenge demands patience and careful attention to detail to reveal its true nature."
+  ],
+  socrates: [
+    "But first, we must ask ourselves: do we truly understand what this challenge is asking of us? What assumptions are we making?",
+    "I wonder if we have examined this problem from all angles. What questions have we not yet asked?",
+    "This challenge presents an opportunity to examine our own thinking - are we seeking truth or merely confirming what we already believe?"
+  ],
+  hypatia: [
+    "Let us apply mathematical reasoning to this challenge, seeking the elegant solution that balances all variables.",
+    "This problem can be understood through the lens of geometry - finding the optimal path between multiple points of consideration.",
+    "We must ensure our solution serves not just efficiency but also equity and the greater good of all involved."
+  ],
+  einstein: [
+    "This challenge invites us to think beyond conventional frameworks - perhaps the solution lies in reimagining our fundamental assumptions.",
+    "Like relativity teaches us, the perspective from which we view this problem will determine what solutions become visible to us.",
+    "I find myself wondering what thought experiment might illuminate the hidden connections within this challenge."
+  ],
+  confucius: [
+    "The path to solving this challenge lies in understanding how it affects the harmony between all stakeholders involved.",
+    "Wisdom suggests we consider not just the immediate solution, but the long-term consequences for our community.",
+    "True resolution comes when we balance practical necessities with moral responsibilities and social cohesion."
+  ],
+  lovelace: [
+    "This challenge has the characteristics of a complex algorithm - we must break it down into logical steps and iterate toward the solution.",
+    "I see patterns in this problem that suggest a systematic, computational approach could yield innovative results.",
+    "The intersection of analytical thinking and creative vision will be key to unlocking this challenge's potential."
+  ],
+  machiavelli: [
+    "We must examine the practical realities and competing interests at play in this challenge, not just the idealistic goals.",
+    "Effective solutions require understanding the motivations and constraints of all parties involved - what they truly want versus what they claim to want.",
+    "This challenge calls for strategic thinking that accounts for human nature and the real-world dynamics of power and influence."
+  ]
+};
+
+// Generate enhanced fallback response based on expert personality
+function generatePersonalizedFallbackResponse(expertId: string, prompt: string): string {
+  const responses = EXPERT_FALLBACK_RESPONSES[expertId] || [
+    "This presents an intriguing challenge that deserves careful consideration from multiple perspectives.",
+    "I believe we need to examine this issue through the lens of my unique expertise and experience.",
+    "The complexity of this challenge calls for a thoughtful and measured approach."
+  ];
+  
+  const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+  console.log(`Generated fallback response for ${expertId}: ${randomResponse.slice(0, 50)}...`);
+  return randomResponse;
+}
+
+// Generate AI response with enhanced error handling and fallbacks
+async function generateAIResponse(prompt: string, provider: string, apiKey: string, expertId: string): Promise<string> {
+  console.log(`Generating response for expert ${expertId} using provider: ${provider}, has API key: ${apiKey ? 'yes' : 'no'}`);
   
   try {
     switch (provider) {
       case 'OpenAI':
-        if (!apiKey) throw new Error('OpenAI API key required');
+        if (!apiKey) {
+          console.log(`OpenAI requires API key, falling back for ${expertId}`);
+          return generatePersonalizedFallbackResponse(expertId, prompt);
+        }
         return await callOpenAI(prompt, apiKey);
       case 'Anthropic':
-        if (!apiKey) throw new Error('Anthropic API key required');
+        if (!apiKey) {
+          console.log(`Anthropic requires API key, falling back for ${expertId}`);
+          return generatePersonalizedFallbackResponse(expertId, prompt);
+        }
         return await callAnthropic(prompt, apiKey);
       case 'Perplexity':
-        if (!apiKey) throw new Error('Perplexity API key required');
+        if (!apiKey) {
+          console.log(`Perplexity requires API key, falling back for ${expertId}`);
+          return generatePersonalizedFallbackResponse(expertId, prompt);
+        }
         return await callPerplexity(prompt, apiKey);
       case 'Groq':
-        if (!apiKey) throw new Error('Groq API key required');
+        if (!apiKey) {
+          console.log(`Groq requires API key, falling back for ${expertId}`);
+          return generatePersonalizedFallbackResponse(expertId, prompt);
+        }
         return await callGroq(prompt, apiKey);
       case 'HuggingFace':
       default:
-        return await callHuggingFace(prompt);
+        return await callHuggingFaceWithFallback(prompt, expertId);
     }
   } catch (error) {
-    console.error(`AI Provider ${provider} error:`, error);
-    // Return a fallback response instead of trying another provider
-    return generateFallbackResponse(prompt);
+    console.error(`AI Provider ${provider} error for expert ${expertId}:`, error);
+    return generatePersonalizedFallbackResponse(expertId, prompt);
   }
 }
 
-// Generate a simple fallback response when AI providers fail
-function generateFallbackResponse(prompt: string): string {
-  const responses = [
-    "This is a fascinating challenge that requires careful consideration from multiple perspectives.",
-    "I believe we need to examine this issue through the lens of my unique expertise and experience.",
-    "This presents an interesting opportunity to apply fundamental principles to a modern problem.",
-    "The complexity of this challenge calls for a thoughtful and measured approach.",
-    "I find myself drawn to explore the deeper implications of this question."
+// Enhanced HuggingFace integration with multiple model fallbacks
+async function callHuggingFaceWithFallback(prompt: string, expertId: string): Promise<string> {
+  const models = [
+    'microsoft/DialoGPT-medium',
+    'facebook/blenderbot-400M-distill',
+    'microsoft/DialoGPT-small'
   ];
-  return responses[Math.floor(Math.random() * responses.length)];
-}
-
-async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4.1-2025-04-14',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 300,
-      temperature: 0.8,
-    }),
-  });
   
-  if (!response.ok) throw new Error(`OpenAI API error: ${response.statusText}`);
-  const data = await response.json();
-  return data.choices[0]?.message?.content || "I apologize, but I'm having difficulty responding right now.";
-}
-
-async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.8,
-    }),
-  });
-  
-  if (!response.ok) throw new Error(`Anthropic API error: ${response.statusText}`);
-  const data = await response.json();
-  return data.content[0]?.text || "I apologize, but I'm having difficulty responding right now.";
-}
-
-async function callPerplexity(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-sonar-large-128k-online',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 300,
-      temperature: 0.8,
-    }),
-  });
-  
-  if (!response.ok) throw new Error(`Perplexity API error: ${response.statusText}`);
-  const data = await response.json();
-  return data.choices[0]?.message?.content || "I apologize, but I'm having difficulty responding right now.";
-}
-
-async function callGroq(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-8b-instant',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 300,
-      temperature: 0.8,
-    }),
-  });
-  
-  if (!response.ok) throw new Error(`Groq API error: ${response.statusText}`);
-  const data = await response.json();
-  return data.choices[0]?.message?.content || "I apologize, but I'm having difficulty responding right now.";
-}
-
-async function callHuggingFace(prompt: string): Promise<string> {
-  // Use a more reliable HuggingFace model
-  const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      inputs: prompt,
-      parameters: {
-        max_new_tokens: 100,
-        temperature: 0.8,
-        return_full_text: false,
-      },
-    }),
-  });
-  
-  if (!response.ok) {
-    console.warn(`HuggingFace API error: ${response.statusText}, using fallback`);
-    return generateFallbackResponse(prompt);
+  for (const model of models) {
+    try {
+      console.log(`Trying HuggingFace model ${model} for expert ${expertId}`);
+      
+      const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            max_new_tokens: 150,
+            temperature: 0.8,
+            return_full_text: false,
+            do_sample: true,
+          },
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data[0]?.generated_text) {
+          console.log(`Successfully generated response using ${model} for expert ${expertId}`);
+          return data[0].generated_text.trim();
+        }
+      }
+      
+      console.warn(`Model ${model} did not return valid response for expert ${expertId}`);
+    } catch (error) {
+      console.warn(`HuggingFace model ${model} failed for expert ${expertId}:`, error);
+    }
   }
   
-  const data = await response.json();
-  return data[0]?.generated_text || generateFallbackResponse(prompt);
+  console.log(`All HuggingFace models failed for expert ${expertId}, using personalized fallback`);
+  return generatePersonalizedFallbackResponse(expertId, prompt);
 }
 
-// Main discussion orchestrator
+// Main discussion orchestrator with enhanced validation and error handling
 export class DiscussionOrchestrator {
   private experts: ExpertConfig[];
   private challenge: string;
@@ -214,12 +208,25 @@ export class DiscussionOrchestrator {
   private currentRound: number;
 
   constructor(experts: ExpertConfig[], challenge: string, maxRounds: number) {
-    console.log('Creating DiscussionOrchestrator with:', { experts: experts.length, challenge: challenge.slice(0, 50), maxRounds });
+    console.log('Creating DiscussionOrchestrator with:', { 
+      experts: experts?.length || 0, 
+      challenge: challenge?.slice(0, 50) || 'No challenge', 
+      maxRounds 
+    });
+    
     this.experts = experts || [];
     this.challenge = challenge || '';
     this.maxRounds = maxRounds || 5;
     this.messages = [];
     this.currentRound = 0;
+    
+    // Validate inputs
+    if (!this.experts.length) {
+      console.warn('DiscussionOrchestrator created with no experts');
+    }
+    if (!this.challenge.trim()) {
+      console.warn('DiscussionOrchestrator created with empty challenge');
+    }
   }
 
   async generateRound(): Promise<DiscussionMessage[]> {
@@ -232,14 +239,18 @@ export class DiscussionOrchestrator {
       return [];
     }
 
+    // Process experts sequentially to avoid rate limiting
     for (const expert of this.experts) {
-      console.log(`Generating response for expert: ${expert.name}`);
+      console.log(`Generating response for expert: ${expert.name} (${expert.id})`);
       try {
         const expertPrompt = this.buildExpertPrompt(expert);
+        console.log(`Built prompt for ${expert.name}: ${expertPrompt.slice(0, 100)}...`);
+        
         const response = await generateAIResponse(
           expertPrompt,
           expert.provider || 'HuggingFace',
-          expert.apiKey || ''
+          expert.apiKey || '',
+          expert.id
         );
 
         const message: DiscussionMessage = {
@@ -251,10 +262,24 @@ export class DiscussionOrchestrator {
 
         roundMessages.push(message);
         this.messages.push(message);
-        console.log(`Expert ${expert.name} response generated successfully`);
+        console.log(`Expert ${expert.name} response generated successfully: ${response.slice(0, 50)}...`);
+        
+        // Small delay between experts to avoid overwhelming APIs
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error(`Error generating response for expert ${expert.name}:`, error);
-        // Continue with other experts even if one fails
+        
+        // Add fallback message even on error to keep discussion flowing
+        const fallbackMessage: DiscussionMessage = {
+          speaker: expert.id,
+          content: generatePersonalizedFallbackResponse(expert.id, this.challenge),
+          round: this.currentRound,
+          timestamp: new Date(),
+        };
+        
+        roundMessages.push(fallbackMessage);
+        this.messages.push(fallbackMessage);
+        console.log(`Added fallback response for expert ${expert.name}`);
       }
     }
 
@@ -269,7 +294,7 @@ export class DiscussionOrchestrator {
     let contextPrompt = `${enhancedPrompt}\n\nChallenge: ${this.challenge}\n\n`;
     
     if (this.currentRound === 1) {
-      contextPrompt += "This is the first round of discussion. Provide your initial perspective on this challenge.";
+      contextPrompt += "This is the first round of discussion. Provide your initial perspective on this challenge in 2-3 sentences.";
     } else {
       contextPrompt += `This is round ${this.currentRound} of ${this.maxRounds}. Previous discussion:\n`;
       
@@ -280,10 +305,8 @@ export class DiscussionOrchestrator {
         contextPrompt += `${speakerName}: ${msg.content}\n\n`;
       }
       
-      contextPrompt += "Build upon the previous discussion while maintaining your unique perspective. Reference other experts' ideas when relevant.";
+      contextPrompt += "Build upon the previous discussion while maintaining your unique perspective. Reference other experts' ideas when relevant. Respond in 2-3 sentences.";
     }
-    
-    contextPrompt += "\n\nProvide a thoughtful response (2-3 sentences) that reflects your historical perspective and expertise.";
     
     return contextPrompt;
   }

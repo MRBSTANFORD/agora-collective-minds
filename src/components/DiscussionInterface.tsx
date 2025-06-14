@@ -125,8 +125,13 @@ const DiscussionInterface = ({
   ];
 
   const startDiscussion = async () => {
-    console.log('Starting discussion...', { hasOrchestrator: !!orchestrator, challenge: challenge?.slice(0, 50) });
+    console.log('Starting discussion...', { 
+      hasOrchestrator: !!orchestrator, 
+      challenge: challenge?.slice(0, 50),
+      expertsCount: config?.experts?.length 
+    });
     
+    // Enhanced validation
     if (!orchestrator) {
       console.error('No orchestrator available - cannot start discussion');
       toast({
@@ -147,6 +152,16 @@ const DiscussionInterface = ({
       return;
     }
 
+    if (!config?.experts?.length) {
+      console.error('No experts configured');
+      toast({
+        title: "Cannot Start Discussion",
+        description: "Please select and configure at least one expert.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsRunning(true);
     setCurrentRound(0);
     setMessages([]);
@@ -154,9 +169,11 @@ const DiscussionInterface = ({
     setRoundProgress(Array(maxRounds).fill(0));
     setHasError(false);
     
+    console.log(`Starting symposium with ${config.experts.length} experts for ${maxRounds} rounds`);
+    
     toast({
       title: "Discussion Started",
-      description: "The symposium has begun. The experts are gathering their thoughts...",
+      description: `The symposium has begun with ${config.experts.length} experts. Watch as they share their wisdom...`,
     });
     
     await generateNextRound();
@@ -168,12 +185,15 @@ const DiscussionInterface = ({
       return;
     }
 
-    console.log('Generating next round...');
+    console.log(`Generating round ${orchestrator.getCurrentRound() + 1}...`);
     setIsGenerating(true);
     
     try {
+      const startTime = Date.now();
       const roundMessages = await orchestrator.generateRound();
-      console.log('Round messages generated:', roundMessages.length);
+      const endTime = Date.now();
+      
+      console.log(`Round completed in ${endTime - startTime}ms with ${roundMessages.length} messages`);
       
       if (roundMessages.length === 0) {
         console.error('No messages generated for this round');
@@ -191,6 +211,7 @@ const DiscussionInterface = ({
       // Add messages one by one with typing effect
       for (let i = 0; i < roundMessages.length; i++) {
         const message = roundMessages[i];
+        console.log(`Displaying message from ${message.speaker}: ${message.content.slice(0, 50)}...`);
         setCurrentSpeaker(message.speaker);
         
         // Typing effect
@@ -220,14 +241,16 @@ const DiscussionInterface = ({
 
       // Continue to next round if not complete
       if (!orchestrator.isComplete() && isRunning) {
+        console.log(`Preparing for round ${newRound + 1}`);
         setTimeout(() => generateNextRound(), 2000 / discussionSpeed);
       } else {
         setIsRunning(false);
         setIsGenerating(false);
         if (orchestrator.isComplete()) {
+          console.log('Discussion completed successfully');
           toast({
             title: "Discussion Complete",
-            description: "The symposium has concluded. All rounds have been completed.",
+            description: `The symposium has concluded after ${maxRounds} rounds of enlightening discourse.`,
           });
         }
       }
@@ -238,7 +261,7 @@ const DiscussionInterface = ({
       setIsGenerating(false);
       toast({
         title: "Discussion Error",
-        description: "An error occurred during the discussion. Please try again.",
+        description: "An error occurred during the discussion. The symposium will attempt to continue with available responses.",
         variant: "destructive",
       });
     }
@@ -268,6 +291,7 @@ const DiscussionInterface = ({
   };
 
   const resetDiscussion = () => {
+    console.log('Resetting discussion...');
     setIsRunning(false);
     setIsGenerating(false);
     setCurrentRound(0);
@@ -277,7 +301,9 @@ const DiscussionInterface = ({
     setTypingMessage('');
     setRoundProgress(Array(maxRounds).fill(0));
     setHasError(false);
+    
     if (config?.experts && challenge?.trim()) {
+      console.log('Recreating orchestrator after reset');
       setOrchestrator(new DiscussionOrchestrator(config.experts, challenge, config.rounds || 5));
     }
   };
