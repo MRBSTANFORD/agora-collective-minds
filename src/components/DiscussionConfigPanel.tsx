@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -103,7 +102,6 @@ export function DiscussionConfigPanel({
   };
 
   const handleApiKey = (id: string, value: string) => {
-    console.log(`🔧 Setting API key for expert ${id}: ${value ? value.slice(0, 8) + '...' : 'empty'}`);
     setExperts((current) =>
       current.map((expert) =>
         expert.id === id
@@ -114,11 +112,20 @@ export function DiscussionConfigPanel({
   };
 
   const handleProvider = (id: string, value: string) => {
-    console.log(`🔧 Setting provider for expert ${id}: ${value}`);
     setExperts((current) =>
       current.map((expert) =>
         expert.id === id
           ? { ...expert, provider: value }
+          : expert
+      )
+    );
+  };
+
+  const handleModel = (id: string, value: string) => {
+    setExperts((current) =>
+      current.map((expert) =>
+        expert.id === id
+          ? { ...expert, model: value }
           : expert
       )
     );
@@ -200,6 +207,7 @@ export function DiscussionConfigPanel({
                     onTraitChange={handleTrait}
                     onApiKeyChange={handleApiKey}
                     onProviderChange={handleProvider}
+                    onModelChange={handleModel}
                   />
                 </CardContent>
               </Card>
