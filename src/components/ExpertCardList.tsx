@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { testApiConnection, ProviderApiStatus } from "@/services/apiTester";
+import { useAvailableModels, LLMModel } from "@/hooks/useAvailableModels";
 
 export type ExpertConfig = {
   id: string;
@@ -148,6 +148,15 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
   onProviderChange,
   onModelChange,
 }) => {
+  const providerList = [
+    ...new Set(experts.map(e => e.provider || "HuggingFace"))
+  ];
+  const apiKeys: Record<string, string> = {};
+  experts.forEach(exp => { if(exp.provider && exp.apiKey) apiKeys[exp.provider] = exp.apiKey; });
+
+  // Use dynamic AI models
+  const { loading, models: availableModels, error } = useAvailableModels(providerList, apiKeys);
+
   const [testingStatus, setTestingStatus] = useState<ApiStatuses>({});
   const [apiMessages, setApiMessages] = useState<ApiMessages>({});
 
@@ -171,6 +180,8 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
           const providerMeta = PROVIDERS_WITH_MODELS[expert.provider || "HuggingFace"];
           const tier = providerMeta?.tier || "🆓";
 
+          const modelOptions: LLMModel[] = availableModels[expert.provider || "HuggingFace"] || [];
+          // fallback for static config if dynamic fails
           return (
           <Card key={expert.id} className={`bg-slate-50/80 border-amber-100 hover:shadow-md transition-shadow`}>
             <CardHeader className="pb-4">
@@ -260,19 +271,27 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
                     </TooltipContent>
                   </Tooltip>
                 </Label>
-                <Select
-                  value={expert.model || getModelOptions(expert.provider || "HuggingFace")[0]?.value}
-                  onValueChange={(value) => onModelChange(expert.id, value)}
-                >
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select Model" /></SelectTrigger>
-                  <SelectContent>
-                    {getModelOptions(expert.provider || "HuggingFace").map((model) => (
-                      <SelectItem key={model.value} value={model.value}>
-                        <span className="font-medium">{model.label}</span> {model.free && <span className="text-green-600 font-bold">🆓 Free</span>}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {loading ? (
+                  <div className="mt-2 text-xs text-slate-500">Loading models…</div>
+                ) : error ? (
+                  <div className="mt-2 text-rose-500 text-xs">{error}</div>
+                ) : (
+                  <Select
+                    value={expert.model || modelOptions[0]?.value}
+                    onValueChange={(value) => onModelChange(expert.id, value)}
+                  >
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select Model" /></SelectTrigger>
+                    <SelectContent>
+                      {modelOptions.map((model) => (
+                        <SelectItem key={model.value} value={model.value}>
+                          <span className="font-medium">{model.label}</span> {model.free === true && <span className="text-green-600 font-bold">🆓 Free</span>}
+                          {model.free === false && <span className="text-yellow-800 font-bold">💎 Paid</span>}
+                          {/* model.note? */}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* API Key Input + Test */}
