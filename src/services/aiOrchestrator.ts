@@ -12,6 +12,100 @@ export interface AIProvider {
   apiKey: string;
 }
 
+// API call functions for different providers
+async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4.1-2025-04-14',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 150,
+      temperature: 0.8,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0]?.message?.content || 'No response generated';
+}
+
+async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 150,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.8,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Anthropic API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.content[0]?.text || 'No response generated';
+}
+
+async function callPerplexity(prompt: string, apiKey: string): Promise<string> {
+  const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama-3.1-sonar-small-128k-online',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 150,
+      temperature: 0.8,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Perplexity API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0]?.message?.content || 'No response generated';
+}
+
+async function callGroq(prompt: string, apiKey: string): Promise<string> {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'mixtral-8x7b-32768',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 150,
+      temperature: 0.8,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Groq API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0]?.message?.content || 'No response generated';
+}
+
 // Expert personality prompts based on SDD specifications
 const EXPERT_PROMPTS: Record<string, string> = {
   leonardo: `You are Leonardo da Vinci, a Renaissance polymath with a visionary and interdisciplinary mind. You explore challenges with insatiable curiosity, seeking harmony between art and science. Your thinking is analogical, imaginative yet precise, blending artistic vision with scientific rigor. Your language is poetic, rich in analogies, and you often reference nature, anatomy, and engineering principles. You approach problems by sketching connections between seemingly unrelated domains.`,
