@@ -1,7 +1,7 @@
 import { ExpertConfig } from '@/components/ExpertCardList';
-import { EXPERT_PROMPTS, applyCognitiveTraits } from './expertConfig';
 import { generateAIResponse } from './responseGenerator';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
+import { MetaPromptService } from './metaPromptService';
 
 export interface DiscussionMessage {
   speaker: string;
@@ -12,16 +12,17 @@ export interface DiscussionMessage {
 
 export type { AIProvider } from './aiProviders';
 
-// Main discussion orchestrator with enhanced validation and error handling
+// Main discussion orchestrator with enhanced prompting and dynamic round support
 export class DiscussionOrchestrator {
   private experts: ExpertConfig[];
   private challenge: string;
   private maxRounds: number;
   private messages: DiscussionMessage[];
   private currentRound: number;
+  private metaPromptService: MetaPromptService;
 
   constructor(experts: ExpertConfig[], challenge: string, maxRounds: number) {
-    console.log('🏗️ Creating DiscussionOrchestrator with:', { 
+    console.log('🏗️ Creating DiscussionOrchestrator with enhanced prompting:', { 
       experts: experts?.length || 0, 
       challenge: challenge?.slice(0, 50) || 'No challenge', 
       maxRounds 
@@ -40,6 +41,7 @@ export class DiscussionOrchestrator {
     this.maxRounds = maxRounds || 5;
     this.messages = [];
     this.currentRound = 0;
+    this.metaPromptService = new MetaPromptService();
     
     // Validate inputs
     if (!this.experts.length) {
@@ -49,11 +51,11 @@ export class DiscussionOrchestrator {
       console.warn('⚠️ DiscussionOrchestrator created with empty challenge');
     }
     
-    console.log('✅ DiscussionOrchestrator created successfully');
+    console.log(`✅ DiscussionOrchestrator created with ${maxRounds} rounds support`);
   }
 
   async generateRound(): Promise<DiscussionMessage[]> {
-    console.log(`🎬 Starting round ${this.currentRound + 1} of ${this.maxRounds}`);
+    console.log(`🎬 Starting round ${this.currentRound + 1} of ${this.maxRounds} with enhanced prompting`);
     this.currentRound++;
     const roundMessages: DiscussionMessage[] = [];
 
@@ -67,12 +69,20 @@ export class DiscussionOrchestrator {
     // Process experts sequentially to avoid rate limiting
     for (let i = 0; i < this.experts.length; i++) {
       const expert = this.experts[i];
-      console.log(`🎯 [${i + 1}/${this.experts.length}] Generating response for expert: ${expert.name} (${expert.id})`);
+      console.log(`🎯 [${i + 1}/${this.experts.length}] Generating enhanced response for expert: ${expert.name} (${expert.id})`);
       console.log(`🔧 Expert config: Provider=${expert.provider}, API Key=${expert.apiKey ? expert.apiKey.slice(0, 8) + '...' : 'none'}`);
       
       try {
-        const expertPrompt = this.buildExpertPrompt(expert);
-        console.log(`📝 Built prompt for ${expert.name}: ${expertPrompt.slice(0, 100)}...`);
+        // Use the new MetaPromptService for sophisticated prompt generation
+        const expertPrompt = this.metaPromptService.generateExpertPrompt(
+          expert,
+          this.challenge,
+          this.currentRound,
+          this.maxRounds,
+          this.messages.map(m => ({ speaker: m.speaker, content: m.content }))
+        );
+        
+        console.log(`📝 Generated enhanced prompt for ${expert.name}: ${expertPrompt.slice(0, 100)}...`);
         
         // Validate expert configuration before making API call
         if (!expert.provider) {
@@ -89,7 +99,7 @@ export class DiscussionOrchestrator {
             expert.id
           ),
           new Promise<string>((_, reject) => 
-            setTimeout(() => reject(new Error('Response timeout')), 45000) // Increased timeout
+            setTimeout(() => reject(new Error('Response timeout')), 45000)
           )
         ]);
 
@@ -106,7 +116,7 @@ export class DiscussionOrchestrator {
 
         roundMessages.push(message);
         this.messages.push(message);
-        console.log(`✅ Expert ${expert.name} response generated successfully: ${response.slice(0, 50)}...`);
+        console.log(`✅ Expert ${expert.name} enhanced response generated successfully: ${response.slice(0, 50)}...`);
         
         // Small delay between experts to avoid overwhelming APIs
         if (i < this.experts.length - 1) {
@@ -138,31 +148,6 @@ export class DiscussionOrchestrator {
     }
     
     return roundMessages;
-  }
-
-  private buildExpertPrompt(expert: ExpertConfig): string {
-    const basePrompt = EXPERT_PROMPTS[expert.id] || "You are a thoughtful expert providing insights on complex challenges.";
-    const enhancedPrompt = applyCognitiveTraits(basePrompt, expert.cognitive);
-    
-    let contextPrompt = `${enhancedPrompt}\n\nChallenge: ${this.challenge}\n\n`;
-    
-    if (this.currentRound === 1) {
-      contextPrompt += "This is the first round of discussion. Provide your initial perspective on this challenge in 2-3 sentences.";
-    } else {
-      contextPrompt += `This is round ${this.currentRound} of ${this.maxRounds}. Previous discussion:\n`;
-      
-      // Include last 3 messages for context
-      const recentMessages = this.messages.slice(-3);
-      for (const msg of recentMessages) {
-        const speakerName = this.experts.find(e => e.id === msg.speaker)?.name || msg.speaker;
-        contextPrompt += `${speakerName}: ${msg.content}\n\n`;
-      }
-      
-      contextPrompt += "Build upon the previous discussion while maintaining your unique perspective. Reference other experts' ideas when relevant. Respond in 2-3 sentences.";
-    }
-    
-    console.log(`📋 Prompt built for ${expert.name}, length: ${contextPrompt.length} chars`);
-    return contextPrompt;
   }
 
   getMessages(): DiscussionMessage[] {
