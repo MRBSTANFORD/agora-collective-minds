@@ -1,8 +1,9 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* AGORA Design System - Inspired by Pythagorean geometry and golden ratio */
 
 @layer base {
   :root {
@@ -15,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 231 48% 48%; /* AGORA Indigo */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -32,25 +33,23 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 231 48% 48%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* AGORA Custom Properties */
+    --golden-ratio: 1.618;
+    --agora-indigo: 231 48% 48%;
+    --agora-golden: 43 74% 49%;
   }
 
   .dark {
@@ -98,6 +97,133 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+    line-height: calc(1em + 0.5rem);
+  }
+
+  p {
+    line-height: calc(1em + 0.75rem);
+  }
+}
+
+@layer components {
+  /* AGORA Custom Components */
+  .agora-card {
+    @apply bg-white border border-indigo-100 rounded-2xl shadow-lg;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .agora-card:hover {
+    @apply shadow-xl border-indigo-200;
+    transform: translateY(-2px);
+  }
+
+  .agora-gradient {
+    background: linear-gradient(135deg, theme('colors.agora.indigo') 0%, theme('colors.agora.golden') 100%);
+  }
+
+  .agora-text-gradient {
+    @apply bg-gradient-to-r from-indigo-600 to-amber-500 bg-clip-text text-transparent;
+  }
+
+  /* Sacred geometry patterns */
+  .golden-section {
+    aspect-ratio: var(--golden-ratio);
+  }
+
+  /* Smooth animations */
+  .animate-gentle-bounce {
+    animation: gentle-bounce 2s ease-in-out infinite;
+  }
+
+  .animate-subtle-pulse {
+    animation: subtle-pulse 3s ease-in-out infinite;
+  }
+
+  /* Interactive elements */
+  .interactive-scale {
+    transition: transform 0.2s ease-out;
+  }
+
+  .interactive-scale:hover {
+    transform: scale(1.02);
+  }
+
+  .interactive-scale:active {
+    transform: scale(0.98);
+  }
+}
+
+@layer utilities {
+  /* Custom utility classes */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .golden-ratio-height {
+    height: calc(100% / var(--golden-ratio));
+  }
+
+  .golden-ratio-width {
+    width: calc(100% * var(--golden-ratio));
+  }
+}
+
+/* Custom keyframes */
+@keyframes gentle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-indigo-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-indigo-400;
+}
+
+/* Focus styles for accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-break-before {
+    break-before: page;
   }
 }
