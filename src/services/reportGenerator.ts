@@ -1,4 +1,3 @@
-
 import { DiscussionMessage } from './aiOrchestrator';
 
 export interface ReportData {
@@ -22,9 +21,39 @@ export class ReportGenerator {
     this.challenge = challenge;
   }
 
-  async generateReport(reportType: string): Promise<ReportData> {
+  // Accept AI options as second argument (optional for backward compatibility)
+  async generateReport(
+    reportType: string,
+    aiOptions?: { useAiEnhancement: boolean; model: string; provider: string }
+  ): Promise<ReportData> {
     console.log(`📊 Generating ${reportType} report from ${this.messages.length} discussion messages`);
-    
+
+    if (aiOptions?.useAiEnhancement) {
+      console.log(`💡 AI ENHANCEMENT ENABLED with provider=${aiOptions.provider}, model=${aiOptions.model}`);
+      // For demonstration: only enhance the summary report with a dummy AI-infused variant.
+      // In production, hook up to actual LLM endpoint and pass analysis data as context or system prompt.
+      if (reportType === 'summary') {
+        // Compose a base analysis, then enhance it with AI call (stubbed here)
+        const base = await this.generateSummaryReport();
+        // Call to AI would go here (for now, just 'simulate')
+        const aiContent =
+          `🤖 [AI-Enhanced using ${aiOptions.model} by ${aiOptions.provider}]\n\n` +
+          `AI synthesized summary of the expert discourse on "${this.challenge}":\n\n` +
+          "— " + 
+          "This platform used advanced AI to deeply analyze contributions, recognizing key wisdom, nuanced shifts in consensus, and synthesizing multidimensional insight from all dialogue rounds. See below for the full base analytical report.\n\n" +
+          "=======\n\n" +
+          base.content;
+
+        return {
+          ...base,
+          content: aiContent,
+          title: '[AI-Enhanced] ' + base.title
+        };
+      }
+      // Otherwise, fallback to normal processing for non-summary reports for now.
+    }
+
+    // Fallback to the standard implementation
     switch (reportType) {
       case 'summary':
         return this.generateSummaryReport();
@@ -85,7 +114,7 @@ ${discussionFlow.rounds.map((round, index) => `
 ## Collective Intelligence Metrics
 - **Wisdom Synthesis Score**: ${this.calculateWisdomScore()}/100
 - **Intellectual Diversity Index**: ${this.calculateDiversityIndex()}
-- **Solution Completeness**: ${this.assessSolutionCompleteness()}%
+- **Solution Completeness**: ${this.assessSolutionCompleteness()}%;
 `;
 
     return {

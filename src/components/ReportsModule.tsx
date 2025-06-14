@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { ReportGenerator, ReportData, ReportGenerationStatus } from '@/services/
 import { FileGenerator } from '@/services/fileGenerator';
 import { DiscussionMessage } from '@/services/aiOrchestrator';
 import { useToast } from "@/hooks/use-toast";
+import { useAvailableModels } from "@/hooks/useAvailableModels";
 
 interface ReportsModuleProps {
   discussionMessages?: DiscussionMessage[];
@@ -27,6 +27,27 @@ const ReportsModule = ({
   const [reportStatuses, setReportStatuses] = useState<ReportGenerationStatus>({});
   const [generatedReports, setGeneratedReports] = useState<Record<string, ReportData>>({});
   const [reportGenerator, setReportGenerator] = useState<ReportGenerator | null>(null);
+
+  // AI Enhancement -- new logic
+  const [useAiEnhancement, setUseAiEnhancement] = useState(false);
+  const [selectedAiProvider, setSelectedAiProvider] = useState<string>('OpenAI');
+  const [selectedAiModel, setSelectedAiModel] = useState<string>('');
+
+  // For model selection dropdowns
+  const { models: availableModels } = useAvailableModels([selectedAiProvider]);
+  const modelOptionsForSelectedProvider =
+    availableModels[selectedAiProvider]?.map(m => ({
+      label: m.label + (m.free ? " (Free)" : " (Paid)"),
+      value: m.value,
+    })) || [];
+
+  useEffect(() => {
+    // Set a default model when provider changes
+    if (modelOptionsForSelectedProvider.length && !modelOptionsForSelectedProvider.find(m => m.value === selectedAiModel)) {
+      setSelectedAiModel(modelOptionsForSelectedProvider[0].value);
+    }
+    // eslint-disable-next-line
+  }, [selectedAiProvider, availableModels]);
 
   const reportTypes = [
     {
@@ -131,11 +152,18 @@ const ReportsModule = ({
     try {
       // Generate reports sequentially to avoid overwhelming the system
       for (const reportType of reportTypes) {
-        console.log(`📊 Generating ${reportType.title}...`);
+        console.log(`📊 Generating ${reportType.title} (${useAiEnhancement ? "AI-Enhanced" : "Analytical"})`);
         setReportStatuses(prev => ({ ...prev, [reportType.id]: 'generating' }));
 
         try {
-          const report = await reportGenerator.generateReport(reportType.id);
+          const report = await reportGenerator.generateReport(
+            reportType.id,
+            {
+              useAiEnhancement,
+              model: selectedAiModel,
+              provider: selectedAiProvider,
+            }
+          );
           setGeneratedReports(prev => ({ ...prev, [reportType.id]: report }));
           setReportStatuses(prev => ({ ...prev, [reportType.id]: 'completed' }));
           console.log(`✅ ${reportType.title} generated successfully`);
@@ -236,6 +264,44 @@ const ReportsModule = ({
           >
             {generatingReports ? 'Generating...' : 'Generate All Reports'}
           </Button>
+        </div>
+
+        {/* ===== AI Enhancement Controls ===== */}
+        <div className="flex flex-col md:flex-row gap-3 items-center mb-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useAiEnhancement}
+              onChange={e => setUseAiEnhancement(e.target.checked)}
+              className="form-checkbox"
+            />
+            <span className="text-sm text-indigo-700 font-medium">Enable AI Enhancement</span>
+          </label>
+
+          {useAiEnhancement && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-700 font-medium">Provider:</span>
+              <select
+                className="text-sm border rounded px-2 py-1"
+                value={selectedAiProvider}
+                onChange={e => setSelectedAiProvider(e.target.value)}
+              >
+                {Object.keys(availableModels).map(provider => (
+                  <option key={provider} value={provider}>{provider}</option>
+                ))}
+              </select>
+              <span className="text-xs text-slate-700 font-medium">Model:</span>
+              <select
+                className="text-sm border rounded px-2 py-1"
+                value={selectedAiModel}
+                onChange={e => setSelectedAiModel(e.target.value)}
+              >
+                {modelOptionsForSelectedProvider.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {!isDiscussionComplete && (
