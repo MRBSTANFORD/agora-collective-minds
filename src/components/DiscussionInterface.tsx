@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,10 +7,25 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Play, Pause, RotateCcw, MessageCircle, Clock } from 'lucide-react';
 
-const DiscussionInterface = ({ challenge }) => {
+const DiscussionInterface = ({
+  challenge,
+  discussionConfig,
+}: {
+  challenge: string;
+  discussionConfig?: import('./DiscussionConfigPanel').DiscussionConfig;
+}) => {
+  // Accept config
+  const config = discussionConfig;
+
+  // Use rounds, expert config for simulation
+  const [maxRounds, setMaxRounds] = useState(config?.rounds || 5);
+
+  useEffect(() => {
+    setMaxRounds(config?.rounds || 5);
+  }, [config?.rounds]);
+
   const [isRunning, setIsRunning] = useState(false);
   const [currentRound, setCurrentRound] = useState(0);
-  const [maxRounds, setMaxRounds] = useState(5);
   const [progress, setProgress] = useState(0);
   const [messages, setMessages] = useState([]);
   const [currentSpeaker, setCurrentSpeaker] = useState(null);

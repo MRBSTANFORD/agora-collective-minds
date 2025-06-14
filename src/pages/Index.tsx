@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,14 +9,18 @@ import { ArrowRight, Users, Brain, Lightbulb, BookOpen, Columns, Flame, Scroll }
 import ExpertProfiles from '@/components/ExpertProfiles';
 import DiscussionInterface from '@/components/DiscussionInterface';
 import ReportsModule from '@/components/ReportsModule';
+import { DiscussionConfigPanel, DiscussionConfig } from "@/components/DiscussionConfigPanel";
 
 const Index = () => {
   const [challenge, setChallenge] = useState('');
   const [activeTab, setActiveTab] = useState('home');
   const [discussionStarted, setDiscussionStarted] = useState(false);
 
+  // Symposium config state (see new panel)
+  const [discussionConfig, setDiscussionConfig] = useState<DiscussionConfig | undefined>(undefined);
+
   const handleStartDiscussion = () => {
-    if (challenge.trim()) {
+    if (challenge.trim() && discussionConfig) {
       setDiscussionStarted(true);
       setActiveTab('discussion');
     }
@@ -136,6 +139,13 @@ const Index = () => {
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-400 to-transparent"></div>
                   
+                  <div className="flex justify-end mb-2">
+                    <DiscussionConfigPanel
+                      initialConfig={discussionConfig}
+                      onChange={setDiscussionConfig}
+                    />
+                  </div>
+                  
                   <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
                       <div className="flex items-center justify-center mb-6">
@@ -180,7 +190,7 @@ const Index = () => {
                         <Button
                           onClick={handleStartDiscussion}
                           className="px-12 py-4 text-lg font-light tracking-wider text-white bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 shadow-lg hover:shadow-xl transition-all duration-300 rounded-full"
-                          disabled={!challenge.trim()}
+                          disabled={!challenge.trim() || !discussionConfig}
                         >
                           Convene the Symposium
                           <ArrowRight className="w-5 h-5 ml-3" />
@@ -254,7 +264,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="discussion" className="mt-0">
-            <DiscussionInterface challenge={challenge} />
+            <DiscussionInterface challenge={challenge} discussionConfig={discussionConfig} />
           </TabsContent>
 
           <TabsContent value="reports" className="mt-0">
