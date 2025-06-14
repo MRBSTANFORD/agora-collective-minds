@@ -1,15 +1,10 @@
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, RotateCcw, MessageCircle, Clock, Users, Loader2, FastForward, Rewind, BookmarkPlus, Share2, BarChart3, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
 import { useToast } from "@/hooks/use-toast";
+import DiscussionHeader from './discussion/DiscussionHeader';
+import DiscussionControls from './discussion/DiscussionControls';
+import ExpertsPanel from './discussion/ExpertsPanel';
+import MessagesPanel from './discussion/MessagesPanel';
 
 const DiscussionInterface = ({
   challenge,
@@ -48,6 +43,7 @@ const DiscussionInterface = ({
     }
   }, [config?.rounds, config?.experts, challenge]);
 
+  // Discussion state
   const [isRunning, setIsRunning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentRound, setCurrentRound] = useState(0);
@@ -193,7 +189,7 @@ const DiscussionInterface = ({
       console.log('🎯 Calling generateNextRound after state update...');
       generateNextRound();
     }, 100);
-  }, [orchestrator, challenge, config?.experts, maxRounds, isRunning, isGenerating]);
+  }, [orchestrator, challenge, config?.experts, maxRounds, isRunning, isGenerating, toast]);
 
   const generateNextRound = useCallback(async () => {
     console.log('🔄 generateNextRound called with state:', {
@@ -316,7 +312,7 @@ const DiscussionInterface = ({
     }
     
     setIsGenerating(false);
-  }, [orchestrator, isRunning, isGenerating, maxRounds, discussionSpeed]);
+  }, [orchestrator, isRunning, isGenerating, maxRounds, discussionSpeed, toast]);
 
   const simulateTyping = useCallback(async (text: string) => {
     const words = text.split(' ');
@@ -388,281 +384,47 @@ const DiscussionInterface = ({
 
   return (
     <div className="space-y-8 py-8">
-      {/* Enhanced Header */}
-      <Card className="bg-gradient-to-r from-slate-50 to-amber-50/30 border-amber-200 shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img 
-                src="/lovable-uploads/d82ffa24-857d-498f-927d-b12fd2bd58a6.png" 
-                alt="AGORA Logo" 
-                className="w-12 h-12 object-contain"
-              />
-              <div>
-                <CardTitle className="text-2xl font-thin tracking-wide text-slate-800">
-                  Active Symposium
-                </CardTitle>
-                <CardDescription className="text-slate-600">
-                  {experts.length} immortal minds • {maxRounds} rounds of discourse
-                </CardDescription>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                Round {currentRound} of {maxRounds}
-              </Badge>
-              {(isRunning || isGenerating) && (
-                <Badge className="bg-green-100 text-green-700 animate-pulse border-green-200">
-                  <MessageCircle className="w-3 h-3 mr-1" />
-                  Discussion Active
-                </Badge>
-              )}
-              {hasError && (
-                <Badge variant="destructive" className="animate-pulse">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  Issues Detected
-                </Badge>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="bg-white/80 rounded-lg p-4 border border-amber-100">
-            <h3 className="font-medium text-slate-800 mb-2">Challenge Under Discussion:</h3>
-            <p className="text-slate-700 leading-relaxed">{challenge || "No challenge specified yet"}</p>
-          </div>
+      <DiscussionHeader
+        challenge={challenge}
+        expertsCount={experts.length}
+        maxRounds={maxRounds}
+        currentRound={currentRound}
+        progress={progress}
+        roundProgress={roundProgress}
+        isRunning={isRunning}
+        isGenerating={isGenerating}
+        hasError={hasError}
+        orchestrator={orchestrator}
+      />
 
-          {/* Show initialization status */}
-          {!orchestrator && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-yellow-800">
-                <AlertCircle className="w-4 h-4" />
-                <span className="font-medium">Discussion Not Ready</span>
-              </div>
-              <p className="text-yellow-700 text-sm mt-1">
-                Please configure experts and enter a challenge to begin the symposium.
-              </p>
-            </div>
-          )}
+      <div className="space-y-4">
+        <DiscussionControls
+          isRunning={isRunning}
+          isGenerating={isGenerating}
+          orchestrator={orchestrator}
+          challenge={challenge}
+          discussionSpeed={discussionSpeed}
+          onStart={startDiscussion}
+          onPause={pauseDiscussion}
+          onReset={resetDiscussion}
+          onSpeedChange={adjustSpeed}
+        />
+      </div>
 
-          <div className="space-y-4">
-            {/* Enhanced Progress Section */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700">Symposium Progress</span>
-                <span className="text-sm text-slate-500">{Math.round(progress)}% complete</span>
-              </div>
-              <Progress value={progress} className="h-3 bg-slate-200" />
-              
-              {/* Round by round progress */}
-              <div className="flex gap-2 mt-3">
-                {Array.from({ length: maxRounds }, (_, i) => (
-                  <div key={i} className="flex-1">
-                    <div className="text-xs text-slate-500 mb-1">R{i + 1}</div>
-                    <Progress 
-                      value={roundProgress[i] || 0} 
-                      className="h-2 bg-slate-100"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Enhanced Controls */}
-            <div className="flex items-center justify-between">
-              <div className="flex space-x-4">
-                {!isRunning ? (
-                  <Button 
-                    onClick={startDiscussion} 
-                    className="bg-slate-700 hover:bg-slate-800 text-white"
-                    disabled={!orchestrator || !challenge?.trim() || isGenerating}
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Begin Symposium
-                  </Button>
-                ) : (
-                  <Button onClick={pauseDiscussion} variant="outline" className="border-slate-300">
-                    <Pause className="w-4 h-4 mr-2" />
-                    Pause Discussion
-                  </Button>
-                )}
-                <Button onClick={resetDiscussion} variant="outline" className="border-slate-300">
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset
-                </Button>
-              </div>
-
-              {/* Speed Controls */}
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-slate-600">Speed:</span>
-                <div className="flex space-x-1">
-                  {[0.5, 1, 2].map(speed => (
-                    <Button
-                      key={speed}
-                      onClick={() => adjustSpeed(speed)}
-                      variant={discussionSpeed === speed ? "default" : "outline"}
-                      size="sm"
-                      className="px-3 py-1 text-xs"
-                    >
-                      {speed}x
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Enhanced Discussion Panel */}
       <div className="grid lg:grid-cols-4 gap-8">
-        {/* Enhanced Experts Panel */}
-        <Card className="lg:col-span-1 border-amber-100">
-          <CardHeader>
-            <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Active Participants
-            </CardTitle>
-            <CardDescription>The assembled minds of history</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[500px]">
-              <div className="space-y-3">
-                {experts.map((expert) => (
-                  <div 
-                    key={expert.id}
-                    className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-300 border ${
-                      currentSpeaker === expert.id 
-                        ? `${expert.color} shadow-md scale-105 animate-pulse` 
-                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200'
-                    }`}
-                  >
-                    <Avatar className="w-10 h-10 border-2 border-white shadow-sm">
-                      <AvatarImage src={expert.image} alt={expert.name} />
-                      <AvatarFallback className="text-xs">{expert.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">
-                        {expert.name}
-                      </p>
-                      <p className="text-xs text-slate-600 truncate">
-                        {expert.domain}
-                      </p>
-                      {currentSpeaker === expert.id && (
-                        <div className="flex items-center mt-1">
-                          <Loader2 className="w-3 h-3 animate-spin text-green-600 mr-2" />
-                          <span className="text-xs text-green-600 font-medium">Contemplating...</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+        <ExpertsPanel
+          experts={experts}
+          currentSpeaker={currentSpeaker}
+        />
 
-        {/* Enhanced Messages Panel */}
-        <Card className="lg:col-span-3 border-amber-100">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg text-slate-800">Symposium Discourse</CardTitle>
-                <CardDescription>Real-time dialogue among the immortal minds</CardDescription>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" className="text-slate-600">
-                  <BookmarkPlus className="w-4 h-4 mr-1" />
-                  Bookmark
-                </Button>
-                <Button variant="ghost" size="sm" className="text-slate-600">
-                  <Share2 className="w-4 h-4 mr-1" />
-                  Share
-                </Button>
-                <Button variant="ghost" size="sm" className="text-slate-600">
-                  <BarChart3 className="w-4 h-4 mr-1" />
-                  Analytics
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[500px] px-6">
-              {messages.length === 0 && !currentSpeaker ? (
-                <div className="flex items-center justify-center h-full text-slate-500">
-                  <div className="text-center py-16">
-                    <MessageCircle className="w-16 h-16 mx-auto mb-6 text-slate-300" />
-                    <p className="text-lg font-light">Begin the symposium to witness</p>
-                    <p className="text-lg font-light">the convergence of timeless wisdom</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6 py-6">
-                  {messages.map((message, index) => {
-                    const expert = getExpertInfo(message.speaker);
-                    return (
-                      <div key={index} className="flex space-x-4 animate-fade-in">
-                        <Avatar className="w-12 h-12 border-2 border-white shadow-lg">
-                          <AvatarImage src={expert?.image} alt={expert?.name} />
-                          <AvatarFallback className="text-sm">{expert?.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <p className="text-sm font-medium text-slate-900">{expert?.name}</p>
-                            <Badge variant="outline" className="text-xs border-amber-200 text-amber-700">
-                              Round {message.round}
-                            </Badge>
-                            <span className="text-xs text-slate-500 flex items-center">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {getRelativeTime(message.timestamp)}
-                            </span>
-                          </div>
-                          <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                            <p className="text-sm text-slate-700 leading-relaxed">{message.content}</p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {/* Typing indicator */}
-                  {currentSpeaker && (
-                    <div className="flex space-x-4 animate-fade-in">
-                      <Avatar className="w-12 h-12 border-2 border-white shadow-lg">
-                        <AvatarImage src={getExpertInfo(currentSpeaker)?.image} alt={getExpertInfo(currentSpeaker)?.name} />
-                        <AvatarFallback className="text-sm">{getExpertInfo(currentSpeaker)?.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <p className="text-sm font-medium text-slate-900">{getExpertInfo(currentSpeaker)?.name}</p>
-                          <Badge className="text-xs bg-green-100 text-green-700 animate-pulse">
-                            Thinking...
-                          </Badge>
-                        </div>
-                        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-                          {typingMessage ? (
-                            <p className="text-sm text-slate-700 leading-relaxed">
-                              {typingMessage}
-                              <span className="animate-pulse">|</span>
-                            </p>
-                          ) : (
-                            <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
+        <MessagesPanel
+          messages={messages}
+          currentSpeaker={currentSpeaker}
+          typingMessage={typingMessage}
+          experts={experts}
+          getExpertInfo={getExpertInfo}
+          getRelativeTime={getRelativeTime}
+        />
       </div>
     </div>
   );
