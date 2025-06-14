@@ -3,12 +3,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AGORA Design System - Inspired by Pythagorean geometry and golden ratio */
+/* AGORA Design System - Greek Classical & Modern Minimalist Fusion */
 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 215 28% 17%; /* Dark slate from logo */
+    --foreground: 215 28% 17%; /* AGORA Navy */
 
     --card: 0 0% 100%;
     --card-foreground: 215 28% 17%;
@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 28% 17%;
 
-    --primary: 215 28% 17%; /* AGORA Dark Blue */
+    --primary: 215 28% 17%; /* AGORA Navy */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -25,7 +25,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 43 74% 49%; /* AGORA Golden */
     --accent-foreground: 215 28% 17%;
 
     --destructive: 0 84.2% 60.2%;
@@ -35,59 +35,39 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 215 28% 17%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 215 28% 17%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 215 28% 17%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-
-    /* AGORA Custom Properties */
+    /* AGORA Sacred Geometry */
     --golden-ratio: 1.618;
-    --agora-navy: 215 28% 17%;
-    --agora-golden: 43 74% 49%;
+    --classical-spacing: calc(1rem * var(--golden-ratio));
+    --temple-height: calc(100vh / var(--golden-ratio));
+    
+    /* Greek-inspired proportions */
+    --doric-ratio: 1.4;
+    --ionic-ratio: 1.6;
+    --corinthian-ratio: 1.8;
   }
 
   .dark {
     --background: 215 28% 17%;
     --foreground: 210 40% 98%;
-
     --card: 215 28% 17%;
     --card-foreground: 210 40% 98%;
-
     --popover: 215 28% 17%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 210 40% 98%;
     --primary-foreground: 215 28% 17%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --accent: 43 74% 49%;
+    --accent-foreground: 215 28% 17%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 215 28% 17%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -97,138 +77,359 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground;
+    font-family: 'Inter', 'system-ui', '-apple-system', 'sans-serif';
+    font-feature-settings: "rlig" 1, "calt" 1, "kern" 1;
+    letter-spacing: 0.01em;
+    line-height: calc(1em + 0.618rem); /* Golden ratio line height */
   }
 
-  /* Typography improvements */
+  /* Greek-inspired typography */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
+    font-weight: 300; /* Thin, elegant headers */
+    letter-spacing: 0.02em;
     line-height: calc(1em + 0.5rem);
   }
 
-  p {
-    line-height: calc(1em + 0.75rem);
+  .font-thin {
+    font-weight: 100;
+  }
+
+  .font-light {
+    font-weight: 300;
+  }
+
+  /* Classical text treatment */
+  .tracking-wider {
+    letter-spacing: 0.05em;
+  }
+
+  .tracking-wide {
+    letter-spacing: 0.025em;
   }
 }
 
 @layer components {
-  /* AGORA Custom Components */
+  /* Greek Temple Architecture Components */
+  .temple-column {
+    position: relative;
+  }
+
+  .temple-column::before {
+    content: '';
+    position: absolute;
+    top: -1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 0.25rem;
+    background: linear-gradient(to right, transparent, #64748b, transparent);
+  }
+
+  .temple-column::after {
+    content: '';
+    position: absolute;
+    bottom: -1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120%;
+    height: 0.5rem;
+    background: linear-gradient(to right, transparent, #64748b, transparent);
+  }
+
+  /* Greek Key Pattern */
+  .greek-key::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      #DAA520 0px,
+      #DAA520 8px,
+      transparent 8px,
+      transparent 12px,
+      #DAA520 12px,
+      #DAA520 16px,
+      transparent 16px,
+      transparent 20px
+    );
+  }
+
+  /* Sacred Geometry Cards */
   .agora-card {
-    @apply bg-white border border-slate-200 rounded-2xl shadow-lg;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    @apply bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-lg;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .agora-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 3rem;
+    height: 3rem;
+    background: linear-gradient(135deg, #DAA520, transparent);
+    opacity: 0.1;
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
   }
 
   .agora-card:hover {
-    @apply shadow-xl border-amber-300;
-    transform: translateY(-2px);
+    @apply shadow-2xl border-amber-300/50;
+    transform: translateY(-0.5rem) scale(1.02);
   }
 
+  /* Classical Buttons */
+  .classical-button {
+    @apply px-8 py-3 text-white font-light tracking-wider rounded-full;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 1px solid rgba(218, 165, 32, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .classical-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+  }
+
+  .classical-button:hover::before {
+    left: 100%;
+  }
+
+  .classical-button:hover {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+    border-color: rgba(218, 165, 32, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(30, 41, 59, 0.2);
+  }
+
+  /* Geometric Separators */
+  .classical-divider {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      #DAA520,
+      transparent
+    );
+    position: relative;
+  }
+
+  .classical-divider::before {
+    content: '◆';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    color: #DAA520;
+    padding: 0 1rem;
+    font-size: 0.75rem;
+  }
+
+  /* Symposium Layout */
+  .symposium-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: calc(1rem * var(--golden-ratio));
+  }
+
+  /* Philosophical Text */
+  .philosophical-text {
+    @apply text-slate-600 leading-relaxed;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  /* Classical Gradients */
   .agora-gradient {
     background: linear-gradient(135deg, #1e293b 0%, #DAA520 100%);
   }
 
-  .agora-text-gradient {
-    @apply bg-gradient-to-r from-slate-700 to-amber-500 bg-clip-text text-transparent;
+  .marble-gradient {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   }
 
-  /* Sacred geometry patterns */
-  .golden-section {
-    aspect-ratio: var(--golden-ratio);
+  .golden-gradient {
+    background: linear-gradient(135deg, #DAA520 0%, #F4D03F 100%);
   }
 
-  /* Pentagon-inspired elements */
-  .pentagon-shape {
-    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  /* Wisdom Badge */
+  .wisdom-badge {
+    @apply inline-flex items-center px-4 py-2 rounded-full text-sm font-light;
+    background: rgba(248, 250, 252, 0.9);
+    border: 1px solid rgba(218, 165, 32, 0.2);
+    backdrop-filter: blur(8px);
   }
 
-  /* Smooth animations */
-  .animate-gentle-bounce {
-    animation: gentle-bounce 2s ease-in-out infinite;
+  /* Ionic Columns Animation */
+  .ionic-column {
+    position: relative;
+    animation: subtle-rise 0.8s ease-out;
   }
 
-  .animate-subtle-pulse {
-    animation: subtle-pulse 3s ease-in-out infinite;
+  @keyframes subtle-rise {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  /* Interactive elements */
-  .interactive-scale {
-    transition: transform 0.2s ease-out;
+  /* Sacred Circle */
+  .sacred-circle {
+    @apply rounded-full border-2 border-slate-200;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
   }
 
-  .interactive-scale:hover {
-    transform: scale(1.02);
+  .sacred-circle::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(45deg, transparent, #DAA520, transparent);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
 
-  .interactive-scale:active {
-    transform: scale(0.98);
+  .sacred-circle:hover::before {
+    opacity: 1;
   }
 }
 
 @layer utilities {
-  /* Custom utility classes */
+  /* Classical Proportions */
+  .doric-height {
+    height: calc(100% / var(--doric-ratio));
+  }
+
+  .ionic-height {
+    height: calc(100% / var(--ionic-ratio));
+  }
+
+  .corinthian-height {
+    height: calc(100% / var(--corinthian-ratio));
+  }
+
+  .golden-section {
+    aspect-ratio: var(--golden-ratio);
+  }
+
+  .golden-width {
+    width: calc(100% * var(--golden-ratio));
+  }
+
+  .golden-height {
+    height: calc(100% / var(--golden-ratio));
+  }
+
+  /* Classical Spacing */
+  .space-classical {
+    gap: var(--classical-spacing);
+  }
+
+  .p-classical {
+    padding: var(--classical-spacing);
+  }
+
+  .m-classical {
+    margin: var(--classical-spacing);
+  }
+
+  /* Text Balance for Headlines */
   .text-balance {
     text-wrap: balance;
   }
 
-  .golden-ratio-height {
-    height: calc(100% / var(--golden-ratio));
-  }
-
-  .golden-ratio-width {
-    width: calc(100% * var(--golden-ratio));
-  }
-}
-
-/* Custom keyframes */
-@keyframes gentle-bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
+  /* Philosophical Justification */
+  .text-philosophical {
+    text-align: justify;
+    hyphens: auto;
+    text-justify: inter-word;
   }
 }
 
-@keyframes subtle-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-/* Scrollbar styling */
+/* Custom Scrollbar - Classical Style */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 rounded-full;
+  @apply bg-slate-100 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-indigo-300 rounded-full;
+  background: linear-gradient(to bottom, #DAA520, #B8860B);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-indigo-400;
+  background: linear-gradient(to bottom, #B8860B, #DAA520);
 }
 
-/* Focus styles for accessibility */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+/* Focus Styles - Classical */
+.focus-classical {
+  @apply focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2;
 }
 
-/* Print styles */
+/* Print Styles - Preserve Classical Layout */
 @media print {
   .no-print {
     display: none !important;
   }
   
-  .print-break-before {
+  .print-classical {
     break-before: page;
+    font-family: 'Times New Roman', serif;
+  }
+  
+  .agora-card {
+    @apply shadow-none border border-slate-400;
+    break-inside: avoid;
+  }
+}
+
+/* Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .agora-card {
+    @apply border-2 border-slate-800;
+  }
+  
+  .classical-button {
+    @apply border-2 border-slate-800;
   }
 }
