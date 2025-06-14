@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -183,8 +184,8 @@ const ExpertProfiles = () => {
                   alt={expert.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    // Fallback to a placeholder if Wikipedia image fails
-                    e.target.src = `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face`;
+                    const target = e.target as HTMLImageElement;
+                    target.src = `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face`;
                   }}
                 />
               </div>
