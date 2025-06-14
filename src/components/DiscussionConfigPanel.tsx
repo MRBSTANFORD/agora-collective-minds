@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -12,7 +11,8 @@ import {
   DrawerTitle,
   DrawerDescription,
   DrawerTrigger,
-} from "@/components/ui/drawer"; // <-- Fixed import here
+} from "@/components/ui/drawer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Settings } from "lucide-react";
 
 const defaultExperts = [
@@ -145,59 +145,64 @@ export function DiscussionConfigPanel({
             />
             <span className="ml-2 text-sm font-light text-slate-600">{rounds} discussion rounds</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {experts.map((ex) => (
-              <Card key={ex.id} className="mb-4 bg-slate-50 border-amber-100">
-                <CardHeader>
-                  <CardTitle className="text-base font-medium">{ex.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-2">
-                    <Label>Creativity</Label>
-                    <Slider
-                      value={[ex.cognitive.creativity]}
-                      min={0}
-                      max={100}
-                      onValueChange={([v]) => handleTrait(ex.id, "creativity", v)}
-                      className="mt-1"
-                    />
-                    <span className="text-xs text-slate-500 ml-2">{ex.cognitive.creativity}%</span>
-                  </div>
-                  <div className="mb-2">
-                    <Label>Skepticism</Label>
-                    <Slider
-                      value={[ex.cognitive.skepticism]}
-                      min={0}
-                      max={100}
-                      onValueChange={([v]) => handleTrait(ex.id, "skepticism", v)}
-                      className="mt-1"
-                    />
-                    <span className="text-xs text-slate-500 ml-2">{ex.cognitive.skepticism}%</span>
-                  </div>
-                  <div className="mb-2">
-                    <Label>Optimism</Label>
-                    <Slider
-                      value={[ex.cognitive.optimism]}
-                      min={0}
-                      max={100}
-                      onValueChange={([v]) => handleTrait(ex.id, "optimism", v)}
-                      className="mt-1"
-                    />
-                    <span className="text-xs text-slate-500 ml-2">{ex.cognitive.optimism}%</span>
-                  </div>
-                  <div className="mt-2">
-                    <Label>API Key</Label>
-                    <Input
-                      placeholder="Leave blank for HuggingFace"
-                      type="password"
-                      value={ex.apiKey}
-                      onChange={e => handleApiKey(ex.id, e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="relative">
+            {/* Scroll for expert list */}
+            <ScrollArea className="max-h-[420px] md:max-h-[560px] rounded-lg border border-slate-100 pr-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-2 px-2">
+                {experts.map((ex) => (
+                  <Card key={ex.id} className="mb-4 bg-slate-50 border-amber-100">
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium">{ex.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-2">
+                        <Label>Creativity</Label>
+                        <Slider
+                          value={[ex.cognitive.creativity]}
+                          min={0}
+                          max={100}
+                          onValueChange={([v]) => handleTrait(ex.id, "creativity", v)}
+                          className="mt-1"
+                        />
+                        <span className="text-xs text-slate-500 ml-2">{ex.cognitive.creativity}%</span>
+                      </div>
+                      <div className="mb-2">
+                        <Label>Skepticism</Label>
+                        <Slider
+                          value={[ex.cognitive.skepticism]}
+                          min={0}
+                          max={100}
+                          onValueChange={([v]) => handleTrait(ex.id, "skepticism", v)}
+                          className="mt-1"
+                        />
+                        <span className="text-xs text-slate-500 ml-2">{ex.cognitive.skepticism}%</span>
+                      </div>
+                      <div className="mb-2">
+                        <Label>Optimism</Label>
+                        <Slider
+                          value={[ex.cognitive.optimism]}
+                          min={0}
+                          max={100}
+                          onValueChange={([v]) => handleTrait(ex.id, "optimism", v)}
+                          className="mt-1"
+                        />
+                        <span className="text-xs text-slate-500 ml-2">{ex.cognitive.optimism}%</span>
+                      </div>
+                      <div className="mt-2">
+                        <Label>API Key</Label>
+                        <Input
+                          placeholder="Leave blank for HuggingFace"
+                          type="password"
+                          value={ex.apiKey}
+                          onChange={e => handleApiKey(ex.id, e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
           <div className="flex w-full justify-end">
             <Button onClick={handleSave} className="bg-amber-600 text-white">
