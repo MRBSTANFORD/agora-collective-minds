@@ -10,7 +10,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="relative">
           <img 
-            src="/lovable-uploads/7c086ec5-9c76-4818-bcd0-24ba342a765b.png" 
+            src="/lovable-uploads/442cd3f7-0a66-40f7-bdb1-4874b741a816.png" 
             alt="AGORA Logo Background" 
             className="w-40 h-40 object-contain opacity-10 blur-sm"
           />
@@ -30,7 +30,7 @@ const HeroSection = () => {
         <div className="flex justify-center mb-12">
           <div className="relative">
             <img 
-              src="/lovable-uploads/7c086ec5-9c76-4818-bcd0-24ba342a765b.png" 
+              src="/lovable-uploads/442cd3f7-0a66-40f7-bdb1-4874b741a816.png"
               alt="AGORA Logo" 
               className="w-32 h-32 object-contain drop-shadow-2xl"
             />
