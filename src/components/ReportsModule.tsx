@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { DiscussionMessage } from '@/services/aiOrchestrator';
 import { useToast } from "@/hooks/use-toast";
 import { useAvailableModels } from "@/hooks/useAvailableModels";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 
 interface ReportsModuleProps {
   discussionMessages?: DiscussionMessage[];
@@ -18,117 +20,128 @@ interface ReportsModuleProps {
   isDiscussionComplete?: boolean;
 }
 
-const ReportsModule = ({ 
+// Memoized static report types configuration
+const REPORT_TYPES = [
+  {
+    id: 'summary',
+    title: 'Discussion Summary',
+    description: 'Comprehensive overview of all expert perspectives and key insights',
+    icon: FileText,
+    color: 'bg-blue-100 text-blue-700',
+  },
+  {
+    id: 'consensus',
+    title: 'Consensus & Shared Ideas',
+    description: 'Areas of agreement and common ground among experts',
+    icon: Users,
+    color: 'bg-green-100 text-green-700',
+  },
+  {
+    id: 'divergent',
+    title: 'Divergent & Dissenting Opinions',
+    description: 'Contrasting viewpoints and creative tensions in the discussion',
+    icon: BarChart3,
+    color: 'bg-orange-100 text-orange-700',
+  },
+  {
+    id: 'innovative',
+    title: 'Innovative & Creative Solutions',
+    description: 'Novel approaches and breakthrough ideas from the collective wisdom',
+    icon: Lightbulb,
+    color: 'bg-yellow-100 text-yellow-700',
+  },
+  {
+    id: 'practical',
+    title: 'Practical Recommendations',
+    description: 'Actionable steps and implementation strategies',
+    icon: CheckCircle,
+    color: 'bg-indigo-100 text-indigo-700',
+  },
+  {
+    id: 'ethical',
+    title: 'Ethical & Societal Implications',
+    description: 'Moral considerations and broader social impact analysis',
+    icon: Shield,
+    color: 'bg-purple-100 text-purple-700',
+  },
+  {
+    id: 'historical',
+    title: 'Historical & Contextual Analysis',
+    description: 'Lessons from history and contextual frameworks',
+    icon: History,
+    color: 'bg-amber-100 text-amber-700',
+  },
+  {
+    id: 'personal',
+    title: 'Personalized Action Plan',
+    description: 'Customized recommendations based on your specific context',
+    icon: User,
+    color: 'bg-pink-100 text-pink-700',
+  }
+];
+
+const ReportsModule = React.memo<ReportsModuleProps>(({ 
   discussionMessages = [], 
   challenge = 'Sample Challenge', 
   isDiscussionComplete = false 
-}: ReportsModuleProps) => {
+}) => {
+  usePerformanceMonitor('ReportsModule', 100);
+  
   const { toast } = useToast();
   const [generatingReports, setGeneratingReports] = useState(false);
   const [reportStatuses, setReportStatuses] = useState<ReportGenerationStatus>({});
   const [generatedReports, setGeneratedReports] = useState<Record<string, ReportData>>({});
   const [reportGenerator, setReportGenerator] = useState<ReportGenerator | null>(null);
 
-  // AI Enhancement -- new logic
+  // AI Enhancement state
   const [useAiEnhancement, setUseAiEnhancement] = useState(false);
   const [selectedAiProvider, setSelectedAiProvider] = useState<string>('OpenAI');
   const [selectedAiModel, setSelectedAiModel] = useState<string>('');
 
-  // For model selection dropdowns
-  const { models: availableModels } = useAvailableModels([selectedAiProvider]);
-  const modelOptionsForSelectedProvider =
+  // Memoized providers array for stable dependencies
+  const providers = useMemo(() => [selectedAiProvider], [selectedAiProvider]);
+  
+  const { models: availableModels } = useAvailableModels(providers);
+
+  // Memoized model options
+  const modelOptionsForSelectedProvider = useMemo(() =>
     availableModels[selectedAiProvider]?.map(m => ({
       label: m.label + (m.free ? " (Free)" : " (Paid)"),
       value: m.value,
-    })) || [];
+    })) || [],
+    [availableModels, selectedAiProvider]
+  );
 
+  // Set default model when provider changes
   useEffect(() => {
-    // Set a default model when provider changes
-    if (modelOptionsForSelectedProvider.length && !modelOptionsForSelectedProvider.find(m => m.value === selectedAiModel)) {
+    if (modelOptionsForSelectedProvider.length && 
+        !modelOptionsForSelectedProvider.find(m => m.value === selectedAiModel)) {
       setSelectedAiModel(modelOptionsForSelectedProvider[0].value);
     }
-    // eslint-disable-next-line
-  }, [selectedAiProvider, availableModels]);
+  }, [selectedAiProvider, modelOptionsForSelectedProvider, selectedAiModel]);
 
-  const reportTypes = [
-    {
-      id: 'summary',
-      title: 'Discussion Summary',
-      description: 'Comprehensive overview of all expert perspectives and key insights',
-      icon: FileText,
-      color: 'bg-blue-100 text-blue-700',
-    },
-    {
-      id: 'consensus',
-      title: 'Consensus & Shared Ideas',
-      description: 'Areas of agreement and common ground among experts',
-      icon: Users,
-      color: 'bg-green-100 text-green-700',
-    },
-    {
-      id: 'divergent',
-      title: 'Divergent & Dissenting Opinions',
-      description: 'Contrasting viewpoints and creative tensions in the discussion',
-      icon: BarChart3,
-      color: 'bg-orange-100 text-orange-700',
-    },
-    {
-      id: 'innovative',
-      title: 'Innovative & Creative Solutions',
-      description: 'Novel approaches and breakthrough ideas from the collective wisdom',
-      icon: Lightbulb,
-      color: 'bg-yellow-100 text-yellow-700',
-    },
-    {
-      id: 'practical',
-      title: 'Practical Recommendations',
-      description: 'Actionable steps and implementation strategies',
-      icon: CheckCircle,
-      color: 'bg-indigo-100 text-indigo-700',
-    },
-    {
-      id: 'ethical',
-      title: 'Ethical & Societal Implications',
-      description: 'Moral considerations and broader social impact analysis',
-      icon: Shield,
-      color: 'bg-purple-100 text-purple-700',
-    },
-    {
-      id: 'historical',
-      title: 'Historical & Contextual Analysis',
-      description: 'Lessons from history and contextual frameworks',
-      icon: History,
-      color: 'bg-amber-100 text-amber-700',
-    },
-    {
-      id: 'personal',
-      title: 'Personalized Action Plan',
-      description: 'Customized recommendations based on your specific context',
-      icon: User,
-      color: 'bg-pink-100 text-pink-700',
-    }
-  ];
-
-  // Initialize report generator when discussion data is available
-  useEffect(() => {
-    if (discussionMessages.length > 0 && challenge) {
-      console.log('📊 Initializing ReportGenerator with discussion data:', {
-        messages: discussionMessages.length,
-        challenge: challenge.slice(0, 50)
-      });
-      setReportGenerator(new ReportGenerator(discussionMessages, challenge));
+  // Initialize report generator - memoized to prevent recreation
+  const initializeReportGenerator = useCallback(() => {
+    if (discussionMessages.length > 0 && challenge && !reportGenerator) {
+      console.log('📊 Initializing ReportGenerator with discussion data');
+      const generator = new ReportGenerator(discussionMessages, challenge);
+      setReportGenerator(generator);
       
       // Reset statuses
       const initialStatuses: ReportGenerationStatus = {};
-      reportTypes.forEach(type => {
+      REPORT_TYPES.forEach(type => {
         initialStatuses[type.id] = 'pending';
       });
       setReportStatuses(initialStatuses);
       setGeneratedReports({});
     }
-  }, [discussionMessages, challenge]);
+  }, [discussionMessages, challenge, reportGenerator]);
 
-  const generateAllReports = async () => {
+  useEffect(() => {
+    initializeReportGenerator();
+  }, [initializeReportGenerator]);
+
+  const generateAllReports = useCallback(async () => {
     if (!reportGenerator) {
       toast({
         title: "No Discussion Data",
@@ -148,16 +161,19 @@ const ReportsModule = ({
     }
 
     setGeneratingReports(true);
-    console.log('🔄 Starting report generation for all report types...');
+    console.log('🔄 Starting report generation...');
 
     try {
-      // Generate reports sequentially to avoid overwhelming the system
-      for (const reportType of reportTypes) {
-        console.log(`📊 Generating ${reportType.title} (${useAiEnhancement ? "AI-Enhanced" : "Analytical"})`);
+      // Generate reports with timeout protection
+      for (const reportType of REPORT_TYPES) {
         setReportStatuses(prev => ({ ...prev, [reportType.id]: 'generating' }));
 
         try {
-          const report = await reportGenerator.generateReport(
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Report generation timeout')), 30000)
+          );
+
+          const reportPromise = reportGenerator.generateReport(
             reportType.id,
             {
               useAiEnhancement,
@@ -165,16 +181,18 @@ const ReportsModule = ({
               provider: selectedAiProvider,
             }
           );
+
+          const report = await Promise.race([reportPromise, timeoutPromise]) as ReportData;
+          
           setGeneratedReports(prev => ({ ...prev, [reportType.id]: report }));
           setReportStatuses(prev => ({ ...prev, [reportType.id]: 'completed' }));
-          console.log(`✅ ${reportType.title} generated successfully`);
         } catch (error) {
           console.error(`❌ Failed to generate ${reportType.title}:`, error);
           setReportStatuses(prev => ({ ...prev, [reportType.id]: 'error' }));
         }
 
         // Small delay between reports
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       toast({
@@ -191,9 +209,9 @@ const ReportsModule = ({
     } finally {
       setGeneratingReports(false);
     }
-  };
+  }, [reportGenerator, isDiscussionComplete, useAiEnhancement, selectedAiModel, selectedAiProvider, toast]);
 
-  const downloadReport = async (reportId: string, format: 'pdf' | 'html') => {
+  const downloadReport = useCallback(async (reportId: string, format: 'pdf' | 'html') => {
     const report = generatedReports[reportId];
     if (!report) {
       toast({
@@ -205,8 +223,6 @@ const ReportsModule = ({
     }
 
     try {
-      console.log(`📥 Downloading ${reportId} as ${format}...`);
-      
       let blob: Blob;
       if (format === 'pdf') {
         blob = await FileGenerator.generatePDF(report);
@@ -229,9 +245,10 @@ const ReportsModule = ({
         variant: "destructive",
       });
     }
-  };
+  }, [generatedReports, toast]);
 
-  const getStatusBadge = (reportId: string) => {
+  // Memoized status badge component
+  const getStatusBadge = useCallback((reportId: string) => {
     const status = reportStatuses[reportId] || 'pending';
     switch (status) {
       case 'completed':
@@ -244,10 +261,23 @@ const ReportsModule = ({
       default:
         return <Badge variant="outline">Pending</Badge>;
     }
-  };
+  }, [reportStatuses]);
 
-  const completedReportsCount = Object.values(reportStatuses).filter(status => status === 'completed').length;
-  const canGenerate = reportGenerator && isDiscussionComplete && !generatingReports;
+  // Memoized calculations
+  const completedReportsCount = useMemo(() => 
+    Object.values(reportStatuses).filter(status => status === 'completed').length,
+    [reportStatuses]
+  );
+
+  const uniqueExpertCount = useMemo(() => 
+    new Set(discussionMessages.map(m => m.speaker)).size,
+    [discussionMessages]
+  );
+
+  const canGenerate = useMemo(() => 
+    reportGenerator && isDiscussionComplete && !generatingReports,
+    [reportGenerator, isDiscussionComplete, generatingReports]
+  );
 
   return (
     <ErrorBoundary>
@@ -268,7 +298,7 @@ const ReportsModule = ({
             </Button>
           </div>
 
-          {/* ===== AI Enhancement Controls ===== */}
+          {/* AI Enhancement Controls */}
           <div className="flex flex-col md:flex-row gap-3 items-center mb-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -314,9 +344,10 @@ const ReportsModule = ({
             </div>
           )}
 
+          {/* Stats Grid */}
           <div className="grid md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-indigo-50 rounded-lg">
-              <div className="text-2xl font-bold text-indigo-600">{reportTypes.length}</div>
+              <div className="text-2xl font-bold text-indigo-600">{REPORT_TYPES.length}</div>
               <div className="text-sm text-indigo-700">Report Types</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -328,9 +359,7 @@ const ReportsModule = ({
               <div className="text-sm text-amber-700">Expert Messages</div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
-                {new Set(discussionMessages.map(m => m.speaker)).size}
-              </div>
+              <div className="text-2xl font-bold text-purple-600">{uniqueExpertCount}</div>
               <div className="text-sm text-purple-700">Expert Voices</div>
             </div>
           </div>
@@ -338,7 +367,7 @@ const ReportsModule = ({
 
         {/* Reports Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {reportTypes.map((report) => {
+          {REPORT_TYPES.map((report) => {
             const IconComponent = report.icon;
             const status = reportStatuses[report.id] || 'pending';
             const isCompleted = status === 'completed';
@@ -413,7 +442,7 @@ const ReportsModule = ({
                 <TabsList className="grid w-full grid-cols-2">
                   {Object.keys(generatedReports).slice(0, 2).map(reportId => (
                     <TabsTrigger key={reportId} value={reportId}>
-                      {reportTypes.find(t => t.id === reportId)?.title || reportId}
+                      {REPORT_TYPES.find(t => t.id === reportId)?.title || reportId}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -438,6 +467,8 @@ const ReportsModule = ({
       </div>
     </ErrorBoundary>
   );
-};
+});
+
+ReportsModule.displayName = 'ReportsModule';
 
 export default ReportsModule;
