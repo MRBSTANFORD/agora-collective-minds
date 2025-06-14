@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Play, Pause, RotateCcw, MessageCircle, Clock, Users } from 'lucide-react';
+import { Play, Pause, RotateCcw, MessageCircle, Clock, Users, Loader2 } from 'lucide-react';
+import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
 
 const DiscussionInterface = ({
   challenge,
@@ -17,16 +18,21 @@ const DiscussionInterface = ({
 }) => {
   const config = discussionConfig;
   const [maxRounds, setMaxRounds] = useState(config?.rounds || 5);
+  const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
 
   useEffect(() => {
     setMaxRounds(config?.rounds || 5);
-  }, [config?.rounds]);
+    if (config?.experts) {
+      setOrchestrator(new DiscussionOrchestrator(config.experts, challenge, config.rounds));
+    }
+  }, [config?.rounds, config?.experts, challenge]);
 
   const [isRunning, setIsRunning] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [currentRound, setCurrentRound] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [messages, setMessages] = useState([]);
-  const [currentSpeaker, setCurrentSpeaker] = useState(null);
+  const [messages, setMessages] = useState<DiscussionMessage[]>([]);
+  const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
 
   // Updated expert data with historical images
   const experts = [
@@ -88,111 +94,81 @@ const DiscussionInterface = ({
     }
   ];
 
-  // Enhanced simulated discussion messages with more sophisticated content
-  const sampleMessages = [
-    {
-      speaker: 'leonardo',
-      content: "Miei cari colleghi, sustainable urban development is like designing a living organism! Observe how nature creates cities - ant colonies, bee hives, coral reefs. Each follows patterns of efficiency, beauty, and harmony with environment. We must sketch the city as I would sketch anatomy - understanding every system's connection to the whole.",
-      round: 1,
-      timestamp: new Date()
-    },
-    {
-      speaker: 'curie',
-      content: "Leonardo's biological analogy is compelling, but we must ground it in empirical measurement. I propose systematic study: measure air quality before and after green infrastructure, quantify energy consumption patterns, analyze pollution reduction data. Without rigorous methodology, we risk building on assumptions rather than knowledge.",
-      round: 1,
-      timestamp: new Date()
-    },
-    {
-      speaker: 'socrates',
-      content: "But Marie, my dear friend, before we measure, we must question our very foundations. What is 'sustainable'? Sustainable for the wealthy or the poor? For this generation or the next seven? Are we solving real problems, or merely the problems of those with power to define them? True wisdom begins with admitting our ignorance.",
-      round: 1,
-      timestamp: new Date()
-    },
-    {
-      speaker: 'hypatia',
-      content: "Socrates raises essential questions about justice and inclusion. As one who faced exclusion from discourse, I propose we mathematically model different stakeholder needs. Create geometric representations where each community's requirements form vertices of our urban design polygon. The optimal solution maximizes area while maintaining structural integrity.",
-      round: 2,
-      timestamp: new Date()
-    },
-    {
-      speaker: 'einstein',
-      content: "Fascinating! Hypatia's geometric approach reminds me of spacetime - how mass warps the fabric of reality. Perhaps urban density warps the 'fabric' of social and environmental sustainability. We need thought experiments: What if transportation moved at light speed? What if energy was truly infinite? These impossible scenarios illuminate real constraints.",
-      round: 2,
-      timestamp: new Date()
-    },
-    {
-      speaker: 'confucius',
-      content: "My honored colleagues speak wisely of measurement and modeling, but governance requires harmony between human nature and social order. Sustainable cities must cultivate virtue in their citizens. When people respect their environment as they respect their ancestors, conservation becomes natural, not enforced. Right relationships create right actions.",
-      round: 2,
-      timestamp: new Date()
-    },
-    {
-      speaker: 'lovelace',
-      content: "I envision an analytical engine for the city - algorithms that process real-time data from every street, building, and transport node. Like my work with Babbage's machine, we can program adaptive responses: traffic flows adjust automatically, energy distribution optimizes in real-time, waste systems respond to usage patterns. The city becomes a vast, intelligent computation.",
-      round: 3,
-      timestamp: new Date()
-    },
-    {
-      speaker: 'machiavelli',
-      content: "Ada's computational vision is admirable, but we must face political reality. Sustainable cities require sustainable power structures. Who controls this data? Who programs these algorithms? I've observed that good intentions matter less than who holds the keys. We must design systems that work even when governed by those who care more for power than environment.",
-      round: 3,
-      timestamp: new Date()
+  const startDiscussion = async () => {
+    if (!orchestrator) {
+      console.error('No orchestrator available');
+      return;
     }
-  ];
 
-  const startDiscussion = () => {
     setIsRunning(true);
-    setCurrentRound(1);
-    simulateDiscussion();
+    setCurrentRound(0);
+    setMessages([]);
+    setProgress(0);
+    await generateNextRound();
+  };
+
+  const generateNextRound = async () => {
+    if (!orchestrator || !isRunning) return;
+
+    setIsGenerating(true);
+    
+    try {
+      const roundMessages = await orchestrator.generateRound();
+      
+      // Add messages one by one with delays for better UX
+      for (let i = 0; i < roundMessages.length; i++) {
+        const message = roundMessages[i];
+        setCurrentSpeaker(message.speaker);
+        
+        // Simulate typing delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        setMessages(prev => [...prev, message]);
+        setCurrentSpeaker(null);
+        
+        // Small delay between experts
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      const newRound = orchestrator.getCurrentRound();
+      setCurrentRound(newRound);
+      setProgress((newRound / maxRounds) * 100);
+
+      // Continue to next round if not complete
+      if (!orchestrator.isComplete() && isRunning) {
+        setTimeout(() => generateNextRound(), 2000);
+      } else {
+        setIsRunning(false);
+        setIsGenerating(false);
+      }
+    } catch (error) {
+      console.error('Error generating round:', error);
+      setIsRunning(false);
+      setIsGenerating(false);
+    }
+    
+    setIsGenerating(false);
   };
 
   const pauseDiscussion = () => {
     setIsRunning(false);
+    setIsGenerating(false);
+    setCurrentSpeaker(null);
   };
 
   const resetDiscussion = () => {
     setIsRunning(false);
+    setIsGenerating(false);
     setCurrentRound(0);
     setProgress(0);
     setMessages([]);
     setCurrentSpeaker(null);
-  };
-
-  const simulateDiscussion = () => {
-    let messageIndex = 0;
-    
-    const addMessage = () => {
-      if (messageIndex < sampleMessages.length && isRunning) {
-        const message = sampleMessages[messageIndex];
-        setMessages(prev => [...prev, message]);
-        setCurrentSpeaker(message.speaker);
-        setProgress((messageIndex + 1) / sampleMessages.length * 100);
-        
-        if (message.round > currentRound) {
-          setCurrentRound(message.round);
-        }
-        
-        messageIndex++;
-        
-        if (messageIndex < sampleMessages.length) {
-          setTimeout(addMessage, 4000); // Slower pace for reading
-        } else {
-          setIsRunning(false);
-          setCurrentSpeaker(null);
-        }
-      }
-    };
-    
-    setTimeout(addMessage, 1500);
-  };
-
-  useEffect(() => {
-    if (isRunning) {
-      simulateDiscussion();
+    if (config?.experts) {
+      setOrchestrator(new DiscussionOrchestrator(config.experts, challenge, config.rounds));
     }
-  }, [isRunning]);
+  };
 
-  const getExpertInfo = (expertId) => {
+  const getExpertInfo = (expertId: string) => {
     return experts.find(e => e.id === expertId);
   };
 
@@ -221,7 +197,7 @@ const DiscussionInterface = ({
               <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                 Round {currentRound} of {maxRounds}
               </Badge>
-              {isRunning && (
+              {(isRunning || isGenerating) && (
                 <Badge className="bg-green-100 text-green-700 animate-pulse border-green-200">
                   <MessageCircle className="w-3 h-3 mr-1" />
                   Discussion Active
@@ -247,7 +223,11 @@ const DiscussionInterface = ({
 
             <div className="flex space-x-4">
               {!isRunning ? (
-                <Button onClick={startDiscussion} className="bg-slate-700 hover:bg-slate-800 text-white">
+                <Button 
+                  onClick={startDiscussion} 
+                  className="bg-slate-700 hover:bg-slate-800 text-white"
+                  disabled={!orchestrator}
+                >
                   <Play className="w-4 h-4 mr-2" />
                   Begin Symposium
                 </Button>
@@ -302,8 +282,8 @@ const DiscussionInterface = ({
                       </p>
                       {currentSpeaker === expert.id && (
                         <div className="flex items-center mt-1">
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
-                          <span className="text-xs text-green-600 font-medium">Speaking...</span>
+                          <Loader2 className="w-3 h-3 animate-spin text-green-600 mr-2" />
+                          <span className="text-xs text-green-600 font-medium">Thinking...</span>
                         </div>
                       )}
                     </div>
@@ -337,12 +317,12 @@ const DiscussionInterface = ({
                     return (
                       <div key={index} className="flex space-x-4">
                         <Avatar className="w-12 h-12 border-2 border-white shadow-lg">
-                          <AvatarImage src={expert.image} alt={expert.name} />
-                          <AvatarFallback className="text-sm">{expert.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarImage src={expert?.image} alt={expert?.name} />
+                          <AvatarFallback className="text-sm">{expert?.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-3 mb-2">
-                            <p className="text-sm font-medium text-slate-900">{expert.name}</p>
+                            <p className="text-sm font-medium text-slate-900">{expert?.name}</p>
                             <Badge variant="outline" className="text-xs border-amber-200 text-amber-700">
                               Round {message.round}
                             </Badge>
