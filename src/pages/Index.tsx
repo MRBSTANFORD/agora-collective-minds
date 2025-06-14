@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -226,10 +225,26 @@ const Index = () => {
             <div>
               <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">The Assembly</h4>
               <ul className="space-y-3 text-slate-300 font-light">
-                <li>Eight Immortal Minds</li>
-                <li>Iterative Discourse</li>
-                <li>Synthesis of Wisdom</li>
-                <li>Transcendent Insights</li>
+                <li>
+                  <Link to="/eight-immortal-minds" className="hover:text-amber-300 transition-colors">
+                    Eight Immortal Minds
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/iterative-discourse" className="hover:text-amber-300 transition-colors">
+                    Iterative Discourse
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/synthesis-of-wisdom" className="hover:text-amber-300 transition-colors">
+                    Synthesis of Wisdom
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/transcendent-insights" className="hover:text-amber-300 transition-colors">
+                    Transcendent Insights
+                  </Link>
+                </li>
               </ul>
             </div>
             
