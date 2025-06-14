@@ -22,48 +22,56 @@ const defaultExperts = [
     name: 'Leonardo da Vinci',
     cognitive: { creativity: 95, skepticism: 40, optimism: 85 },
     apiKey: "",
+    provider: "HuggingFace",
   },
   {
     id: 'curie',
     name: 'Marie Curie',
     cognitive: { creativity: 70, skepticism: 85, optimism: 60 },
     apiKey: "",
+    provider: "HuggingFace",
   },
   {
     id: 'socrates',
     name: 'Socrates',
     cognitive: { creativity: 60, skepticism: 90, optimism: 55 },
     apiKey: "",
+    provider: "HuggingFace",
   },
   {
     id: 'hypatia',
     name: 'Hypatia of Alexandria',
     cognitive: { creativity: 75, skepticism: 70, optimism: 80 },
     apiKey: "",
+    provider: "HuggingFace",
   },
   {
     id: 'einstein',
     name: 'Albert Einstein',
     cognitive: { creativity: 100, skepticism: 60, optimism: 75 },
     apiKey: "",
+    provider: "HuggingFace",
   },
   {
     id: 'confucius',
     name: 'Confucius',
     cognitive: { creativity: 65, skepticism: 45, optimism: 85 },
     apiKey: "",
+    provider: "HuggingFace",
   },
   {
     id: 'lovelace',
     name: 'Ada Lovelace',
     cognitive: { creativity: 90, skepticism: 50, optimism: 90 },
     apiKey: "",
+    provider: "HuggingFace",
   },
   {
     id: 'machiavelli',
     name: 'Niccolò Machiavelli',
     cognitive: { creativity: 80, skepticism: 95, optimism: 40 },
     apiKey: "",
+    provider: "HuggingFace",
   }
 ];
 
@@ -105,6 +113,16 @@ export function DiscussionConfigPanel({
     );
   };
 
+  const handleProvider = (id: string, value: string) => {
+    setExperts((current) =>
+      current.map((expert) =>
+        expert.id === id
+          ? { ...expert, provider: value }
+          : expert
+      )
+    );
+  };
+
   const handleRounds = (value: number) => setRounds(value);
 
   const handleSave = () => {
@@ -127,7 +145,7 @@ export function DiscussionConfigPanel({
         <DrawerHeader>
           <DrawerTitle>Symposium Configuration</DrawerTitle>
           <DrawerDescription>
-            Set number of rounds and configure experts' cognitive style and API keys.<br />
+            Set number of rounds and configure experts' cognitive style, LLM provider, and API keys.<br />
             (Leave API Key blank to use default free HuggingFace, or add your OpenAI/Perplexity/etc key)
           </DrawerDescription>
         </DrawerHeader>
@@ -151,6 +169,7 @@ export function DiscussionConfigPanel({
                 experts={experts}
                 onTraitChange={handleTrait}
                 onApiKeyChange={handleApiKey}
+                onProviderChange={handleProvider}
               />
             </ScrollArea>
           </div>
