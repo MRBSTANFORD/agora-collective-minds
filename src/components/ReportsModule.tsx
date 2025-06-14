@@ -1,15 +1,32 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download, FileText, BarChart3, Users, Lightbulb, Shield, History, User, CheckCircle } from 'lucide-react';
+import { ReportGenerator, ReportData, ReportGenerationStatus } from '@/services/reportGenerator';
+import { FileGenerator } from '@/services/fileGenerator';
+import { DiscussionMessage } from '@/services/aiOrchestrator';
+import { useToast } from "@/hooks/use-toast";
 
-const ReportsModule = () => {
+interface ReportsModuleProps {
+  discussionMessages?: DiscussionMessage[];
+  challenge?: string;
+  isDiscussionComplete?: boolean;
+}
+
+const ReportsModule = ({ 
+  discussionMessages = [], 
+  challenge = 'Sample Challenge', 
+  isDiscussionComplete = false 
+}: ReportsModuleProps) => {
+  const { toast } = useToast();
   const [generatingReports, setGeneratingReports] = useState(false);
-  const [completedReports, setCompletedReports] = useState([]);
+  const [reportStatuses, setReportStatuses] = useState<ReportGenerationStatus>({});
+  const [generatedReports, setGeneratedReports] = useState<Record<string, ReportData>>({});
+  const [reportGenerator, setReportGenerator] = useState<ReportGenerator | null>(null);
 
   const reportTypes = [
     {
@@ -18,7 +35,6 @@ const ReportsModule = () => {
       description: 'Comprehensive overview of all expert perspectives and key insights',
       icon: FileText,
       color: 'bg-blue-100 text-blue-700',
-      status: 'completed'
     },
     {
       id: 'consensus',
@@ -26,7 +42,6 @@ const ReportsModule = () => {
       description: 'Areas of agreement and common ground among experts',
       icon: Users,
       color: 'bg-green-100 text-green-700',
-      status: 'completed'
     },
     {
       id: 'divergent',
@@ -34,7 +49,6 @@ const ReportsModule = () => {
       description: 'Contrasting viewpoints and creative tensions in the discussion',
       icon: BarChart3,
       color: 'bg-orange-100 text-orange-700',
-      status: 'completed'
     },
     {
       id: 'innovative',
@@ -42,7 +56,6 @@ const ReportsModule = () => {
       description: 'Novel approaches and breakthrough ideas from the collective wisdom',
       icon: Lightbulb,
       color: 'bg-yellow-100 text-yellow-700',
-      status: 'completed'
     },
     {
       id: 'practical',
@@ -50,7 +63,6 @@ const ReportsModule = () => {
       description: 'Actionable steps and implementation strategies',
       icon: CheckCircle,
       color: 'bg-indigo-100 text-indigo-700',
-      status: 'generating'
     },
     {
       id: 'ethical',
@@ -58,7 +70,6 @@ const ReportsModule = () => {
       description: 'Moral considerations and broader social impact analysis',
       icon: Shield,
       color: 'bg-purple-100 text-purple-700',
-      status: 'generating'
     },
     {
       id: 'historical',
@@ -66,7 +77,6 @@ const ReportsModule = () => {
       description: 'Lessons from history and contextual frameworks',
       icon: History,
       color: 'bg-amber-100 text-amber-700',
-      status: 'pending'
     },
     {
       id: 'personal',
@@ -74,94 +84,141 @@ const ReportsModule = () => {
       description: 'Customized recommendations based on your specific context',
       icon: User,
       color: 'bg-pink-100 text-pink-700',
-      status: 'pending'
     }
   ];
 
-  const sampleReportContent = {
-    summary: {
-      title: "Executive Summary: Sustainable Urban Development",
-      content: `
-## Key Insights from Expert Panel
+  // Initialize report generator when discussion data is available
+  useEffect(() => {
+    if (discussionMessages.length > 0 && challenge) {
+      console.log('📊 Initializing ReportGenerator with discussion data:', {
+        messages: discussionMessages.length,
+        challenge: challenge.slice(0, 50)
+      });
+      setReportGenerator(new ReportGenerator(discussionMessages, challenge));
+      
+      // Reset statuses
+      const initialStatuses: ReportGenerationStatus = {};
+      reportTypes.forEach(type => {
+        initialStatuses[type.id] = 'pending';
+      });
+      setReportStatuses(initialStatuses);
+      setGeneratedReports({});
+    }
+  }, [discussionMessages, challenge]);
 
-The eight-member expert panel engaged in a comprehensive 5-round discussion on sustainable urban development, yielding rich insights from diverse historical perspectives.
+  const generateAllReports = async () => {
+    if (!reportGenerator) {
+      toast({
+        title: "No Discussion Data",
+        description: "Please complete a discussion first to generate reports.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-### Primary Themes Identified:
-1. **Biomimetic Design**: Leonardo da Vinci's emphasis on learning from nature's patterns
-2. **Data-Driven Approaches**: Marie Curie's call for empirical methodology
-3. **Philosophical Foundations**: Socrates' questioning of sustainability definitions
-4. **Technological Innovation**: Ada Lovelace's vision for computational solutions
+    if (!isDiscussionComplete) {
+      toast({
+        title: "Discussion Not Complete",
+        description: "Please wait for the discussion to complete before generating reports.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-### Cross-Cutting Principles:
-- Integration of artistic beauty with functional efficiency
-- Emphasis on measurable outcomes and scientific rigor
-- Importance of ethical frameworks in urban planning
-- Balance between innovation and practical implementation
+    setGeneratingReports(true);
+    console.log('🔄 Starting report generation for all report types...');
 
-### Expert Synthesis:
-The discussion revealed how historical wisdom can inform modern challenges, with each expert bringing unique methodological approaches while finding common ground in the pursuit of human flourishing through thoughtful urban design.
-      `
-    },
-    consensus: {
-      title: "Areas of Expert Agreement",
-      content: `
-## Unanimous Agreements
+    try {
+      // Generate reports sequentially to avoid overwhelming the system
+      for (const reportType of reportTypes) {
+        console.log(`📊 Generating ${reportType.title}...`);
+        setReportStatuses(prev => ({ ...prev, [reportType.id]: 'generating' }));
 
-### 1. Holistic Systems Thinking
-All experts agreed that urban sustainability requires integrated thinking across multiple domains:
-- Environmental systems
-- Social structures  
-- Economic frameworks
-- Technological infrastructure
+        try {
+          const report = await reportGenerator.generateReport(reportType.id);
+          setGeneratedReports(prev => ({ ...prev, [reportType.id]: report }));
+          setReportStatuses(prev => ({ ...prev, [reportType.id]: 'completed' }));
+          console.log(`✅ ${reportType.title} generated successfully`);
+        } catch (error) {
+          console.error(`❌ Failed to generate ${reportType.title}:`, error);
+          setReportStatuses(prev => ({ ...prev, [reportType.id]: 'error' }));
+        }
 
-### 2. Human-Centered Design
-Despite different approaches, all experts emphasized that sustainable cities must serve human flourishing:
-- **Leonardo**: Beauty and functionality for human well-being
-- **Curie**: Scientific rigor to improve human health
-- **Socrates**: Ethical considerations for all citizens
-- **Einstein**: Imaginative solutions that connect with human experience
+        // Small delay between reports
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
-### 3. Long-term Perspective
-Strong consensus on the need for intergenerational thinking:
-- Planning beyond current political cycles
-- Considering impacts on future generations
-- Building adaptive capacity for changing conditions
-
-### 4. Evidence-Based Decision Making
-Agreement on the importance of data and measurement:
-- Quantifiable sustainability metrics
-- Regular monitoring and adjustment
-- Learning from both successes and failures
-      `
+      toast({
+        title: "Reports Generated",
+        description: "All available reports have been generated successfully.",
+      });
+    } catch (error) {
+      console.error('💥 Error during report generation:', error);
+      toast({
+        title: "Generation Error",
+        description: "Some reports could not be generated. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingReports(false);
     }
   };
 
-  const generateReports = () => {
-    setGeneratingReports(true);
-    // Simulate report generation
-    setTimeout(() => {
-      setGeneratingReports(false);
-      setCompletedReports(reportTypes.map(r => r.id));
-    }, 3000);
+  const downloadReport = async (reportId: string, format: 'pdf' | 'html') => {
+    const report = generatedReports[reportId];
+    if (!report) {
+      toast({
+        title: "Report Not Available",
+        description: "This report hasn't been generated yet.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log(`📥 Downloading ${reportId} as ${format}...`);
+      
+      let blob: Blob;
+      if (format === 'pdf') {
+        blob = await FileGenerator.generatePDF(report);
+      } else {
+        blob = await FileGenerator.generateHTML(report);
+      }
+
+      const filename = `${report.title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}`;
+      FileGenerator.downloadFile(blob, filename, format);
+
+      toast({
+        title: "Download Started",
+        description: `${report.title} is being downloaded as ${format.toUpperCase()}.`,
+      });
+    } catch (error) {
+      console.error(`💥 Error downloading report:`, error);
+      toast({
+        title: "Download Error",
+        description: "Could not download the report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const downloadReport = (reportId, format) => {
-    // In a real app, this would generate and download the actual report
-    console.log(`Downloading ${reportId} in ${format} format`);
-  };
-
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (reportId: string) => {
+    const status = reportStatuses[reportId] || 'pending';
     switch (status) {
       case 'completed':
         return <Badge className="bg-green-100 text-green-700">Completed</Badge>;
       case 'generating':
         return <Badge className="bg-yellow-100 text-yellow-700 animate-pulse">Generating...</Badge>;
+      case 'error':
+        return <Badge className="bg-red-100 text-red-700">Error</Badge>;
       case 'pending':
-        return <Badge variant="outline">Pending</Badge>;
       default:
-        return null;
+        return <Badge variant="outline">Pending</Badge>;
     }
   };
+
+  const completedReportsCount = Object.values(reportStatuses).filter(status => status === 'completed').length;
+  const canGenerate = reportGenerator && isDiscussionComplete && !generatingReports;
 
   return (
     <div className="space-y-6">
@@ -173,30 +230,40 @@ Agreement on the importance of data and measurement:
             <p className="text-gray-600 mt-1">AI-generated insights from expert discussions</p>
           </div>
           <Button 
-            onClick={generateReports}
-            disabled={generatingReports}
-            className="bg-indigo-600 hover:bg-indigo-700"
+            onClick={generateAllReports}
+            disabled={!canGenerate}
+            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
           >
             {generatingReports ? 'Generating...' : 'Generate All Reports'}
           </Button>
         </div>
 
+        {!isDiscussionComplete && (
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-amber-800 text-sm">
+              Reports will be available after completing a discussion with experts.
+            </p>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-indigo-50 rounded-lg">
-            <div className="text-2xl font-bold text-indigo-600">8</div>
+            <div className="text-2xl font-bold text-indigo-600">{reportTypes.length}</div>
             <div className="text-sm text-indigo-700">Report Types</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{completedReports.length}</div>
+            <div className="text-2xl font-bold text-green-600">{completedReportsCount}</div>
             <div className="text-sm text-green-700">Completed</div>
           </div>
           <div className="text-center p-4 bg-amber-50 rounded-lg">
-            <div className="text-2xl font-bold text-amber-600">5</div>
-            <div className="text-sm text-amber-700">Discussion Rounds</div>
+            <div className="text-2xl font-bold text-amber-600">{discussionMessages.length}</div>
+            <div className="text-sm text-amber-700">Expert Messages</div>
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">24</div>
-            <div className="text-sm text-purple-700">Expert Insights</div>
+            <div className="text-2xl font-bold text-purple-600">
+              {new Set(discussionMessages.map(m => m.speaker)).size}
+            </div>
+            <div className="text-sm text-purple-700">Expert Voices</div>
           </div>
         </div>
       </div>
@@ -205,7 +272,9 @@ Agreement on the importance of data and measurement:
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
         {reportTypes.map((report) => {
           const IconComponent = report.icon;
-          const isCompleted = completedReports.includes(report.id) || report.status === 'completed';
+          const status = reportStatuses[report.id] || 'pending';
+          const isCompleted = status === 'completed';
+          const reportData = generatedReports[report.id];
           
           return (
             <Card 
@@ -219,7 +288,7 @@ Agreement on the importance of data and measurement:
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${report.color}`}>
                     <IconComponent className="w-5 h-5" />
                   </div>
-                  {getStatusBadge(isCompleted ? 'completed' : report.status)}
+                  {getStatusBadge(report.id)}
                 </div>
                 <CardTitle className="text-sm text-indigo-900 leading-tight">{report.title}</CardTitle>
               </CardHeader>
@@ -228,7 +297,7 @@ Agreement on the importance of data and measurement:
                   {report.description}
                 </CardDescription>
                 
-                {isCompleted ? (
+                {isCompleted && reportData ? (
                   <div className="flex space-x-1">
                     <Button 
                       size="sm" 
@@ -246,12 +315,16 @@ Agreement on the importance of data and measurement:
                       onClick={() => downloadReport(report.id, 'html')}
                     >
                       <FileText className="w-3 h-3 mr-1" />
-                      View
+                      HTML
                     </Button>
                   </div>
                 ) : (
                   <div className="text-center">
-                    <div className="text-xs text-gray-400">Available after generation</div>
+                    <div className="text-xs text-gray-400">
+                      {status === 'generating' ? 'Generating...' : 
+                       status === 'error' ? 'Generation failed' :
+                       'Available after generation'}
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -261,42 +334,35 @@ Agreement on the importance of data and measurement:
       </div>
 
       {/* Report Preview */}
-      {completedReports.length > 0 && (
+      {completedReportsCount > 0 && (
         <Card className="border-indigo-100">
           <CardHeader>
             <CardTitle className="text-lg text-indigo-900">Report Preview</CardTitle>
             <CardDescription>Sample content from completed reports</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="summary">
+            <Tabs defaultValue={Object.keys(generatedReports)[0] || 'summary'}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="summary">Discussion Summary</TabsTrigger>
-                <TabsTrigger value="consensus">Consensus Areas</TabsTrigger>
+                {Object.keys(generatedReports).slice(0, 2).map(reportId => (
+                  <TabsTrigger key={reportId} value={reportId}>
+                    {reportTypes.find(t => t.id === reportId)?.title || reportId}
+                  </TabsTrigger>
+                ))}
               </TabsList>
-              <TabsContent value="summary" className="mt-4">
-                <ScrollArea className="h-64 w-full border rounded-lg p-4">
-                  <div className="prose prose-sm max-w-none">
-                    <h3 className="text-lg font-bold text-indigo-900 mb-3">
-                      {sampleReportContent.summary.title}
-                    </h3>
-                    <div className="whitespace-pre-line text-gray-700">
-                      {sampleReportContent.summary.content}
+              {Object.entries(generatedReports).slice(0, 2).map(([reportId, report]) => (
+                <TabsContent key={reportId} value={reportId} className="mt-4">
+                  <ScrollArea className="h-64 w-full border rounded-lg p-4">
+                    <div className="prose prose-sm max-w-none">
+                      <h3 className="text-lg font-bold text-indigo-900 mb-3">
+                        {report.title}
+                      </h3>
+                      <div className="whitespace-pre-line text-gray-700">
+                        {report.content.slice(0, 1500)}...
+                      </div>
                     </div>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-              <TabsContent value="consensus" className="mt-4">
-                <ScrollArea className="h-64 w-full border rounded-lg p-4">
-                  <div className="prose prose-sm max-w-none">
-                    <h3 className="text-lg font-bold text-indigo-900 mb-3">
-                      {sampleReportContent.consensus.title}
-                    </h3>
-                    <div className="whitespace-pre-line text-gray-700">
-                      {sampleReportContent.consensus.content}
-                    </div>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
+                  </ScrollArea>
+                </TabsContent>
+              ))}
             </Tabs>
           </CardContent>
         </Card>

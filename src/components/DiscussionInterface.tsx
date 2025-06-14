@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
 import { useToast } from "@/hooks/use-toast";
@@ -10,9 +9,11 @@ import MessagesPanel from './discussion/MessagesPanel';
 const DiscussionInterface = ({
   challenge,
   discussionConfig,
+  onDiscussionUpdate,
 }: {
   challenge: string;
   discussionConfig?: import('./DiscussionConfigPanel').DiscussionConfig;
+  onDiscussionUpdate?: (messages: DiscussionMessage[], complete: boolean) => void;
 }) => {
   const { toast } = useToast();
   const config = discussionConfig;
@@ -361,6 +362,13 @@ const DiscussionInterface = ({
     if (minutes < 60) return `${minutes}m ago`;
     return timestamp.toLocaleTimeString();
   }, []);
+
+  // Update the callback when messages or completion status changes
+  useEffect(() => {
+    if (onDiscussionUpdate) {
+      onDiscussionUpdate(messages, orchestrator?.isComplete() || false);
+    }
+  }, [messages, orchestrator, onDiscussionUpdate]);
 
   return (
     <div className="space-y-8 py-8">

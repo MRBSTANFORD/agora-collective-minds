@@ -16,6 +16,8 @@ const Index = () => {
   const [rounds, setRounds] = useState(5);
   const [activeTab, setActiveTab] = useState('home');
   const [discussionStarted, setDiscussionStarted] = useState(false);
+  const [discussionMessages, setDiscussionMessages] = useState<any[]>([]);
+  const [isDiscussionComplete, setIsDiscussionComplete] = useState(false);
 
   // Default experts configuration
   const defaultExperts = [
@@ -96,6 +98,12 @@ const Index = () => {
   const handleConfigChange = (newConfig: DiscussionConfig) => {
     setDiscussionConfig(newConfig);
     setRounds(newConfig.rounds);
+  };
+
+  // Add handler to receive discussion updates
+  const handleDiscussionUpdate = (messages: any[], complete: boolean) => {
+    setDiscussionMessages(messages);
+    setIsDiscussionComplete(complete);
   };
 
   const handleStartDiscussion = () => {
@@ -183,11 +191,19 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="discussion" className="mt-0">
-            <DiscussionInterface challenge={challenge} discussionConfig={discussionConfig} />
+            <DiscussionInterface 
+              challenge={challenge} 
+              discussionConfig={discussionConfig}
+              onDiscussionUpdate={handleDiscussionUpdate}
+            />
           </TabsContent>
 
           <TabsContent value="reports" className="mt-0">
-            <ReportsModule />
+            <ReportsModule 
+              discussionMessages={discussionMessages}
+              challenge={challenge}
+              isDiscussionComplete={isDiscussionComplete}
+            />
           </TabsContent>
         </Tabs>
       </main>
