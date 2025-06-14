@@ -148,56 +148,57 @@ export function DiscussionConfigPanel({
             <span className="text-amber-600">Leave API Key blank to use free HuggingFace models by default.</span>
           </DrawerDescription>
         </DrawerHeader>
-        <div className="flex-1 overflow-hidden p-6">
-          <div className="space-y-6 h-full">
-            {/* Rounds Configuration */}
-            <Card className="border-amber-100">
-              <CardHeader>
-                <CardTitle className="text-lg text-slate-800">Discussion Parameters</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div>
-                  <Label htmlFor="rounds">Number of Rounds (3-10)</Label>
-                  <Slider
-                    value={[rounds]}
-                    min={3}
-                    max={10}
-                    step={1}
-                    onValueChange={([v]) => handleRounds(v)}
-                    className="mt-2 w-full"
-                  />
-                  <span className="ml-2 text-sm font-light text-slate-600">{rounds} discussion rounds</span>
-                </div>
-              </CardContent>
-            </Card>
+        
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-6 space-y-6">
+              {/* Rounds Configuration */}
+              <Card className="border-amber-100">
+                <CardHeader>
+                  <CardTitle className="text-lg text-slate-800">Discussion Parameters</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <Label htmlFor="rounds">Number of Rounds (3-10)</Label>
+                    <Slider
+                      value={[rounds]}
+                      min={3}
+                      max={10}
+                      step={1}
+                      onValueChange={([v]) => handleRounds(v)}
+                      className="mt-2 w-full"
+                    />
+                    <span className="ml-2 text-sm font-light text-slate-600">{rounds} discussion rounds</span>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Expert Configuration */}
-            <Card className="border-amber-100 flex-1">
-              <CardHeader>
-                <CardTitle className="text-lg text-slate-800">Expert Configuration</CardTitle>
-                <CardDescription>
-                  Customize each expert's cognitive traits and AI provider settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="h-[500px]">
-                <ScrollArea className="h-full w-full">
+              {/* Expert Configuration */}
+              <Card className="border-amber-100">
+                <CardHeader>
+                  <CardTitle className="text-lg text-slate-800">Expert Configuration</CardTitle>
+                  <CardDescription>
+                    Customize each expert's cognitive traits and AI provider settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                   <ExpertCardList
                     experts={experts}
                     onTraitChange={handleTrait}
                     onApiKeyChange={handleApiKey}
                     onProviderChange={handleProvider}
                   />
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Save Button */}
-            <div className="flex w-full justify-end pt-4">
-              <Button onClick={handleSave} className="bg-amber-600 hover:bg-amber-700 text-white px-8">
-                Save Symposium Settings
-              </Button>
+              {/* Save Button - now inside scrollable area */}
+              <div className="flex w-full justify-end pt-4 pb-6">
+                <Button onClick={handleSave} className="bg-amber-600 hover:bg-amber-700 text-white px-8">
+                  Save Symposium Settings
+                </Button>
+              </div>
             </div>
-          </div>
+          </ScrollArea>
         </div>
       </DrawerContent>
     </Drawer>
