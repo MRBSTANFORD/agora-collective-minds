@@ -1,4 +1,3 @@
-
 import { callOpenAI, callAnthropic, callPerplexity, callGroq, callHuggingFaceWithFallback } from './aiProviders';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
 
@@ -60,11 +59,12 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
           break;
       }
 
-      if (response && response.trim().length > 0) {
-        console.log(`✅ Successfully generated response for ${expertId} using ${provider} on attempt ${attempt}: ${response.slice(0, 50)}...`);
+      // Ensure response is long enough (force retry/fallback if <150 chars)
+      if (response && response.trim().length > 150) {
+        console.log(`✅ Successfully generated response for ${expertId} using ${provider} on attempt ${attempt}: ${response.slice(0, 60)}...`);
         return response.trim();
       } else {
-        throw new Error('Empty response received from AI provider');
+        throw new Error('AI response too short or empty');
       }
     } catch (error) {
       lastError = error as Error;
@@ -87,6 +87,6 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
     }
   }
 
-  console.error(`💥 All attempts failed for expert ${expertId} with ${provider}, using fallback response. Last error:`, lastError);
+  console.error(`💥 All attempts failed (or too short) for expert ${expertId} with ${provider}, using fallback response. Last error:`, lastError);
   return generatePersonalizedFallbackResponse(expertId, prompt);
 }

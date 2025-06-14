@@ -1,4 +1,3 @@
-
 export interface AIProvider {
   name: string;
   apiKey: string;
@@ -16,8 +15,10 @@ export async function callOpenAI(prompt: string, apiKey: string): Promise<string
     body: JSON.stringify({
       model: 'gpt-4.1-2025-04-14',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 150,
+      max_tokens: 1000,
       temperature: 0.8,
+      top_p: 0.95,
+      presence_penalty: 0.2
     }),
   });
 
@@ -46,9 +47,10 @@ export async function callAnthropic(prompt: string, apiKey: string): Promise<str
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 150,
+      max_tokens: 1200,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.8,
+      top_p: 0.95
     }),
   });
 
@@ -77,8 +79,10 @@ export async function callPerplexity(prompt: string, apiKey: string): Promise<st
     body: JSON.stringify({
       model: 'llama-3.1-sonar-small-128k-online',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 150,
+      max_tokens: 1000,
       temperature: 0.8,
+      top_p: 0.95,
+      presence_penalty: 0.2
     }),
   });
 
@@ -112,8 +116,10 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
     body: JSON.stringify({
       model: 'mixtral-8x7b-32768',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 150,
+      max_tokens: 800,
       temperature: 0.8,
+      top_p: 0.95,
+      presence_penalty: 0.2
     }),
   });
 
@@ -140,12 +146,13 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
 export async function callHuggingFaceWithFallback(prompt: string, expertId: string, apiKey?: string): Promise<string> {
   console.log(`🤗 Calling HuggingFace API for expert ${expertId}, has API key: ${!!apiKey}`);
   
-  // Use more reliable and current models
+  // Upgraded to stronger, larger models that perform better for long-form text
   const models = [
-    'microsoft/DialoGPT-medium',
-    'facebook/blenderbot-400M-distill',
+    'microsoft/DialoGPT-large',
+    'facebook/blenderbot-1B-distill',
     'HuggingFaceH4/zephyr-7b-beta',
-    'microsoft/DialoGPT-small'
+    'meta-llama/Llama-2-7b-chat-hf',
+    'microsoft/DialoGPT-medium'
   ];
   
   const headers: Record<string, string> = {
@@ -174,12 +181,12 @@ export async function callHuggingFaceWithFallback(prompt: string, expertId: stri
         body: JSON.stringify({
           inputs: prompt,
           parameters: {
-            max_new_tokens: 150,
+            max_new_tokens: 800, // WAS 150, now much more
             temperature: 0.8,
+            top_p: 0.95,
+            repetition_penalty: 1.2, // reduce repeating
             return_full_text: false,
             do_sample: true,
-            top_p: 0.9,
-            repetition_penalty: 1.1,
           },
           options: {
             wait_for_model: true,
