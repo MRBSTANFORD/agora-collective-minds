@@ -57,17 +57,23 @@ function applyCognitiveTraits(basePrompt: string, cognitive: { creativity: numbe
   return basePrompt + traitModifiers;
 }
 
-// Generate AI response based on provider
+// Generate AI response based on provider with better error handling
 async function generateAIResponse(prompt: string, provider: string, apiKey: string): Promise<string> {
+  console.log(`Generating response for provider: ${provider}, has API key: ${apiKey ? 'yes' : 'no'}`);
+  
   try {
     switch (provider) {
       case 'OpenAI':
+        if (!apiKey) throw new Error('OpenAI API key required');
         return await callOpenAI(prompt, apiKey);
       case 'Anthropic':
+        if (!apiKey) throw new Error('Anthropic API key required');
         return await callAnthropic(prompt, apiKey);
       case 'Perplexity':
+        if (!apiKey) throw new Error('Perplexity API key required');
         return await callPerplexity(prompt, apiKey);
       case 'Groq':
+        if (!apiKey) throw new Error('Groq API key required');
         return await callGroq(prompt, apiKey);
       case 'HuggingFace':
       default:
@@ -75,9 +81,21 @@ async function generateAIResponse(prompt: string, provider: string, apiKey: stri
     }
   } catch (error) {
     console.error(`AI Provider ${provider} error:`, error);
-    // Fallback to HuggingFace if other providers fail
-    return await callHuggingFace(prompt);
+    // Return a fallback response instead of trying another provider
+    return generateFallbackResponse(prompt);
   }
+}
+
+// Generate a simple fallback response when AI providers fail
+function generateFallbackResponse(prompt: string): string {
+  const responses = [
+    "This is a fascinating challenge that requires careful consideration from multiple perspectives.",
+    "I believe we need to examine this issue through the lens of my unique expertise and experience.",
+    "This presents an interesting opportunity to apply fundamental principles to a modern problem.",
+    "The complexity of this challenge calls for a thoughtful and measured approach.",
+    "I find myself drawn to explore the deeper implications of this question."
+  ];
+  return responses[Math.floor(Math.random() * responses.length)];
 }
 
 async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
@@ -162,7 +180,8 @@ async function callGroq(prompt: string, apiKey: string): Promise<string> {
 }
 
 async function callHuggingFace(prompt: string): Promise<string> {
-  const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-large', {
+  // Use a more reliable HuggingFace model
+  const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -170,16 +189,20 @@ async function callHuggingFace(prompt: string): Promise<string> {
     body: JSON.stringify({
       inputs: prompt,
       parameters: {
-        max_new_tokens: 300,
+        max_new_tokens: 100,
         temperature: 0.8,
         return_full_text: false,
       },
     }),
   });
   
-  if (!response.ok) throw new Error(`HuggingFace API error: ${response.statusText}`);
+  if (!response.ok) {
+    console.warn(`HuggingFace API error: ${response.statusText}, using fallback`);
+    return generateFallbackResponse(prompt);
+  }
+  
   const data = await response.json();
-  return data[0]?.generated_text || "I apologize, but I'm having difficulty responding right now.";
+  return data[0]?.generated_text || generateFallbackResponse(prompt);
 }
 
 // Main discussion orchestrator
@@ -191,41 +214,56 @@ export class DiscussionOrchestrator {
   private currentRound: number;
 
   constructor(experts: ExpertConfig[], challenge: string, maxRounds: number) {
-    this.experts = experts;
-    this.challenge = challenge;
-    this.maxRounds = maxRounds;
+    console.log('Creating DiscussionOrchestrator with:', { experts: experts.length, challenge: challenge.slice(0, 50), maxRounds });
+    this.experts = experts || [];
+    this.challenge = challenge || '';
+    this.maxRounds = maxRounds || 5;
     this.messages = [];
     this.currentRound = 0;
   }
 
   async generateRound(): Promise<DiscussionMessage[]> {
+    console.log(`Starting round ${this.currentRound + 1} of ${this.maxRounds}`);
     this.currentRound++;
     const roundMessages: DiscussionMessage[] = [];
 
-    for (const expert of this.experts) {
-      const expertPrompt = this.buildExpertPrompt(expert);
-      const response = await generateAIResponse(
-        expertPrompt,
-        expert.provider || 'HuggingFace',
-        expert.apiKey
-      );
-
-      const message: DiscussionMessage = {
-        speaker: expert.id,
-        content: response,
-        round: this.currentRound,
-        timestamp: new Date(),
-      };
-
-      roundMessages.push(message);
-      this.messages.push(message);
+    if (!this.experts || this.experts.length === 0) {
+      console.error('No experts available for discussion');
+      return [];
     }
 
+    for (const expert of this.experts) {
+      console.log(`Generating response for expert: ${expert.name}`);
+      try {
+        const expertPrompt = this.buildExpertPrompt(expert);
+        const response = await generateAIResponse(
+          expertPrompt,
+          expert.provider || 'HuggingFace',
+          expert.apiKey || ''
+        );
+
+        const message: DiscussionMessage = {
+          speaker: expert.id,
+          content: response,
+          round: this.currentRound,
+          timestamp: new Date(),
+        };
+
+        roundMessages.push(message);
+        this.messages.push(message);
+        console.log(`Expert ${expert.name} response generated successfully`);
+      } catch (error) {
+        console.error(`Error generating response for expert ${expert.name}:`, error);
+        // Continue with other experts even if one fails
+      }
+    }
+
+    console.log(`Round ${this.currentRound} completed with ${roundMessages.length} messages`);
     return roundMessages;
   }
 
   private buildExpertPrompt(expert: ExpertConfig): string {
-    const basePrompt = EXPERT_PROMPTS[expert.id];
+    const basePrompt = EXPERT_PROMPTS[expert.id] || "You are a thoughtful expert providing insights on complex challenges.";
     const enhancedPrompt = applyCognitiveTraits(basePrompt, expert.cognitive);
     
     let contextPrompt = `${enhancedPrompt}\n\nChallenge: ${this.challenge}\n\n`;

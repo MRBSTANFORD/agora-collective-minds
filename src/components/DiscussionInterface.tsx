@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,9 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, RotateCcw, MessageCircle, Clock, Users, Loader2, FastForward, Rewind, BookmarkPlus, Share2, BarChart3 } from 'lucide-react';
+import { Play, Pause, RotateCcw, MessageCircle, Clock, Users, Loader2, FastForward, Rewind, BookmarkPlus, Share2, BarChart3, AlertCircle } from 'lucide-react';
 import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
+import { useToast } from "@/hooks/use-toast";
 
 const DiscussionInterface = ({
   challenge,
@@ -17,16 +17,32 @@ const DiscussionInterface = ({
   challenge: string;
   discussionConfig?: import('./DiscussionConfigPanel').DiscussionConfig;
 }) => {
+  const { toast } = useToast();
   const config = discussionConfig;
   const [maxRounds, setMaxRounds] = useState(config?.rounds || 5);
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
-  const [discussionSpeed, setDiscussionSpeed] = useState(1); // 0.5x, 1x, 2x speed
+  const [discussionSpeed, setDiscussionSpeed] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Initialize orchestrator when config changes
   useEffect(() => {
+    console.log('DiscussionInterface: Config or challenge changed', { 
+      hasConfig: !!config, 
+      hasExperts: !!config?.experts, 
+      expertsCount: config?.experts?.length,
+      challenge: challenge?.slice(0, 50),
+      rounds: config?.rounds 
+    });
+    
     setMaxRounds(config?.rounds || 5);
-    if (config?.experts) {
-      setOrchestrator(new DiscussionOrchestrator(config.experts, challenge, config.rounds));
+    
+    if (config?.experts && challenge?.trim()) {
+      console.log('Creating new orchestrator with experts:', config.experts.map(e => e.name));
+      const newOrchestrator = new DiscussionOrchestrator(config.experts, challenge, config.rounds || 5);
+      setOrchestrator(newOrchestrator);
+    } else {
+      console.log('Cannot create orchestrator - missing config or challenge');
+      setOrchestrator(null);
     }
   }, [config?.rounds, config?.experts, challenge]);
 
@@ -38,6 +54,7 @@ const DiscussionInterface = ({
   const [currentSpeaker, setCurrentSpeaker] = useState<string | null>(null);
   const [typingMessage, setTypingMessage] = useState<string>('');
   const [roundProgress, setRoundProgress] = useState<number[]>([]);
+  const [hasError, setHasError] = useState(false);
 
   // Enhanced expert data with historical images
   const experts = [
@@ -108,8 +125,25 @@ const DiscussionInterface = ({
   ];
 
   const startDiscussion = async () => {
+    console.log('Starting discussion...', { hasOrchestrator: !!orchestrator, challenge: challenge?.slice(0, 50) });
+    
     if (!orchestrator) {
-      console.error('No orchestrator available');
+      console.error('No orchestrator available - cannot start discussion');
+      toast({
+        title: "Cannot Start Discussion",
+        description: "Please configure experts and enter a challenge first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!challenge?.trim()) {
+      console.error('No challenge provided');
+      toast({
+        title: "Cannot Start Discussion", 
+        description: "Please enter a challenge to discuss.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -118,16 +152,41 @@ const DiscussionInterface = ({
     setMessages([]);
     setProgress(0);
     setRoundProgress(Array(maxRounds).fill(0));
+    setHasError(false);
+    
+    toast({
+      title: "Discussion Started",
+      description: "The symposium has begun. The experts are gathering their thoughts...",
+    });
+    
     await generateNextRound();
   };
 
   const generateNextRound = async () => {
-    if (!orchestrator || !isRunning) return;
+    if (!orchestrator || !isRunning) {
+      console.log('Cannot generate next round - orchestrator missing or not running');
+      return;
+    }
 
+    console.log('Generating next round...');
     setIsGenerating(true);
     
     try {
       const roundMessages = await orchestrator.generateRound();
+      console.log('Round messages generated:', roundMessages.length);
+      
+      if (roundMessages.length === 0) {
+        console.error('No messages generated for this round');
+        setHasError(true);
+        toast({
+          title: "Discussion Issue",
+          description: "No responses were generated this round. The discussion may have encountered issues.",
+          variant: "destructive",
+        });
+        setIsRunning(false);
+        setIsGenerating(false);
+        return;
+      }
       
       // Add messages one by one with typing effect
       for (let i = 0; i < roundMessages.length; i++) {
@@ -165,11 +224,23 @@ const DiscussionInterface = ({
       } else {
         setIsRunning(false);
         setIsGenerating(false);
+        if (orchestrator.isComplete()) {
+          toast({
+            title: "Discussion Complete",
+            description: "The symposium has concluded. All rounds have been completed.",
+          });
+        }
       }
     } catch (error) {
       console.error('Error generating round:', error);
+      setHasError(true);
       setIsRunning(false);
       setIsGenerating(false);
+      toast({
+        title: "Discussion Error",
+        description: "An error occurred during the discussion. Please try again.",
+        variant: "destructive",
+      });
     }
     
     setIsGenerating(false);
@@ -186,7 +257,6 @@ const DiscussionInterface = ({
   };
 
   const updateParticipation = (expertId: string) => {
-    // This would update participation statistics in a real implementation
     console.log(`${expertId} participated in discussion`);
   };
 
@@ -206,8 +276,9 @@ const DiscussionInterface = ({
     setCurrentSpeaker(null);
     setTypingMessage('');
     setRoundProgress(Array(maxRounds).fill(0));
-    if (config?.experts) {
-      setOrchestrator(new DiscussionOrchestrator(config.experts, challenge, config.rounds));
+    setHasError(false);
+    if (config?.experts && challenge?.trim()) {
+      setOrchestrator(new DiscussionOrchestrator(config.experts, challenge, config.rounds || 5));
     }
   };
 
@@ -269,14 +340,33 @@ const DiscussionInterface = ({
                   Discussion Active
                 </Badge>
               )}
+              {hasError && (
+                <Badge variant="destructive" className="animate-pulse">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Issues Detected
+                </Badge>
+              )}
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="bg-white/80 rounded-lg p-4 border border-amber-100">
             <h3 className="font-medium text-slate-800 mb-2">Challenge Under Discussion:</h3>
-            <p className="text-slate-700 leading-relaxed">{challenge || "Sustainable Urban Development in the Digital Age"}</p>
+            <p className="text-slate-700 leading-relaxed">{challenge || "No challenge specified yet"}</p>
           </div>
+
+          {/* Show initialization status */}
+          {!orchestrator && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-yellow-800">
+                <AlertCircle className="w-4 h-4" />
+                <span className="font-medium">Discussion Not Ready</span>
+              </div>
+              <p className="text-yellow-700 text-sm mt-1">
+                Please configure experts and enter a challenge to begin the symposium.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-4">
             {/* Enhanced Progress Section */}
@@ -308,7 +398,7 @@ const DiscussionInterface = ({
                   <Button 
                     onClick={startDiscussion} 
                     className="bg-slate-700 hover:bg-slate-800 text-white"
-                    disabled={!orchestrator}
+                    disabled={!orchestrator || !challenge?.trim()}
                   >
                     <Play className="w-4 h-4 mr-2" />
                     Begin Symposium
