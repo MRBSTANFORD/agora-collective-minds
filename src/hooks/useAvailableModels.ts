@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
 export type LLMModel = {
   value: string;
@@ -68,59 +67,62 @@ function useStableProviders(providers: string[]) {
   return stable;
 }
 
-export function useAvailableModels(providers: string[], apiKeys?: Record<string, string>) {
+/**
+ * Returns available models for providers, with strong dependency and async safety.
+ */
+export function useAvailableModels(
+  providers: string[],
+  apiKeys?: Record<string, string>
+) {
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState<Record<string, LLMModel[]>>({});
   const [error, setError] = useState<string | null>(null);
 
-  // Stable dependency to avoid unnecessary re-runs
+  // Make dependency array stable, only trigger on providers/API keys identity change
   const stableProviders = useStableProviders(providers);
 
-  useEffect(() => {
-    let cancelled = false;
-    const timeoutId = setTimeout(() => {
-      if (!cancelled) {
-        setLoading(false);
-        setError("Model loading timed out. Please retry.");
-      }
-    }, 8000);
+  // Memoize API Keys
+  const stableApiKeys = useMemo(
+    () => apiKeys && JSON.stringify(apiKeys),
+    [apiKeys && Object.keys(apiKeys).sort().join(",")]
+  );
 
-    async function load() {
-      setLoading(true);
-      setError(null);
-      const results: Record<string, LLMModel[]> = {};
+  // Core async fetcher, runs when providers or their keys change in a meaningful way
+  const fetchModels = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    const results: Record<string, LLMModel[]> = {};
 
-      for (const provider of stableProviders) {
-        try {
-          // Prevent infinite loop by catching unexpected errors
-          const modelsList = await fetchers[provider]?.(apiKeys?.[provider]);
-          results[provider] = modelsList || [];
-        } catch (e) {
-          setError(`Failed to fetch models for ${provider}`);
-          results[provider] = [];
-        }
-        // Defensive: if cancelled during long fetch, bail out early
-        if (cancelled) return;
+    for (const provider of stableProviders) {
+      if (signal?.aborted) return;
+      try {
+        const modelsList = await fetchers[provider]?.(apiKeys?.[provider]);
+        results[provider] = modelsList || [];
+      } catch (e) {
+        setError(`Failed to fetch models for ${provider}`);
+        results[provider] = [];
       }
-      if (!cancelled) {
-        setModels(results);
-        setLoading(false);
-      }
-      clearTimeout(timeoutId);
+      if (signal?.aborted) return;
     }
-    if (stableProviders.length > 0) {
-      load();
-    } else {
+    setModels(results);
+    setLoading(false);
+  }, [stableProviders, stableApiKeys]);
+
+  // Use cancellation-safe async invoker
+  useAsyncWithCancel(fetchModels, [fetchModels]);
+
+  useEffect(() => {
+    // Reset models if no active providers
+    if (!stableProviders.length) {
       setModels({});
       setLoading(false);
     }
+    // ... no need to trigger fetch here, it's inside useAsyncWithCancel ...
+    // eslint-disable-next-line
+  }, [stableProviders.length]);
 
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-    };
-    // Dep ONLY on stableProviders (array is already stable), and apiKeys keys
-  }, [stableProviders, apiKeys && Object.keys(apiKeys).sort().join(',')]);
-
-  return { loading, models, error };
+  return useMemo(
+    () => ({ loading, models, error }),
+    [loading, models, error]
+  );
 }

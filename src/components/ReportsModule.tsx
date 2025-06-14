@@ -10,6 +10,7 @@ import { FileGenerator } from '@/services/fileGenerator';
 import { DiscussionMessage } from '@/services/aiOrchestrator';
 import { useToast } from "@/hooks/use-toast";
 import { useAvailableModels } from "@/hooks/useAvailableModels";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 interface ReportsModuleProps {
   discussionMessages?: DiscussionMessage[];
@@ -249,191 +250,193 @@ const ReportsModule = ({
   const canGenerate = reportGenerator && isDiscussionComplete && !generatingReports;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-indigo-900">Comprehensive Reports</h2>
-            <p className="text-gray-600 mt-1">AI-generated insights from expert discussions</p>
+    <ErrorBoundary>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-indigo-900">Comprehensive Reports</h2>
+              <p className="text-gray-600 mt-1">AI-generated insights from expert discussions</p>
+            </div>
+            <Button 
+              onClick={generateAllReports}
+              disabled={!canGenerate}
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {generatingReports ? 'Generating...' : 'Generate All Reports'}
+            </Button>
           </div>
-          <Button 
-            onClick={generateAllReports}
-            disabled={!canGenerate}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {generatingReports ? 'Generating...' : 'Generate All Reports'}
-          </Button>
-        </div>
 
-        {/* ===== AI Enhancement Controls ===== */}
-        <div className="flex flex-col md:flex-row gap-3 items-center mb-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useAiEnhancement}
-              onChange={e => setUseAiEnhancement(e.target.checked)}
-              className="form-checkbox"
-            />
-            <span className="text-sm text-indigo-700 font-medium">Enable AI Enhancement</span>
-          </label>
+          {/* ===== AI Enhancement Controls ===== */}
+          <div className="flex flex-col md:flex-row gap-3 items-center mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useAiEnhancement}
+                onChange={e => setUseAiEnhancement(e.target.checked)}
+                className="form-checkbox"
+              />
+              <span className="text-sm text-indigo-700 font-medium">Enable AI Enhancement</span>
+            </label>
 
-          {useAiEnhancement && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-700 font-medium">Provider:</span>
-              <select
-                className="text-sm border rounded px-2 py-1"
-                value={selectedAiProvider}
-                onChange={e => setSelectedAiProvider(e.target.value)}
-              >
-                {Object.keys(availableModels).map(provider => (
-                  <option key={provider} value={provider}>{provider}</option>
-                ))}
-              </select>
-              <span className="text-xs text-slate-700 font-medium">Model:</span>
-              <select
-                className="text-sm border rounded px-2 py-1"
-                value={selectedAiModel}
-                onChange={e => setSelectedAiModel(e.target.value)}
-              >
-                {modelOptionsForSelectedProvider.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+            {useAiEnhancement && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-700 font-medium">Provider:</span>
+                <select
+                  className="text-sm border rounded px-2 py-1"
+                  value={selectedAiProvider}
+                  onChange={e => setSelectedAiProvider(e.target.value)}
+                >
+                  {Object.keys(availableModels).map(provider => (
+                    <option key={provider} value={provider}>{provider}</option>
+                  ))}
+                </select>
+                <span className="text-xs text-slate-700 font-medium">Model:</span>
+                <select
+                  className="text-sm border rounded px-2 py-1"
+                  value={selectedAiModel}
+                  onChange={e => setSelectedAiModel(e.target.value)}
+                >
+                  {modelOptionsForSelectedProvider.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {!isDiscussionComplete && (
+            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-amber-800 text-sm">
+                Reports will be available after completing a discussion with experts.
+              </p>
             </div>
           )}
-        </div>
 
-        {!isDiscussionComplete && (
-          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-amber-800 text-sm">
-              Reports will be available after completing a discussion with experts.
-            </p>
-          </div>
-        )}
-
-        <div className="grid md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-indigo-50 rounded-lg">
-            <div className="text-2xl font-bold text-indigo-600">{reportTypes.length}</div>
-            <div className="text-sm text-indigo-700">Report Types</div>
-          </div>
-          <div className="text-center p-4 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{completedReportsCount}</div>
-            <div className="text-sm text-green-700">Completed</div>
-          </div>
-          <div className="text-center p-4 bg-amber-50 rounded-lg">
-            <div className="text-2xl font-bold text-amber-600">{discussionMessages.length}</div>
-            <div className="text-sm text-amber-700">Expert Messages</div>
-          </div>
-          <div className="text-center p-4 bg-purple-50 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">
-              {new Set(discussionMessages.map(m => m.speaker)).size}
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-indigo-50 rounded-lg">
+              <div className="text-2xl font-bold text-indigo-600">{reportTypes.length}</div>
+              <div className="text-sm text-indigo-700">Report Types</div>
             </div>
-            <div className="text-sm text-purple-700">Expert Voices</div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{completedReportsCount}</div>
+              <div className="text-sm text-green-700">Completed</div>
+            </div>
+            <div className="text-center p-4 bg-amber-50 rounded-lg">
+              <div className="text-2xl font-bold text-amber-600">{discussionMessages.length}</div>
+              <div className="text-sm text-amber-700">Expert Messages</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">
+                {new Set(discussionMessages.map(m => m.speaker)).size}
+              </div>
+              <div className="text-sm text-purple-700">Expert Voices</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Reports Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {reportTypes.map((report) => {
-          const IconComponent = report.icon;
-          const status = reportStatuses[report.id] || 'pending';
-          const isCompleted = status === 'completed';
-          const reportData = generatedReports[report.id];
-          
-          return (
-            <Card 
-              key={report.id} 
-              className={`border border-indigo-100 hover:shadow-lg transition-all duration-300 ${
-                isCompleted ? 'hover:border-indigo-300' : 'opacity-75'
-              }`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${report.color}`}>
-                    <IconComponent className="w-5 h-5" />
-                  </div>
-                  {getStatusBadge(report.id)}
-                </div>
-                <CardTitle className="text-sm text-indigo-900 leading-tight">{report.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <CardDescription className="text-xs text-gray-600 mb-4 leading-relaxed">
-                  {report.description}
-                </CardDescription>
-                
-                {isCompleted && reportData ? (
-                  <div className="flex space-x-1">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50"
-                      onClick={() => downloadReport(report.id, 'pdf')}
-                    >
-                      <Download className="w-3 h-3 mr-1" />
-                      PDF
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50"
-                      onClick={() => downloadReport(report.id, 'html')}
-                    >
-                      <FileText className="w-3 h-3 mr-1" />
-                      HTML
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <div className="text-xs text-gray-400">
-                      {status === 'generating' ? 'Generating...' : 
-                       status === 'error' ? 'Generation failed' :
-                       'Available after generation'}
+        {/* Reports Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {reportTypes.map((report) => {
+            const IconComponent = report.icon;
+            const status = reportStatuses[report.id] || 'pending';
+            const isCompleted = status === 'completed';
+            const reportData = generatedReports[report.id];
+            
+            return (
+              <Card 
+                key={report.id} 
+                className={`border border-indigo-100 hover:shadow-lg transition-all duration-300 ${
+                  isCompleted ? 'hover:border-indigo-300' : 'opacity-75'
+                }`}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${report.color}`}>
+                      <IconComponent className="w-5 h-5" />
                     </div>
+                    {getStatusBadge(report.id)}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Report Preview */}
-      {completedReportsCount > 0 && (
-        <Card className="border-indigo-100">
-          <CardHeader>
-            <CardTitle className="text-lg text-indigo-900">Report Preview</CardTitle>
-            <CardDescription>Sample content from completed reports</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue={Object.keys(generatedReports)[0] || 'summary'}>
-              <TabsList className="grid w-full grid-cols-2">
-                {Object.keys(generatedReports).slice(0, 2).map(reportId => (
-                  <TabsTrigger key={reportId} value={reportId}>
-                    {reportTypes.find(t => t.id === reportId)?.title || reportId}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {Object.entries(generatedReports).slice(0, 2).map(([reportId, report]) => (
-                <TabsContent key={reportId} value={reportId} className="mt-4">
-                  <ScrollArea className="h-64 w-full border rounded-lg p-4">
-                    <div className="prose prose-sm max-w-none">
-                      <h3 className="text-lg font-bold text-indigo-900 mb-3">
-                        {report.title}
-                      </h3>
-                      <div className="whitespace-pre-line text-gray-700">
-                        {report.content.slice(0, 1500)}...
+                  <CardTitle className="text-sm text-indigo-900 leading-tight">{report.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <CardDescription className="text-xs text-gray-600 mb-4 leading-relaxed">
+                    {report.description}
+                  </CardDescription>
+                  
+                  {isCompleted && reportData ? (
+                    <div className="flex space-x-1">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50"
+                        onClick={() => downloadReport(report.id, 'pdf')}
+                      >
+                        <Download className="w-3 h-3 mr-1" />
+                        PDF
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50"
+                        onClick={() => downloadReport(report.id, 'html')}
+                      >
+                        <FileText className="w-3 h-3 mr-1" />
+                        HTML
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400">
+                        {status === 'generating' ? 'Generating...' : 
+                         status === 'error' ? 'Generation failed' :
+                         'Available after generation'}
                       </div>
                     </div>
-                  </ScrollArea>
-                </TabsContent>
-              ))}
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Report Preview */}
+        {completedReportsCount > 0 && (
+          <Card className="border-indigo-100">
+            <CardHeader>
+              <CardTitle className="text-lg text-indigo-900">Report Preview</CardTitle>
+              <CardDescription>Sample content from completed reports</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue={Object.keys(generatedReports)[0] || 'summary'}>
+                <TabsList className="grid w-full grid-cols-2">
+                  {Object.keys(generatedReports).slice(0, 2).map(reportId => (
+                    <TabsTrigger key={reportId} value={reportId}>
+                      {reportTypes.find(t => t.id === reportId)?.title || reportId}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {Object.entries(generatedReports).slice(0, 2).map(([reportId, report]) => (
+                  <TabsContent key={reportId} value={reportId} className="mt-4">
+                    <ScrollArea className="h-64 w-full border rounded-lg p-4">
+                      <div className="prose prose-sm max-w-none">
+                        <h3 className="text-lg font-bold text-indigo-900 mb-3">
+                          {report.title}
+                        </h3>
+                        <div className="whitespace-pre-line text-gray-700">
+                          {report.content.slice(0, 1500)}...
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 };
 
