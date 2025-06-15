@@ -5,7 +5,7 @@ export interface AIProvider {
 }
 
 // API call functions for different providers
-export async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
+export async function callOpenAI(prompt: string, apiKey: string, model: string = 'gpt-4o'): Promise<string> {
   console.log('🔵 Calling OpenAI API...');
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -14,7 +14,7 @@ export async function callOpenAI(prompt: string, apiKey: string): Promise<string
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4.1-2025-04-14',
+      model: model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1000,
       temperature: 0.8,
@@ -37,7 +37,7 @@ export async function callOpenAI(prompt: string, apiKey: string): Promise<string
   return content;
 }
 
-export async function callAnthropic(prompt: string, apiKey: string): Promise<string> {
+export async function callAnthropic(prompt: string, apiKey: string, model: string = 'claude-3-5-sonnet-20241022'): Promise<string> {
   console.log('🟣 Calling Anthropic API...');
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -47,7 +47,7 @@ export async function callAnthropic(prompt: string, apiKey: string): Promise<str
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: model,
       max_tokens: 1200,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.8,
@@ -69,9 +69,9 @@ export async function callAnthropic(prompt: string, apiKey: string): Promise<str
   return content;
 }
 
-export async function callGoogleGemini(prompt: string, apiKey: string): Promise<string> {
+export async function callGoogleGemini(prompt: string, apiKey: string, model: string = 'gemini-1.5-pro'): Promise<string> {
   console.log('🟡 Calling Google Gemini API...');
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -102,21 +102,20 @@ export async function callGoogleGemini(prompt: string, apiKey: string): Promise<
   return content;
 }
 
-export async function callCohere(prompt: string, apiKey: string): Promise<string> {
+export async function callCohere(prompt: string, apiKey: string, model: string = 'command-r'): Promise<string> {
   console.log('🔶 Calling Cohere API...');
-  const response = await fetch('https://api.cohere.ai/v1/generate', {
+  const response = await fetch('https://api.cohere.ai/v1/chat', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'command',
-      prompt: prompt,
-      max_tokens: 1000,
+      model: model,
+      message: prompt,
       temperature: 0.8,
       p: 0.95,
-      stop_sequences: []
+      max_tokens: 1000
     }),
   });
 
@@ -127,14 +126,14 @@ export async function callCohere(prompt: string, apiKey: string): Promise<string
   }
 
   const data = await response.json();
-  const content = data.generations?.[0]?.text;
+  const content = data.text;
   if (!content) {
     throw new Error('No content in Cohere response');
   }
   return content.trim();
 }
 
-export async function callMistralAI(prompt: string, apiKey: string): Promise<string> {
+export async function callMistralAI(prompt: string, apiKey: string, model: string = 'mistral-large-latest'): Promise<string> {
   console.log('🟠 Calling Mistral AI API...');
   const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
     method: 'POST',
@@ -143,7 +142,7 @@ export async function callMistralAI(prompt: string, apiKey: string): Promise<str
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'mistral-large-latest',
+      model: model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1000,
       temperature: 0.8,
@@ -165,7 +164,7 @@ export async function callMistralAI(prompt: string, apiKey: string): Promise<str
   return content;
 }
 
-export async function callPerplexity(prompt: string, apiKey: string): Promise<string> {
+export async function callPerplexity(prompt: string, apiKey: string, model: string = 'llama-3.1-sonar-small-128k-online'): Promise<string> {
   console.log('🟢 Calling Perplexity API...');
   const response = await fetch('https://api.perplexity.ai/chat/completions', {
     method: 'POST',
@@ -174,7 +173,7 @@ export async function callPerplexity(prompt: string, apiKey: string): Promise<st
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-sonar-small-128k-online',
+      model: model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1000,
       temperature: 0.8,
@@ -197,7 +196,7 @@ export async function callPerplexity(prompt: string, apiKey: string): Promise<st
   return content;
 }
 
-export async function callGroq(prompt: string, apiKey: string): Promise<string> {
+export async function callGroq(prompt: string, apiKey: string, model: string = 'llama3-8b-8192'): Promise<string> {
   console.log('🟡 Calling Groq API with key:', apiKey ? `${apiKey.slice(0, 8)}...` : 'NO KEY');
   
   if (!apiKey || apiKey.trim() === '') {
@@ -211,7 +210,7 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'mixtral-8x7b-32768',
+      model: model,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 800,
       temperature: 0.8,
@@ -239,24 +238,17 @@ export async function callGroq(prompt: string, apiKey: string): Promise<string> 
   return content;
 }
 
-// Enhanced HuggingFace integration with API key support and better models
-export async function callHuggingFaceWithFallback(prompt: string, expertId: string, apiKey?: string): Promise<string> {
-  console.log(`🤗 Calling HuggingFace API for expert ${expertId}, has API key: ${!!apiKey}`);
+// Enhanced HuggingFace integration with real model discovery
+export async function callHuggingFaceWithFallback(prompt: string, expertId: string, apiKey?: string, model?: string): Promise<string> {
+  console.log(`🤗 Calling HuggingFace API for expert ${expertId}, has API key: ${!!apiKey}, model: ${model}`);
   
-  // Upgraded to stronger, larger models that perform better for long-form text
-  const models = [
-    'microsoft/DialoGPT-large',
-    'facebook/blenderbot-1B-distill',
-    'HuggingFaceH4/zephyr-7b-beta',
-    'meta-llama/Llama-2-7b-chat-hf',
-    'microsoft/DialoGPT-medium'
-  ];
+  // Use the provided model or fallback to a working one
+  const modelToUse = model || 'microsoft/DialoGPT-large';
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   
-  // Add authorization if API key is provided
   if (apiKey && apiKey.trim() !== '') {
     headers['Authorization'] = `Bearer ${apiKey}`;
     console.log(`🔑 Using HuggingFace API key for expert ${expertId}`);
@@ -264,82 +256,66 @@ export async function callHuggingFaceWithFallback(prompt: string, expertId: stri
     console.log(`🆓 Using free HuggingFace inference for expert ${expertId}`);
   }
   
-  for (let i = 0; i < models.length; i++) {
-    const model = models[i];
-    try {
-      console.log(`🔄 [${i + 1}/${models.length}] Trying HuggingFace model ${model} for expert ${expertId}`);
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
-      
-      const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 800, // WAS 150, now much more
-            temperature: 0.8,
-            top_p: 0.95,
-            repetition_penalty: 1.2, // reduce repeating
-            return_full_text: false,
-            do_sample: true,
-          },
-          options: {
-            wait_for_model: true,
-          }
-        }),
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`⚠️ HuggingFace model ${model} returned ${response.status}: ${errorText}`);
-        
-        // If we get a 503 (model loading), wait a bit longer for this model
-        if (response.status === 503 && i < 2) {
-          console.log(`⏳ Model ${model} is loading, waiting 5 seconds...`);
-          await new Promise(resolve => setTimeout(resolve, 5000));
-          continue;
+  try {
+    console.log(`🔄 Trying HuggingFace model ${modelToUse} for expert ${expertId}`);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+    
+    const response = await fetch(`https://api-inference.huggingface.co/models/${modelToUse}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 800,
+          temperature: 0.8,
+          top_p: 0.95,
+          repetition_penalty: 1.2,
+          return_full_text: false,
+          do_sample: true,
+        },
+        options: {
+          wait_for_model: true,
         }
-        continue;
-      }
-      
-      const data = await response.json();
-      console.log(`🤗 HuggingFace response for ${model}:`, data);
-      
-      if (data.error) {
-        console.warn(`⚠️ HuggingFace model ${model} returned error:`, data.error);
-        continue;
-      }
-      
-      // Handle different response formats
-      let content = '';
-      if (Array.isArray(data) && data[0]?.generated_text) {
-        content = data[0].generated_text.trim();
-      } else if (data.generated_text) {
-        content = data.generated_text.trim();
-      } else if (typeof data === 'string') {
-        content = data.trim();
-      }
-      
-      if (content.length > 10) { // Ensure we have meaningful content
-        console.log(`✅ Successfully generated response using ${model} for expert ${expertId}: ${content.slice(0, 50)}...`);
-        return content;
-      }
-      
-      console.warn(`⚠️ Model ${model} returned insufficient content for expert ${expertId}:`, content);
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.warn(`⏰ HuggingFace model ${model} timed out for expert ${expertId}`);
-      } else {
-        console.warn(`💥 HuggingFace model ${model} failed for expert ${expertId}:`, error);
-      }
+      }),
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn(`⚠️ HuggingFace model ${modelToUse} returned ${response.status}: ${errorText}`);
+      throw new Error(`HuggingFace API error: ${response.status}`);
     }
+    
+    const data = await response.json();
+    console.log(`🤗 HuggingFace response for ${modelToUse}:`, data);
+    
+    if (data.error) {
+      console.warn(`⚠️ HuggingFace model ${modelToUse} returned error:`, data.error);
+      throw new Error(data.error);
+    }
+    
+    // Handle different response formats
+    let content = '';
+    if (Array.isArray(data) && data[0]?.generated_text) {
+      content = data[0].generated_text.trim();
+    } else if (data.generated_text) {
+      content = data.generated_text.trim();
+    } else if (typeof data === 'string') {
+      content = data.trim();
+    }
+    
+    if (content.length > 10) {
+      console.log(`✅ Successfully generated response using ${modelToUse} for expert ${expertId}: ${content.slice(0, 50)}...`);
+      return content;
+    }
+    
+    throw new Error('Insufficient content generated');
+  } catch (error) {
+    console.error(`❌ HuggingFace model ${modelToUse} failed for expert ${expertId}:`, error);
+    throw error;
   }
-  
-  console.error(`❌ All HuggingFace models failed for expert ${expertId}`);
-  throw new Error('All HuggingFace models failed');
 }

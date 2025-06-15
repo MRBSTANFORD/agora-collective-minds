@@ -13,14 +13,13 @@ const cleanApiKey = (apiKey: string): string => {
     return cleaned.replace('hf ', '');
   }
   
-  // Remove any leading/trailing whitespace
   return cleaned;
 };
 
 // Validate API key format for different providers
 const validateApiKey = (apiKey: string, provider: string): boolean => {
   if (!apiKey || apiKey.trim() === '') {
-    return provider === 'HuggingFace'; // HuggingFace can work without API key
+    return provider === 'HuggingFace';
   }
   
   const cleanKey = cleanApiKey(apiKey);
@@ -31,11 +30,11 @@ const validateApiKey = (apiKey: string, provider: string): boolean => {
     case 'Anthropic':
       return cleanKey.startsWith('sk-ant-');
     case 'GoogleGemini':
-      return cleanKey.length > 10; // Google API keys are typically long strings
+      return cleanKey.length > 10;
     case 'Cohere':
-      return cleanKey.length > 10; // Cohere API keys are typically long strings
+      return cleanKey.length > 10;
     case 'MistralAI':
-      return cleanKey.length > 10; // Mistral API keys are typically long strings
+      return cleanKey.length > 10;
     case 'HuggingFace':
       return cleanKey.startsWith('hf_') || cleanKey === '';
     case 'Groq':
@@ -43,30 +42,15 @@ const validateApiKey = (apiKey: string, provider: string): boolean => {
     case 'Perplexity':
       return cleanKey.startsWith('pplx-');
     default:
-      return true; // Allow unknown providers
+      return true;
   }
 };
 
-// Check if response is likely a fallback
-const isFallbackResponse = (response: string): boolean => {
-  const fallbackIndicators = [
-    "This challenge reminds me",
-    "We must approach this systematically",
-    "But first, we must ask ourselves",
-    "Let us apply mathematical reasoning",
-    "This challenge invites us to think",
-    "The path to solving this challenge",
-    "This challenge has the characteristics",
-    "We must examine the practical realities"
-  ];
-  
-  return fallbackIndicators.some(indicator => response.includes(indicator));
-};
-
 // Generate AI response with enhanced error handling and fallbacks
-export async function generateAIResponse(prompt: string, provider: string, apiKey: string, expertId: string): Promise<string> {
+export async function generateAIResponse(prompt: string, provider: string, apiKey: string, expertId: string, model?: string): Promise<string> {
   console.log(`🤖 Generating response for expert ${expertId}:`, { 
     provider, 
+    model,
     hasApiKey: !!apiKey && apiKey.trim() !== '', 
     apiKeyPrefix: apiKey ? apiKey.slice(0, 8) + '...' : 'none'
   });
@@ -85,7 +69,7 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🔄 Attempt ${attempt}/${maxRetries} for expert ${expertId} using ${provider}`);
+      console.log(`🔄 Attempt ${attempt}/${maxRetries} for expert ${expertId} using ${provider}${model ? ` with model ${model}` : ''}`);
       
       let response: string;
       
@@ -149,7 +133,6 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
           
         case 'HuggingFace':
         default:
-          // HuggingFace can work with or without API key
           response = await callHuggingFaceWithFallback(prompt, expertId, cleanedApiKey);
           break;
       }
@@ -157,12 +140,6 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
       // Ensure response is meaningful (at least 50 characters)
       if (response && response.trim().length > 50) {
         console.log(`✅ Successfully generated response for ${expertId} using ${provider} on attempt ${attempt}: ${response.slice(0, 60)}...`);
-        
-        // Log if this was a fallback response even though API call succeeded
-        if (isFallbackResponse(response)) {
-          console.warn(`⚠️ Detected fallback-like response from ${provider} for ${expertId}`);
-        }
-        
         return response.trim();
       } else {
         throw new Error(`AI response too short: ${response?.length || 0} characters`);
