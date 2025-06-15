@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -6,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Info, CheckCircle2, AlertCircle, Loader2, RefreshCw, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { testApiConnection, ProviderApiStatus } from "@/services/apiTester";
 import { useAvailableModels, LLMModel } from "@/hooks/useAvailableModels";
 import { PROVIDERS_WITH_MODELS, traitDocs } from "@/config/providerConfig";
@@ -43,6 +44,8 @@ const ExpertCard = React.memo<{
   testingStatus: ProviderApiStatus;
   apiMessage: string;
   onTestApi: () => void;
+  isModelsLoading: boolean;
+  onRefreshModels: () => void;
 }>(({ 
   expert, 
   onTraitChange, 
@@ -52,7 +55,9 @@ const ExpertCard = React.memo<{
   modelOptions,
   testingStatus,
   apiMessage,
-  onTestApi
+  onTestApi,
+  isModelsLoading,
+  onRefreshModels
 }) => {
   const providerMeta = PROVIDERS_WITH_MODELS[expert.provider as keyof typeof PROVIDERS_WITH_MODELS] || PROVIDERS_WITH_MODELS.HuggingFace;
 
@@ -116,25 +121,55 @@ const ExpertCard = React.memo<{
           </Select>
         </div>
 
-        {/* Model Selection */}
+        {/* Enhanced Model Selection with real-time info */}
         <div>
-          <Label className="text-sm">AI Model</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm">AI Model</Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRefreshModels}
+              disabled={isModelsLoading}
+              className="h-6 px-2 text-xs"
+            >
+              <RefreshCw className={`w-3 h-3 mr-1 ${isModelsLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
           <Select
             value={expert.model || modelOptions[0]?.value}
             onValueChange={onModelChange}
+            disabled={isModelsLoading}
           >
             <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select Model" />
+              <SelectValue placeholder={isModelsLoading ? "Loading models..." : "Select Model"} />
             </SelectTrigger>
             <SelectContent>
-              {modelOptions.map((model) => (
-                <SelectItem key={model.value} value={model.value}>
-                  <span className="font-medium">{model.label}</span>
-                  {model.free && <span className="text-green-600 ml-1">🆓</span>}
+              {modelOptions.length === 0 && !isModelsLoading ? (
+                <SelectItem value="no-models" disabled>
+                  No models available
                 </SelectItem>
-              ))}
+              ) : (
+                modelOptions.map((model) => (
+                  <SelectItem key={model.value} value={model.value} disabled={!model.available}>
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-medium">{model.label}</span>
+                      <div className="flex items-center gap-1 ml-2">
+                        {model.free && <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Free</Badge>}
+                        {!model.available && <Badge variant="outline" className="text-xs text-gray-500">API Key Required</Badge>}
+                        {model.capabilities?.includes('web_search') && <Zap className="w-3 h-3 text-blue-500" />}
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
+          {modelOptions.length > 0 && (
+            <div className="text-xs text-gray-500 mt-1">
+              {modelOptions.filter(m => m.free).length} free, {modelOptions.filter(m => m.available).length} available
+            </div>
+          )}
         </div>
 
         {/* API Key Input + Test */}
@@ -203,7 +238,7 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
     return keys;
   }, [experts]);
 
-  const { models: availableModels } = useAvailableModels(providerList, apiKeys);
+  const { models: availableModels, loading: modelsLoading, error: modelsError, refreshModels, summary } = useAvailableModels(providerList, apiKeys);
 
   const [testingStatus, setTestingStatus] = useState<Record<string, ProviderApiStatus>>({});
   const [apiMessages, setApiMessages] = useState<Record<string, string>>({});
@@ -255,16 +290,57 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
           testingStatus={testingStatus[expert.id] || "idle"}
           apiMessage={apiMessages[expert.id] || ""}
           onTestApi={() => handleTestApi(expert)}
+          isModelsLoading={modelsLoading}
+          onRefreshModels={refreshModels}
         />
       );
     }),
-    [experts, availableModels, testingStatus, apiMessages, onTraitChange, onApiKeyChange, onProviderChange, onModelChange, handleTestApi]
+    [experts, availableModels, testingStatus, apiMessages, modelsLoading, onTraitChange, onApiKeyChange, onProviderChange, onModelChange, handleTestApi, refreshModels]
   );
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pr-4">
-        {expertCards}
+      <div className="space-y-4">
+        {/* Model Discovery Status */}
+        {(modelsLoading || modelsError || summary.totalModels > 0) && (
+          <Card className="bg-blue-50/50 border-blue-200">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {modelsLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                      <span className="text-sm text-blue-700">Discovering available models...</span>
+                    </>
+                  ) : modelsError ? (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-red-600" />
+                      <span className="text-sm text-red-700">Model discovery failed: {modelsError}</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span className="text-sm text-green-700">
+                        Found {summary.totalModels} models ({summary.freeModels} free) across {summary.providersWithModels} providers
+                      </span>
+                    </>
+                  )}
+                </div>
+                {!modelsLoading && (
+                  <Button variant="ghost" size="sm" onClick={refreshModels}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Refresh
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Expert Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pr-4">
+          {expertCards}
+        </div>
       </div>
     </TooltipProvider>
   );

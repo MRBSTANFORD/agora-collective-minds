@@ -1,5 +1,6 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { discoverAllModelsWithCache, DiscoveredModel } from "@/services/modelDiscovery";
 
 export type LLMModel = {
   value: string;
@@ -8,38 +9,12 @@ export type LLMModel = {
   free?: boolean;
   available?: boolean;
   note?: string;
-};
-
-// Static model data - no need to refetch these
-const STATIC_MODELS: Record<string, LLMModel[]> = {
-  OpenAI: [
-    { value: "gpt-4.1-2025-04-14", label: "GPT-4.1", provider: "OpenAI", free: false },
-    { value: "gpt-4o", label: "GPT-4o", provider: "OpenAI", free: false },
-    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo", provider: "OpenAI", free: false },
-  ],
-  Anthropic: [
-    { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4", provider: "Anthropic", free: false },
-    { value: "claude-opus-4-20250514", label: "Claude Opus 4", provider: "Anthropic", free: false },
-    { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku", provider: "Anthropic", free: false },
-  ],
-  Groq: [
-    { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B", provider: "Groq", free: true },
-    { value: "llama-3-70b-8192", label: "Llama 3 70B", provider: "Groq", free: true },
-    { value: "gemma-7b-it", label: "Gemma 7B", provider: "Groq", free: true },
-  ],
-  HuggingFace: [
-    { value: "HuggingFaceH4/zephyr-7b-beta", label: "Zephyr 7B (Free)", provider: "HuggingFace", free: true },
-    { value: "meta-llama/Llama-2-7b-chat-hf", label: "Llama 2 7B (Free)", provider: "HuggingFace", free: true },
-    { value: "microsoft/DialoGPT-large", label: "DialoGPT Large (Free)", provider: "HuggingFace", free: true },
-    { value: "mistralai/Mixtral-8x7B-Instruct-v0.1", label: "Mixtral 8x7B (Free)", provider: "HuggingFace", free: true },
-    { value: "meta-llama/Meta-Llama-3-8B", label: "Llama 3 8B (Free)", provider: "HuggingFace", free: true },
-    { value: "openchat/openchat-7b", label: "OpenChat 7B (Free)", provider: "HuggingFace", free: true },
-    { value: "Qwen/Qwen1.5-14B-Chat", label: "Qwen 14B (Free)", provider: "HuggingFace", free: true }
-  ],
+  contextLength?: number;
+  capabilities?: string[];
 };
 
 /**
- * Stable hook for available models with proper memoization and cancellation
+ * Enhanced hook for dynamic model discovery with real-time API queries
  */
 export function useAvailableModels(
   providers: string[],
@@ -47,6 +22,7 @@ export function useAvailableModels(
 ) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [models, setModels] = useState<Record<string, LLMModel[]>>({});
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Memoize providers array to prevent unnecessary re-renders
@@ -57,22 +33,101 @@ export function useAvailableModels(
 
   // Memoize API keys to prevent unnecessary re-renders
   const stableApiKeys = useMemo(() => {
-    if (!apiKeys) return undefined;
+    if (!apiKeys) return {};
     const sorted = Object.keys(apiKeys).sort().reduce((acc, key) => {
-      acc[key] = apiKeys[key];
+      if (apiKeys[key] && apiKeys[key].trim() !== '') {
+        acc[key] = apiKeys[key];
+      }
       return acc;
     }, {} as Record<string, string>);
     return sorted;
   }, [apiKeys]);
 
-  // Memoize models result - always return static models for now
-  const models = useMemo(() => {
+  // Convert discovered models to LLMModel format
+  const convertDiscoveredModels = useCallback((discoveredModels: Record<string, DiscoveredModel[]>): Record<string, LLMModel[]> => {
     const result: Record<string, LLMModel[]> = {};
+    
     stableProviders.forEach(provider => {
-      result[provider] = STATIC_MODELS[provider] || [];
+      const providerModels = discoveredModels[provider] || [];
+      result[provider] = providerModels.map(model => ({
+        value: model.id,
+        label: model.name,
+        provider: model.provider,
+        free: model.free,
+        available: model.available,
+        note: model.note,
+        contextLength: model.contextLength,
+        capabilities: model.capabilities
+      }));
     });
+    
     return result;
   }, [stableProviders]);
+
+  // Discover models function
+  const discoverModels = useCallback(async () => {
+    if (stableProviders.length === 0) {
+      setModels({});
+      return;
+    }
+
+    console.log('🔍 Starting model discovery for providers:', stableProviders);
+    console.log('🔑 API keys available for:', Object.keys(stableApiKeys));
+    
+    setLoading(true);
+    setError(null);
+
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const discoveredModels = await discoverAllModelsWithCache(stableApiKeys);
+      
+      // Check if request was cancelled
+      if (abortControllerRef.current?.signal.aborted) {
+        console.log('🛑 Model discovery cancelled');
+        return;
+      }
+
+      const convertedModels = convertDiscoveredModels(discoveredModels);
+      
+      console.log('✅ Model discovery completed:', {
+        providers: Object.keys(convertedModels),
+        totalModels: Object.values(convertedModels).flat().length,
+        freeModels: Object.values(convertedModels).flat().filter(m => m.free).length
+      });
+      
+      setModels(convertedModels);
+      setError(null);
+    } catch (err) {
+      if (abortControllerRef.current?.signal.aborted) {
+        console.log('🛑 Model discovery cancelled');
+        return;
+      }
+      
+      console.error('❌ Model discovery failed:', err);
+      setError(err instanceof Error ? err.message : 'Model discovery failed');
+      
+      // Fallback to empty models for providers that failed
+      const fallbackModels: Record<string, LLMModel[]> = {};
+      stableProviders.forEach(provider => {
+        fallbackModels[provider] = [];
+      });
+      setModels(fallbackModels);
+    } finally {
+      setLoading(false);
+      abortControllerRef.current = null;
+    }
+  }, [stableProviders, stableApiKeys, convertDiscoveredModels]);
+
+  // Effect to trigger discovery when providers or API keys change
+  useEffect(() => {
+    discoverModels();
+  }, [discoverModels]);
 
   // Cleanup function
   const cleanup = useCallback(() => {
@@ -87,10 +142,29 @@ export function useAvailableModels(
     return cleanup;
   }, [cleanup]);
 
+  // Function to refresh models manually
+  const refreshModels = useCallback(() => {
+    console.log('🔄 Manual model refresh requested');
+    discoverModels();
+  }, [discoverModels]);
+
+  // Get summary statistics
+  const summary = useMemo(() => {
+    const allModels = Object.values(models).flat();
+    return {
+      totalModels: allModels.length,
+      freeModels: allModels.filter(m => m.free).length,
+      availableModels: allModels.filter(m => m.available).length,
+      providersWithModels: Object.keys(models).filter(p => models[p].length > 0).length
+    };
+  }, [models]);
+
   // Return memoized result to prevent unnecessary re-renders
   return useMemo(() => ({
     loading,
     models,
-    error
-  }), [loading, models, error]);
+    error,
+    refreshModels,
+    summary
+  }), [loading, models, error, refreshModels, summary]);
 }
