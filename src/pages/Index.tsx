@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ExpertProfiles from '@/components/ExpertProfiles';
@@ -8,8 +7,8 @@ import { DiscussionConfig } from "@/components/DiscussionConfigPanel";
 import HeroSection from '@/components/HeroSection';
 import ChallengeInputSection from '@/components/ChallengeInputSection';
 import HowItWorksSection from '@/components/HowItWorksSection';
-import InteractiveDemo from '@/components/InteractiveDemo';
 import TestimonialsSection from '@/components/TestimonialsSection';
+import InteractiveDemo from '@/components/InteractiveDemo';
 import FeaturesComparison from '@/components/FeaturesComparison';
 import ApiCostCalculator from '@/components/ApiCostCalculator';
 import AgoraHeader from '@/components/AgoraHeader';
@@ -102,18 +101,6 @@ const Index = () => {
               />
 
               <HowItWorksSection />
-              
-              <InteractiveDemo
-                onTryChallenge={(demoChallenge) => {
-                  setChallenge(demoChallenge);
-                  setActiveTab('home');
-                  // Scroll to challenge input section
-                  setTimeout(() => {
-                    const challengeSection = document.querySelector('[data-section="challenge-input"]');
-                    challengeSection?.scrollIntoView({ behavior: 'smooth' });
-                  }, 100);
-                }}
-              />
               
               <TestimonialsSection />
             </div>
