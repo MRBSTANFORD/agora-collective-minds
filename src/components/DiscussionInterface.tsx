@@ -1,425 +1,352 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, Play, Pause, RotateCcw, MessageSquare, Users, BarChart3, Activity, FileText } from "lucide-react";
 import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
-import { useToast } from "@/hooks/use-toast";
-import { useDiscussionPersistence } from '@/hooks/useDiscussionPersistence';
+import { ExpertConfig } from './ExpertCardList';
 import { useDiscussionState } from '@/hooks/useDiscussionState';
-import { DiscussionErrorBoundary } from '@/components/ui/DiscussionErrorBoundary';
-import { getExpertImage, getExpertDomain, getExpertColor, getRelativeTime } from '@/utils/expertUtils';
-import DiscussionHeader from './discussion/DiscussionHeader';
-import DiscussionControls from './discussion/DiscussionControls';
-import ExpertsPanel from './discussion/ExpertsPanel';
-import MessagesPanel from './discussion/MessagesPanel';
-import DiscussionRecovery from './discussion/DiscussionRecovery';
+import { useToast } from "@/hooks/use-toast";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import ReportsModule from './ReportsModule';
+import AnalyticsDashboard from './analytics/AnalyticsDashboard';
+import ApiMonitoringDashboard from './monitoring/ApiMonitoringDashboard';
+import MobileDiscussionInterface from './mobile/MobileDiscussionInterface';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-const DiscussionInterface = ({
-  challenge,
-  discussionConfig,
-  onDiscussionUpdate,
-}: {
+export interface DiscussionConfig {
+  rounds: number;
+  experts: ExpertConfig[];
+}
+
+interface DiscussionInterfaceProps {
+  config: DiscussionConfig;
   challenge: string;
-  discussionConfig?: import('./DiscussionConfigPanel').DiscussionConfig;
-  onDiscussionUpdate?: (messages: DiscussionMessage[], complete: boolean) => void;
+  onConfigChange?: (config: DiscussionConfig) => void;
+}
+
+const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
+  config,
+  challenge,
+  onConfigChange
 }) => {
   const { toast } = useToast();
-  const config = discussionConfig;
-  const [maxRounds, setMaxRounds] = useState(config?.rounds || 5);
+  const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState('discussion');
+  
+  const discussionState = useDiscussionState(config.rounds);
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
-  const [discussionSpeed, setDiscussionSpeed] = useState(1);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Use the extracted discussion state hook
-  const discussionState = useDiscussionState(maxRounds);
-  
-  // Persistence hook
-  const { 
-    savedState, 
-    saveDiscussion, 
-    clearSavedDiscussion, 
-    hasSavedState 
-  } = useDiscussionPersistence();
-  
-  const [showRecovery, setShowRecovery] = useState(false);
-
-  // Initialize orchestrator when config changes
-  useEffect(() => {
-    console.log('🔧 DiscussionInterface: Config changed', { 
-      hasConfig: !!config, 
-      hasExperts: !!config?.experts, 
-      expertsCount: config?.experts?.length,
-      challenge: challenge?.slice(0, 50),
-      rounds: config?.rounds 
-    });
-    
-    setMaxRounds(config?.rounds || 5);
-    
-    if (config?.experts && challenge?.trim()) {
-      console.log('🔧 Creating orchestrator with configured experts:', config.experts.map(e => ({ name: e.name, provider: e.provider, hasApiKey: !!e.apiKey })));
-      const newOrchestrator = new DiscussionOrchestrator(config.experts, challenge, config.rounds || 5);
-      setOrchestrator(newOrchestrator);
-      console.log('✅ Orchestrator created with actual expert config');
-    } else {
-      console.log('❌ Cannot create orchestrator - missing config or challenge');
-      setOrchestrator(null);
-    }
-  }, [config?.rounds, config?.experts, challenge]);
-
-  // Use configured experts instead of hardcoded ones
-  const experts = config?.experts?.map(expert => ({
-    id: expert.id,
-    name: expert.name,
-    image: getExpertImage(expert.id),
-    domain: getExpertDomain(expert.id),
-    color: getExpertColor(expert.id),
-    participation: 0
-  })) || [];
-
-  // Check for saved state on mount
-  useEffect(() => {
-    if (hasSavedState && savedState && savedState.challenge === challenge) {
-      setShowRecovery(true);
-    }
-  }, [hasSavedState, savedState, challenge]);
-
-  // Auto-save discussion progress
-  useEffect(() => {
-    if (discussionState.messages.length > 0 && discussionState.currentRound > 0) {
-      saveDiscussion(discussionState.messages, discussionState.currentRound, challenge);
-    }
-  }, [discussionState.messages, discussionState.currentRound, challenge, saveDiscussion]);
-
-  const handleRestoreSession = useCallback(() => {
-    if (savedState) {
-      discussionState.setMessages(savedState.messages);
-      discussionState.setCurrentRound(savedState.currentRound);
-      discussionState.setProgress((savedState.currentRound / maxRounds) * 100);
-      discussionState.setRoundProgress(Array(maxRounds).fill(0).map((_, i) => i < savedState.currentRound ? 100 : 0));
-      setShowRecovery(false);
-      
-      toast({
-        title: "Session Restored",
-        description: `Resumed at round ${savedState.currentRound} with ${savedState.messages.length} messages.`,
-      });
-    }
-  }, [savedState, maxRounds, toast, discussionState]);
-
-  const handleDiscardSession = useCallback(() => {
-    clearSavedDiscussion();
-    setShowRecovery(false);
-  }, [clearSavedDiscussion]);
-
-  const handleErrorReset = useCallback(() => {
-    console.log('🔄 Resetting after error...');
-    discussionState.resetState();
-    discussionState.setCurrentSpeaker(null);
-    discussionState.setTypingMessage('');
-  }, [discussionState]);
 
   const startDiscussion = useCallback(async () => {
-    console.log('🚀 Starting discussion...', { 
-      hasOrchestrator: !!orchestrator, 
-      challenge: challenge?.slice(0, 50),
-      expertsCount: config?.experts?.length,
-      currentIsRunning: discussionState.isRunningRef.current,
-      currentIsGenerating: discussionState.isGeneratingRef.current
-    });
-    
-    if (!orchestrator) {
-      console.error('❌ No orchestrator available');
-      toast({
-        title: "Cannot Start Discussion",
-        description: "Please configure experts and enter a challenge first.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (discussionState.isRunningRef.current) return;
 
-    if (!challenge?.trim()) {
-      console.error('❌ No challenge provided');
-      toast({
-        title: "Cannot Start Discussion", 
-        description: "Please enter a challenge to discuss.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!config?.experts?.length) {
-      console.error('❌ No experts configured');
-      toast({
-        title: "Cannot Start Discussion",
-        description: "Please select and configure at least one expert.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log('✅ Validation passed, starting discussion...');
-    
-    // Reset state
-    discussionState.resetState();
-    discussionState.setCurrentSpeaker(null);
-    discussionState.setTypingMessage('');
-    setShowRecovery(false);
-    clearSavedDiscussion();
-    
-    // Set running state and start immediately
     discussionState.setIsRunning(true);
     discussionState.isRunningRef.current = true;
-    
-    console.log(`✅ Starting symposium with ${config.experts.length} experts for ${maxRounds} rounds`);
-    
-    toast({
-      title: "Discussion Started",
-      description: `The symposium has begun with ${config.experts.length} experts. Watch as they share their wisdom...`,
-    });
-    
-    // Start generation immediately without setTimeout
-    generateNextRound();
-  }, [orchestrator, challenge, config?.experts, maxRounds, toast, clearSavedDiscussion, discussionState]);
+    discussionState.setHasError(false);
 
-  const generateNextRound = useCallback(async () => {
-    console.log('🔄 generateNextRound called with state:', {
-      hasOrchestrator: !!orchestrator,
-      isRunning: discussionState.isRunningRef.current,
-      isGenerating: discussionState.isGeneratingRef.current,
-      currentRound: orchestrator?.getCurrentRound() || 0
-    });
+    if (discussionState.currentRound === 0) {
+      discussionState.resetState();
+      console.log('🚀 Starting new discussion with config:', config, 'challenge:', challenge);
+    } else {
+      console.log('⏯️ Resuming discussion from round:', discussionState.currentRound);
+    }
 
+    // Initialize orchestrator only once at the start or after reset
     if (!orchestrator) {
-      console.error('❌ generateNextRound: No orchestrator available');
-      discussionState.setHasError(true);
-      discussionState.setIsRunning(false);
-      discussionState.isRunningRef.current = false;
-      toast({
-        title: "Discussion Error",
-        description: "Discussion orchestrator is not available. Please restart the discussion.",
-        variant: "destructive",
-      });
-      return;
+      const newOrchestrator = new DiscussionOrchestrator(config.experts, challenge, config.rounds);
+      setOrchestrator(newOrchestrator);
     }
 
-    if (!discussionState.isRunningRef.current) {
-      console.log('⏹️ generateNextRound: Discussion not running, stopping');
-      return;
-    }
+    // Run the discussion rounds
+    while (discussionState.isRunningRef.current && discussionState.currentRound < config.rounds) {
+      const round = discussionState.currentRound + 1;
+      discussionState.setIsGenerating(true);
+      discussionState.isGeneratingRef.current = true;
+      discussionState.setCurrentSpeaker(null);
 
-    if (discussionState.isGeneratingRef.current) {
-      console.warn('⚠️ generateNextRound: Already generating, skipping...');
-      return;
-    }
+      try {
+        if (!orchestrator) {
+          throw new Error('Orchestrator is not initialized');
+        }
 
-    console.log(`🎬 Generating round ${orchestrator.getCurrentRound() + 1}...`);
-    discussionState.setIsGenerating(true);
-    discussionState.isGeneratingRef.current = true;
-    
-    try {
-      const startTime = Date.now();
-      console.log('📡 Calling orchestrator.generateRound()...');
-      const roundMessages = await orchestrator.generateRound();
-      const endTime = Date.now();
-      
-      console.log(`✅ Round completed in ${endTime - startTime}ms with ${roundMessages.length} messages`);
-      
-      if (roundMessages.length === 0) {
-        console.error('❌ No messages generated for this round');
+        const newMessages = await orchestrator.generateRound();
+        discussionState.setMessages(prevMessages => [...prevMessages, ...newMessages]);
+
+        // Update current speaker based on the last message
+        if (newMessages.length > 0) {
+          discussionState.setCurrentSpeaker(newMessages[newMessages.length - 1].speaker);
+        }
+
+        discussionState.updateProgress(round);
+        console.log(`✅ Round ${round} completed successfully`);
+      } catch (error) {
+        console.error(`💥 Error in round ${round}:`, error);
         discussionState.setHasError(true);
         toast({
-          title: "Discussion Issue",
-          description: "No responses were generated this round. Check expert configurations and API keys.",
+          title: "Discussion Error",
+          description: `An error occurred during round ${round}. Please check the console for details.`,
           variant: "destructive",
         });
-        discussionState.setIsRunning(false);
-        discussionState.isRunningRef.current = false;
+        break; // Stop the discussion on error
+      } finally {
         discussionState.setIsGenerating(false);
         discussionState.isGeneratingRef.current = false;
-        return;
       }
-      
-      // Add messages one by one with typing effect
-      for (let i = 0; i < roundMessages.length; i++) {
-        const message = roundMessages[i];
-        console.log(`💬 Displaying message ${i + 1}/${roundMessages.length} from ${message.speaker}: ${message.content.slice(0, 50)}...`);
-        discussionState.setCurrentSpeaker(message.speaker);
-        
-        // Typing effect
-        await simulateTyping(message.content);
-        
-        discussionState.setMessages(prev => {
-          console.log(`📝 Adding message to state, total will be: ${prev.length + 1}`);
-          return [...prev, message];
-        });
-        discussionState.setCurrentSpeaker(null);
-        discussionState.setTypingMessage('');
-        
-        // Update participation stats
-        updateParticipation(message.speaker);
-        
-        // Delay between experts (adjusted by speed)
-        await new Promise(resolve => setTimeout(resolve, 1000 / discussionSpeed));
-      }
-
-      const newRound = orchestrator.getCurrentRound();
-      console.log(`📊 Updating progress: round ${newRound} of ${maxRounds}`);
-      discussionState.updateProgress(newRound);
-
-      // Continue to next round if not complete and still running
-      if (!orchestrator.isComplete() && discussionState.isRunningRef.current) {
-        console.log(`🔄 Preparing for round ${newRound + 1}`);
-        setTimeout(() => {
-          if (discussionState.isRunningRef.current) {
-            console.log('🎯 Calling generateNextRound for next round...');
-            generateNextRound();
-          }
-        }, 2000 / discussionSpeed);
-      } else {
-        console.log('🏁 Discussion completed or stopped');
-        discussionState.setIsRunning(false);
-        discussionState.isRunningRef.current = false;
-        discussionState.setIsGenerating(false);
-        discussionState.isGeneratingRef.current = false;
-        if (orchestrator.isComplete()) {
-          console.log('✅ Discussion completed successfully');
-          toast({
-            title: "Discussion Complete",
-            description: `The symposium has concluded after ${maxRounds} rounds of enlightening discourse.`,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('💥 Error generating round:', error);
-      discussionState.setHasError(true);
-      discussionState.setIsRunning(false);
-      discussionState.isRunningRef.current = false;
-      discussionState.setIsGenerating(false);
-      discussionState.isGeneratingRef.current = false;
-      toast({
-        title: "Discussion Error",
-        description: "An error occurred during the discussion. Please check your API keys and try again.",
-        variant: "destructive",
-      });
     }
-    
-    discussionState.setIsGenerating(false);
-    discussionState.isGeneratingRef.current = false;
-  }, [orchestrator, maxRounds, discussionSpeed, toast, discussionState]);
 
-  const simulateTyping = useCallback(async (text: string) => {
-    const words = text.split(' ');
-    const typingSpeed = 50 / discussionSpeed;
-    
-    for (let i = 0; i <= words.length; i++) {
-      discussionState.setTypingMessage(words.slice(0, i).join(' '));
-      await new Promise(resolve => setTimeout(resolve, typingSpeed));
-    }
-  }, [discussionSpeed, discussionState]);
-
-  const updateParticipation = useCallback((expertId: string) => {
-    console.log(`👤 ${expertId} participated in discussion`);
-  }, []);
-
-  const pauseDiscussion = useCallback(() => {
-    console.log('⏸️ Pausing discussion...');
     discussionState.setIsRunning(false);
     discussionState.isRunningRef.current = false;
-    discussionState.setIsGenerating(false);
-    discussionState.isGeneratingRef.current = false;
-    discussionState.setCurrentSpeaker(null);
-    discussionState.setTypingMessage('');
+    console.log('🛑 Discussion completed or stopped.');
+  }, [config, challenge, orchestrator, discussionState, toast]);
+
+  const pauseDiscussion = useCallback(() => {
+    console.log('⏸️ Pausing discussion');
+    discussionState.setIsRunning(false);
+    discussionState.isRunningRef.current = false;
   }, [discussionState]);
 
   const resetDiscussion = useCallback(() => {
-    console.log('🔄 Resetting discussion...');
+    console.warn('🔄 Resetting discussion state');
     discussionState.resetState();
-    discussionState.setCurrentSpeaker(null);
-    discussionState.setTypingMessage('');
-    setShowRecovery(false);
-    clearSavedDiscussion();
-    
-    if (config?.experts && challenge?.trim()) {
-      console.log('🔄 Recreating orchestrator after reset');
-      setOrchestrator(new DiscussionOrchestrator(config.experts, challenge, config.rounds || 5));
-    }
-  }, [config?.experts, challenge, config?.rounds, clearSavedDiscussion, discussionState]);
+    setOrchestrator(null);
+  }, [discussionState]);
 
-  const adjustSpeed = useCallback((speed: number) => {
-    console.log(`⚡ Adjusting discussion speed to ${speed}x`);
-    setDiscussionSpeed(speed);
-  }, []);
-
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [discussionState.messages, discussionState.typingMessage, scrollToBottom]);
-
-  const getExpertInfo = useCallback((expertId: string) => {
-    return experts.find(e => e.id === expertId);
-  }, [experts]);
-
-  // Update the callback when messages or completion status changes
-  useEffect(() => {
-    if (onDiscussionUpdate) {
-      onDiscussionUpdate(discussionState.messages, orchestrator?.isComplete() || false);
-    }
-  }, [discussionState.messages, orchestrator, onDiscussionUpdate]);
+  // Mobile interface takes precedence on mobile devices
+  if (isMobile) {
+    return (
+      <MobileDiscussionInterface
+        messages={discussionState.messages}
+        experts={config.experts}
+        isRunning={discussionState.isRunning}
+        currentRound={discussionState.currentRound}
+        maxRounds={config.rounds}
+        progress={discussionState.progress}
+        currentSpeaker={discussionState.currentSpeaker}
+        onStart={startDiscussion}
+        onPause={() => discussionState.setIsRunning(false)}
+        onReset={resetDiscussion}
+        onExpertConfigChange={(experts) => onConfigChange?.({ ...config, experts })}
+      />
+    );
+  }
 
   return (
-    <DiscussionErrorBoundary onReset={handleErrorReset}>
-      <div className="space-y-8 py-8">
-        {showRecovery && savedState && (
-          <DiscussionRecovery
-            savedState={savedState}
-            onRestore={handleRestoreSession}
-            onDiscard={handleDiscardSession}
+    <ErrorBoundary>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Enhanced Header with AGORA Branding */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg border border-indigo-100 p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                <span className="text-indigo-600 font-bold text-xl">A</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">AGORA Discussion</h1>
+                <p className="text-indigo-100">Collective Minds & Wisdom in Action</p>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <div className="text-sm text-indigo-100">
+                Round {discussionState.currentRound} of {config.rounds}
+              </div>
+              <div className="text-2xl font-bold">
+                {Math.round(discussionState.progress)}%
+              </div>
+            </div>
+          </div>
+          
+          <Progress 
+            value={discussionState.progress} 
+            className="h-2 bg-indigo-400"
           />
-        )}
-
-        <DiscussionHeader
-          challenge={challenge}
-          expertsCount={experts.length}
-          maxRounds={maxRounds}
-          currentRound={discussionState.currentRound}
-          progress={discussionState.progress}
-          roundProgress={discussionState.roundProgress}
-          isRunning={discussionState.isRunning}
-          isGenerating={discussionState.isGenerating}
-          hasError={discussionState.hasError}
-          orchestrator={orchestrator}
-        />
-
-        <div className="space-y-4">
-          <DiscussionControls
-            isRunning={discussionState.isRunning}
-            isGenerating={discussionState.isGenerating}
-            orchestrator={orchestrator}
-            challenge={challenge}
-            discussionSpeed={discussionSpeed}
-            onStart={startDiscussion}
-            onPause={pauseDiscussion}
-            onReset={resetDiscussion}
-            onSpeedChange={adjustSpeed}
-          />
+          
+          {discussionState.currentSpeaker && (
+            <div className="mt-3 text-center">
+              <Badge className="bg-white text-indigo-600">
+                {config.experts.find(e => e.id === discussionState.currentSpeaker)?.name || discussionState.currentSpeaker} is contributing...
+              </Badge>
+            </div>
+          )}
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-8">
-          <ExpertsPanel
-            experts={experts}
-            currentSpeaker={discussionState.currentSpeaker}
-          />
+        {/* Enhanced Tabs Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="discussion" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Discussion
+            </TabsTrigger>
+            <TabsTrigger value="experts" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Experts
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="monitoring" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Monitoring
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Reports
+            </TabsTrigger>
+          </TabsList>
 
-          <MessagesPanel
-            messages={discussionState.messages}
-            currentSpeaker={discussionState.currentSpeaker}
-            typingMessage={discussionState.typingMessage}
-            experts={experts}
-            getExpertInfo={getExpertInfo}
-            getRelativeTime={getRelativeTime}
-          />
-        </div>
+          <TabsContent value="discussion" className="space-y-6">
+            {/* Discussion Controls */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Discussion Controls</span>
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={discussionState.isRunning ? pauseDiscussion : startDiscussion}
+                      disabled={discussionState.isGenerating}
+                      className={discussionState.isRunning ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
+                    >
+                      {discussionState.isRunning ? (
+                        <>
+                          <Pause className="w-4 h-4 mr-2" />
+                          Pause Discussion
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-2" />
+                          {discussionState.messages.length > 0 ? 'Resume Discussion' : 'Start Discussion'}
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={resetDiscussion}
+                      variant="outline"
+                      disabled={discussionState.isRunning || discussionState.isGenerating}
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Reset
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">{discussionState.messages.length}</div>
+                    <div className="text-sm text-blue-700">Messages</div>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">{config.experts.length}</div>
+                    <div className="text-sm text-green-700">Active Experts</div>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{discussionState.currentRound}</div>
+                    <div className="text-sm text-purple-700">Current Round</div>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-lg">
+                    <div className="text-2xl font-bold text-amber-600">
+                      {discussionState.messages.reduce((sum, m) => sum + m.content.split(' ').length, 0)}
+                    </div>
+                    <div className="text-sm text-amber-700">Total Words</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Messages Display */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Expert Contributions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {discussionState.messages.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>No messages yet. Start the discussion to see expert insights.</p>
+                    </div>
+                  ) : (
+                    discussionState.messages.map((message, index) => (
+                      <div key={index} className="border-l-4 border-l-indigo-500 pl-4 py-2">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium text-indigo-900">
+                            {config.experts.find(e => e.id === message.speaker)?.name || message.speaker}
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline">Round {message.round}</Badge>
+                            <span className="text-xs text-gray-500">
+                              {message.timestamp.toLocaleTimeString()}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-gray-700 leading-relaxed">{message.content}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="experts">
+            <ExpertCardList
+              experts={config.experts}
+              onTraitChange={(id, trait, value) => {
+                const updatedExperts = config.experts.map(expert =>
+                  expert.id === id ? { ...expert, cognitive: { ...expert.cognitive, [trait]: value } } : expert
+                );
+                onConfigChange?.({ ...config, experts: updatedExperts });
+              }}
+              onApiKeyChange={(id, value) => {
+                const updatedExperts = config.experts.map(expert =>
+                  expert.id === id ? { ...expert, apiKey: value } : expert
+                );
+                onConfigChange?.({ ...config, experts: updatedExperts });
+              }}
+              onProviderChange={(id, value) => {
+                const updatedExperts = config.experts.map(expert =>
+                  expert.id === id ? { ...expert, provider: value } : expert
+                );
+                onConfigChange?.({ ...config, experts: updatedExperts });
+              }}
+              onModelChange={(id, value) => {
+                const updatedExperts = config.experts.map(expert =>
+                  expert.id === id ? { ...expert, model: value } : expert
+                );
+                onConfigChange?.({ ...config, experts: updatedExperts });
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard
+              messages={discussionState.messages}
+              experts={config.experts}
+              currentRound={discussionState.currentRound}
+              maxRounds={config.rounds}
+            />
+          </TabsContent>
+
+          <TabsContent value="monitoring">
+            <ApiMonitoringDashboard experts={config.experts} />
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <ReportsModule
+              discussionMessages={discussionState.messages}
+              challenge={challenge}
+              isDiscussionComplete={discussionState.currentRound >= config.rounds}
+              experts={config.experts}
+              currentRound={discussionState.currentRound}
+              maxRounds={config.rounds}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
-    </DiscussionErrorBoundary>
+    </ErrorBoundary>
   );
 };
 
