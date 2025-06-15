@@ -6,15 +6,15 @@ import { Brain, Lightbulb, BookOpen } from 'lucide-react';
 const HeroSection = () => {
   return (
     <section className="py-24 relative overflow-hidden">
-      {/* Large Background Logo */}
+      {/* Large Background Logo - increased size to maintain balance */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="relative">
           <img 
             src="/lovable-uploads/442cd3f7-0a66-40f7-bdb1-4874b741a816.png" 
             alt="AGORA Logo Background" 
-            className="w-40 h-40 object-contain opacity-10 blur-sm"
+            className="w-64 h-64 object-contain opacity-10 blur-sm"
           />
-          <div className="absolute -inset-8 bg-gradient-to-r from-slate-200/10 via-amber-200/15 to-slate-200/10 rounded-full blur-2xl"></div>
+          <div className="absolute -inset-12 bg-gradient-to-r from-slate-200/10 via-amber-200/15 to-slate-200/10 rounded-full blur-2xl"></div>
         </div>
       </div>
 
@@ -27,14 +27,14 @@ const HeroSection = () => {
       </div>
 
       <div className="relative z-20 text-center max-w-5xl mx-auto">
-        <div className="flex justify-center mb-12">
+        <div className="flex justify-center mb-16">
           <div className="relative">
             <img 
               src="/lovable-uploads/442cd3f7-0a66-40f7-bdb1-4874b741a816.png"
               alt="AGORA Logo" 
-              className="w-32 h-32 object-contain drop-shadow-2xl"
+              className="w-160 h-160 object-contain drop-shadow-2xl"
             />
-            <div className="absolute -inset-4 bg-gradient-to-r from-slate-200/20 via-amber-200/20 to-slate-200/20 rounded-full blur-lg"></div>
+            <div className="absolute -inset-8 bg-gradient-to-r from-slate-200/20 via-amber-200/20 to-slate-200/20 rounded-full blur-xl"></div>
           </div>
         </div>
         
