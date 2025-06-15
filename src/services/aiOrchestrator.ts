@@ -12,7 +12,7 @@ export interface DiscussionMessage {
 
 export type { AIProvider } from './aiProviders';
 
-// Main discussion orchestrator with transcendent prompting and real-time synthesis
+// Main discussion orchestrator with enhanced error handling and state management
 export class DiscussionOrchestrator {
   private experts: ExpertConfig[];
   private challenge: string;
@@ -22,17 +22,20 @@ export class DiscussionOrchestrator {
   private enhancedMetaPromptService: EnhancedMetaPromptService;
 
   constructor(experts: ExpertConfig[], challenge: string, maxRounds: number) {
-    console.log('🏗️ Creating DiscussionOrchestrator with transcendent capabilities:', { 
+    console.log('🏗️ Creating DiscussionOrchestrator:', { 
       experts: experts?.length || 0, 
       challenge: challenge?.slice(0, 50) || 'No challenge', 
       maxRounds 
     });
     
-    // Log detailed expert configuration
+    // Validate and log expert configurations
     if (experts && experts.length > 0) {
       console.log('🏗️ Expert configurations:');
       experts.forEach(expert => {
-        console.log(`  - ${expert.name} (${expert.id}): ${expert.provider}, API Key: ${expert.apiKey ? expert.apiKey.slice(0, 8) + '...' : 'none'}`);
+        const keyStatus = expert.apiKey ? 
+          (expert.apiKey.trim() ? `${expert.apiKey.slice(0, 8)}...` : 'empty') : 
+          'none';
+        console.log(`  - ${expert.name} (${expert.id}): ${expert.provider}, API Key: ${keyStatus}`);
       });
     }
     
@@ -51,11 +54,11 @@ export class DiscussionOrchestrator {
       console.warn('⚠️ DiscussionOrchestrator created with empty challenge');
     }
     
-    console.log(`✅ DiscussionOrchestrator created with transcendent prompting for ${maxRounds} rounds`);
+    console.log(`✅ DiscussionOrchestrator created for ${maxRounds} rounds`);
   }
 
   async generateRound(): Promise<DiscussionMessage[]> {
-    console.log(`🎬 Starting transcendent round ${this.currentRound + 1} of ${this.maxRounds}`);
+    console.log(`🎬 Starting round ${this.currentRound + 1} of ${this.maxRounds}`);
     this.currentRound++;
     const roundMessages: DiscussionMessage[] = [];
 
@@ -64,16 +67,16 @@ export class DiscussionOrchestrator {
       return [];
     }
 
-    console.log(`👥 Processing ${this.experts.length} experts for transcendent round ${this.currentRound}`);
+    console.log(`👥 Processing ${this.experts.length} experts for round ${this.currentRound}`);
 
     // Process experts sequentially to avoid rate limiting
     for (let i = 0; i < this.experts.length; i++) {
       const expert = this.experts[i];
-      console.log(`🔮 [${i + 1}/${this.experts.length}] Generating transcendent response for expert: ${expert.name} (${expert.id})`);
+      console.log(`🔮 [${i + 1}/${this.experts.length}] Generating response for expert: ${expert.name} (${expert.id})`);
       console.log(`🔧 Expert config: Provider=${expert.provider}, API Key=${expert.apiKey ? expert.apiKey.slice(0, 8) + '...' : 'none'}`);
       
       try {
-        // Use the enhanced MetaPromptService for transcendent prompt generation
+        // Use the enhanced MetaPromptService for prompt generation
         const transcendentPrompt = this.enhancedMetaPromptService.generateTranscendentPrompt(
           expert,
           this.challenge,
@@ -82,7 +85,7 @@ export class DiscussionOrchestrator {
           this.messages
         );
         
-        console.log(`🌟 Generated transcendent prompt for ${expert.name}: ${transcendentPrompt.slice(0, 100)}...`);
+        console.log(`🌟 Generated prompt for ${expert.name}: ${transcendentPrompt.slice(0, 100)}...`);
         
         // Validate expert configuration before making API call
         if (!expert.provider) {
@@ -90,7 +93,7 @@ export class DiscussionOrchestrator {
           expert.provider = 'HuggingFace';
         }
         
-        // Add timeout wrapper for AI response generation
+        // Add timeout wrapper for AI response generation (60 seconds)
         const response = await Promise.race([
           generateAIResponse(
             transcendentPrompt,
@@ -99,12 +102,12 @@ export class DiscussionOrchestrator {
             expert.id
           ),
           new Promise<string>((_, reject) => 
-            setTimeout(() => reject(new Error('Response timeout')), 45000)
+            setTimeout(() => reject(new Error('Response timeout after 60 seconds')), 60000)
           )
         ]);
 
         if (!response || response.trim().length === 0) {
-          throw new Error('Empty response received');
+          throw new Error('Empty response received from AI provider');
         }
 
         const message: DiscussionMessage = {
@@ -116,17 +119,18 @@ export class DiscussionOrchestrator {
 
         roundMessages.push(message);
         this.messages.push(message);
-        console.log(`✨ Expert ${expert.name} transcendent response generated successfully: ${response.slice(0, 50)}...`);
+        console.log(`✨ Expert ${expert.name} response generated successfully (${response.length} chars): ${response.slice(0, 50)}...`);
         
-        // Small delay between experts to avoid overwhelming APIs
+        // Delay between experts to avoid overwhelming APIs
         if (i < this.experts.length - 1) {
-          console.log(`⏱️ Waiting 500ms before next expert...`);
-          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log(`⏱️ Waiting 1 second before next expert...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
-      } catch (error) {
-        console.error(`💥 Error generating transcendent response for expert ${expert.name} (${expert.provider}):`, error);
         
-        // Add fallback message even on error to keep discussion flowing
+      } catch (error) {
+        console.error(`💥 Error generating response for expert ${expert.name} (${expert.provider}):`, error);
+        
+        // Generate fallback message to keep discussion flowing
         const fallbackContent = generatePersonalizedFallbackResponse(expert.id, this.challenge);
         const fallbackMessage: DiscussionMessage = {
           speaker: expert.id,
@@ -141,7 +145,7 @@ export class DiscussionOrchestrator {
       }
     }
 
-    console.log(`🏁 Transcendent round ${this.currentRound} completed with ${roundMessages.length} messages`);
+    console.log(`🏁 Round ${this.currentRound} completed with ${roundMessages.length} messages`);
     
     if (roundMessages.length === 0) {
       console.error('❌ No messages generated in this round - this should not happen with fallbacks');

@@ -29,6 +29,38 @@ interface DiscussionInterfaceProps {
   onDiscussionUpdate?: (messages: any[], complete: boolean) => void;
 }
 
+// Clean API keys to fix malformed prefixes
+const cleanApiKey = (apiKey: string): string => {
+  if (!apiKey) return '';
+  const cleaned = apiKey.trim();
+  // Fix duplicate prefixes like "hf hf_"
+  if (cleaned.startsWith('hf hf_')) {
+    return cleaned.replace('hf ', '');
+  }
+  return cleaned;
+};
+
+// Validate expert configuration
+const validateExpertConfig = (expert: ExpertConfig): boolean => {
+  if (!expert.id || !expert.name) {
+    console.warn(`❌ Expert missing id or name:`, expert);
+    return false;
+  }
+  
+  // Clean the API key
+  if (expert.apiKey) {
+    expert.apiKey = cleanApiKey(expert.apiKey);
+  }
+  
+  // Set default provider if missing
+  if (!expert.provider) {
+    console.warn(`⚠️ Expert ${expert.name} missing provider, defaulting to HuggingFace`);
+    expert.provider = 'HuggingFace';
+  }
+  
+  return true;
+};
+
 const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
   discussionConfig,
   challenge,
@@ -42,79 +74,136 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
 
   const startDiscussion = useCallback(async () => {
-    if (discussionState.isRunningRef.current) return;
+    console.log('🚀 Start discussion button clicked');
+    
+    // Prevent multiple simultaneous starts
+    if (discussionState.isRunningRef.current) {
+      console.log('⚠️ Discussion already running, ignoring start request');
+      return;
+    }
+
+    // Validate inputs
+    if (!challenge || !challenge.trim()) {
+      toast({
+        title: "Challenge Required",
+        description: "Please enter a challenge before starting the discussion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!discussionConfig.experts || discussionConfig.experts.length === 0) {
+      toast({
+        title: "No Experts",
+        description: "At least one expert is required to start a discussion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Clean and validate expert configurations
+    const validExperts = discussionConfig.experts.filter(validateExpertConfig);
+    if (validExperts.length === 0) {
+      toast({
+        title: "Invalid Expert Configuration",
+        description: "No valid experts found. Please check your expert configurations.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log(`✅ Starting discussion with ${validExperts.length} valid experts`);
 
     discussionState.setIsRunning(true);
     discussionState.isRunningRef.current = true;
     discussionState.setHasError(false);
 
+    // Only reset state if starting fresh (round 0)
     if (discussionState.currentRound === 0) {
+      console.log('🔄 Resetting state for fresh discussion');
       discussionState.resetState();
-      console.log('🚀 Starting new discussion with config:', discussionConfig, 'challenge:', challenge);
     } else {
-      console.log('⏯️ Resuming discussion from round:', discussionState.currentRound);
+      console.log(`⏯️ Resuming discussion from round ${discussionState.currentRound}`);
     }
 
     try {
-      // Initialize orchestrator if not already created or if starting fresh
+      // Create orchestrator only once or if starting fresh
       let currentOrchestrator = orchestrator;
       if (!currentOrchestrator || discussionState.currentRound === 0) {
-        console.log('🔧 Creating new orchestrator...');
-        currentOrchestrator = new DiscussionOrchestrator(discussionConfig.experts, challenge, discussionConfig.rounds);
+        console.log('🔧 Creating new orchestrator with validated experts');
+        currentOrchestrator = new DiscussionOrchestrator(validExperts, challenge, discussionConfig.rounds);
         setOrchestrator(currentOrchestrator);
       }
 
-      // Run the discussion rounds
+      // Run the discussion rounds with improved loop logic
       while (discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds) {
-        const round = discussionState.currentRound + 1;
+        const nextRound = discussionState.currentRound + 1;
+        console.log(`🎯 Starting round ${nextRound}/${discussionConfig.rounds}`);
+        
         discussionState.setIsGenerating(true);
         discussionState.isGeneratingRef.current = true;
         discussionState.setCurrentSpeaker(null);
 
         try {
-          console.log(`🎯 Starting round ${round}/${discussionConfig.rounds}`);
           const newMessages = await currentOrchestrator.generateRound();
-          discussionState.setMessages(prevMessages => [...prevMessages, ...newMessages]);
-
-          // Update current speaker based on the last message
-          if (newMessages.length > 0) {
-            discussionState.setCurrentSpeaker(newMessages[newMessages.length - 1].speaker);
-          }
-
-          discussionState.updateProgress(round);
-          console.log(`✅ Round ${round} completed successfully`);
           
-          // Call the update callback if provided
-          if (onDiscussionUpdate) {
-            onDiscussionUpdate(discussionState.messages, discussionState.currentRound >= discussionConfig.rounds);
+          if (newMessages && newMessages.length > 0) {
+            console.log(`✅ Round ${nextRound} generated ${newMessages.length} messages`);
+            discussionState.setMessages(prevMessages => [...prevMessages, ...newMessages]);
+
+            // Update current speaker based on the last message
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage) {
+              discussionState.setCurrentSpeaker(lastMessage.speaker);
+            }
+
+            discussionState.updateProgress(nextRound);
+            
+            // Call the update callback if provided
+            if (onDiscussionUpdate) {
+              const allMessages = [...discussionState.messages, ...newMessages];
+              onDiscussionUpdate(allMessages, nextRound >= discussionConfig.rounds);
+            }
+          } else {
+            console.warn(`⚠️ Round ${nextRound} generated no messages`);
           }
+          
         } catch (error) {
-          console.error(`💥 Error in round ${round}:`, error);
+          console.error(`💥 Error in round ${nextRound}:`, error);
           discussionState.setHasError(true);
           toast({
             title: "Discussion Error",
-            description: `An error occurred during round ${round}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            description: `An error occurred during round ${nextRound}: ${error instanceof Error ? error.message : 'Unknown error'}`,
             variant: "destructive",
           });
           break; // Stop the discussion on error
         } finally {
           discussionState.setIsGenerating(false);
           discussionState.isGeneratingRef.current = false;
+          discussionState.setCurrentSpeaker(null);
+        }
+
+        // Small delay between rounds to prevent overwhelming
+        if (discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds) {
+          console.log('⏱️ Brief pause between rounds...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 
+      console.log(`🏁 Discussion completed. Final round: ${discussionState.currentRound}/${discussionConfig.rounds}`);
+
     } catch (error) {
-      console.error('💥 Failed to initialize orchestrator:', error);
+      console.error('💥 Failed to initialize or run discussion:', error);
       discussionState.setHasError(true);
       toast({
-        title: "Initialization Error",
+        title: "Discussion Failed",
         description: `Failed to start discussion: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
       discussionState.setIsRunning(false);
       discussionState.isRunningRef.current = false;
-      console.log('🛑 Discussion completed or stopped.');
+      console.log('🛑 Discussion process completed');
     }
   }, [discussionConfig, challenge, orchestrator, discussionState, toast, onDiscussionUpdate]);
 
@@ -122,13 +211,20 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
     console.log('⏸️ Pausing discussion');
     discussionState.setIsRunning(false);
     discussionState.isRunningRef.current = false;
+    discussionState.setIsGenerating(false);
+    discussionState.isGeneratingRef.current = false;
   }, [discussionState]);
 
   const resetDiscussion = useCallback(() => {
-    console.warn('🔄 Resetting discussion state');
+    console.log('🔄 Resetting discussion state completely');
     discussionState.resetState();
     setOrchestrator(null);
-  }, [discussionState]);
+    
+    toast({
+      title: "Discussion Reset",
+      description: "Discussion has been reset. You can start a new discussion now.",
+    });
+  }, [discussionState, toast]);
 
   // Mobile interface takes precedence on mobile devices
   if (isMobile) {
@@ -142,10 +238,9 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
         progress={discussionState.progress}
         currentSpeaker={discussionState.currentSpeaker}
         onStart={startDiscussion}
-        onPause={() => discussionState.setIsRunning(false)}
+        onPause={pauseDiscussion}
         onReset={resetDiscussion}
         onExpertConfigChange={(experts) => {
-          // Note: This would need to be handled by parent component
           console.log('Expert config change requested:', experts);
         }}
       />

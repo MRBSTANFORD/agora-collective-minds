@@ -1,5 +1,45 @@
+
 import { callOpenAI, callAnthropic, callPerplexity, callGroq, callHuggingFaceWithFallback } from './aiProviders';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
+
+// Clean API keys to fix malformed prefixes
+const cleanApiKey = (apiKey: string): string => {
+  if (!apiKey) return '';
+  const cleaned = apiKey.trim();
+  
+  // Fix duplicate prefixes like "hf hf_"
+  if (cleaned.startsWith('hf hf_')) {
+    console.log(`🔧 Cleaning malformed API key: ${cleaned.slice(0, 10)}... -> ${cleaned.replace('hf ', '').slice(0, 10)}...`);
+    return cleaned.replace('hf ', '');
+  }
+  
+  // Remove any leading/trailing whitespace
+  return cleaned;
+};
+
+// Validate API key format for different providers
+const validateApiKey = (apiKey: string, provider: string): boolean => {
+  if (!apiKey || apiKey.trim() === '') {
+    return provider === 'HuggingFace'; // HuggingFace can work without API key
+  }
+  
+  const cleanKey = cleanApiKey(apiKey);
+  
+  switch (provider) {
+    case 'OpenAI':
+      return cleanKey.startsWith('sk-');
+    case 'Anthropic':
+      return cleanKey.startsWith('sk-ant-');
+    case 'HuggingFace':
+      return cleanKey.startsWith('hf_') || cleanKey === '';
+    case 'Groq':
+      return cleanKey.startsWith('gsk_');
+    case 'Perplexity':
+      return cleanKey.startsWith('pplx-');
+    default:
+      return true; // Allow unknown providers
+  }
+};
 
 // Generate AI response with enhanced error handling and fallbacks
 export async function generateAIResponse(prompt: string, provider: string, apiKey: string, expertId: string): Promise<string> {
@@ -8,6 +48,15 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
     hasApiKey: !!apiKey && apiKey.trim() !== '', 
     apiKeyPrefix: apiKey ? apiKey.slice(0, 8) + '...' : 'none'
   });
+  
+  // Clean the API key first
+  const cleanedApiKey = cleanApiKey(apiKey);
+  
+  // Validate API key format
+  if (!validateApiKey(cleanedApiKey, provider)) {
+    console.warn(`🔑 Invalid API key format for ${provider}, using fallback for ${expertId}`);
+    return generatePersonalizedFallbackResponse(expertId, prompt);
+  }
   
   const maxRetries = 2;
   let lastError: Error | null = null;
@@ -20,51 +69,51 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
       
       switch (provider) {
         case 'OpenAI':
-          if (!apiKey || apiKey.trim() === '') {
+          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
             console.log(`🔑 OpenAI requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
-          response = await callOpenAI(prompt, apiKey);
+          response = await callOpenAI(prompt, cleanedApiKey);
           break;
           
         case 'Anthropic':
-          if (!apiKey || apiKey.trim() === '') {
+          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
             console.log(`🔑 Anthropic requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
-          response = await callAnthropic(prompt, apiKey);
+          response = await callAnthropic(prompt, cleanedApiKey);
           break;
           
         case 'Perplexity':
-          if (!apiKey || apiKey.trim() === '') {
+          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
             console.log(`🔑 Perplexity requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
-          response = await callPerplexity(prompt, apiKey);
+          response = await callPerplexity(prompt, cleanedApiKey);
           break;
           
         case 'Groq':
-          if (!apiKey || apiKey.trim() === '') {
+          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
             console.log(`🔑 Groq requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
-          console.log(`🟡 Calling Groq for ${expertId} with API key: ${apiKey.slice(0, 8)}...`);
-          response = await callGroq(prompt, apiKey);
+          console.log(`🟡 Calling Groq for ${expertId} with cleaned API key: ${cleanedApiKey.slice(0, 8)}...`);
+          response = await callGroq(prompt, cleanedApiKey);
           break;
           
         case 'HuggingFace':
         default:
           // HuggingFace can work with or without API key
-          response = await callHuggingFaceWithFallback(prompt, expertId, apiKey);
+          response = await callHuggingFaceWithFallback(prompt, expertId, cleanedApiKey);
           break;
       }
 
-      // Ensure response is long enough (force retry/fallback if <150 chars)
-      if (response && response.trim().length > 150) {
+      // Ensure response is meaningful (at least 50 characters)
+      if (response && response.trim().length > 50) {
         console.log(`✅ Successfully generated response for ${expertId} using ${provider} on attempt ${attempt}: ${response.slice(0, 60)}...`);
         return response.trim();
       } else {
-        throw new Error('AI response too short or empty');
+        throw new Error(`AI response too short: ${response?.length || 0} characters`);
       }
     } catch (error) {
       lastError = error as Error;
@@ -74,7 +123,8 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
       if (error instanceof Error && (
         error.message.includes('API key') || 
         error.message.includes('unauthorized') || 
-        error.message.includes('authentication')
+        error.message.includes('authentication') ||
+        error.message.includes('invalid_api_key')
       )) {
         console.error(`🔑 API authentication failed for ${expertId} with ${provider}, using fallback`);
         break;
@@ -87,6 +137,6 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
     }
   }
 
-  console.error(`💥 All attempts failed (or too short) for expert ${expertId} with ${provider}, using fallback response. Last error:`, lastError);
+  console.error(`💥 All attempts failed for expert ${expertId} with ${provider}, using fallback response. Last error:`, lastError);
   return generatePersonalizedFallbackResponse(expertId, prompt);
 }

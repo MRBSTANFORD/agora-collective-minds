@@ -18,6 +18,7 @@ export function useDiscussionState(maxRounds: number) {
   const isGeneratingRef = useRef(false);
 
   const resetState = useCallback(() => {
+    console.log('🔄 Resetting discussion state');
     setIsRunning(false);
     isRunningRef.current = false;
     setIsGenerating(false);
@@ -32,6 +33,7 @@ export function useDiscussionState(maxRounds: number) {
   }, [maxRounds]);
 
   const updateProgress = useCallback((round: number) => {
+    console.log(`📊 Updating progress: round ${round}/${maxRounds}`);
     setCurrentRound(round);
     setProgress((round / maxRounds) * 100);
     setRoundProgress(prev => {
@@ -40,6 +42,19 @@ export function useDiscussionState(maxRounds: number) {
       return updated;
     });
   }, [maxRounds]);
+
+  // Enhanced setters with logging for debugging
+  const setIsRunningWithLog = useCallback((value: boolean) => {
+    console.log(`🏃 Setting isRunning: ${value}`);
+    setIsRunning(value);
+    isRunningRef.current = value;
+  }, []);
+
+  const setIsGeneratingWithLog = useCallback((value: boolean) => {
+    console.log(`⚙️ Setting isGenerating: ${value}`);
+    setIsGenerating(value);
+    isGeneratingRef.current = value;
+  }, []);
 
   return {
     // State
@@ -55,9 +70,9 @@ export function useDiscussionState(maxRounds: number) {
     isRunningRef,
     isGeneratingRef,
     
-    // Setters
-    setIsRunning,
-    setIsGenerating,
+    // Enhanced setters with logging
+    setIsRunning: setIsRunningWithLog,
+    setIsGenerating: setIsGeneratingWithLog,
     setCurrentRound,
     setProgress,
     setMessages,
