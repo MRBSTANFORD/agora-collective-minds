@@ -59,14 +59,14 @@ export default function UserGuide() {
           icon: Icon
         }) => <TabsTrigger key={t} value={t} className="flex items-center gap-2">
               <Icon className="h-4 w-4" />
-              <span>{label}</span>
+              <span className="py-0">{label}</span>
             </TabsTrigger>)}
         </TabsList>
 
         {/* WELCOME */}
         <TabsContent value="welcome">
           <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2 my-0 py-[20px]">
               <BookOpen className="w-5 h-5 text-amber-500" />
               Welcome to AGORA
             </h2>
@@ -87,7 +87,7 @@ export default function UserGuide() {
         {/* GETTING STARTED */}
         <TabsContent value="getting-started">
           <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2 py-[20px]">
               <ArrowRight className="w-5 h-5 text-slate-700" /> Getting Started
             </h2>
             <ol className="list-decimal pl-5 space-y-2">
