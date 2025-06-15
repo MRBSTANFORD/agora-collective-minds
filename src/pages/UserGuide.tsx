@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,29 +6,42 @@ import { Link } from "react-router-dom";
 import { ApiSetupGuideContent } from "./ApiSetupGuide";
 
 // TABS TITLES
-const GUIDE_TABS = [
-  { tab: "welcome", label: "Welcome", icon: BookOpen },
-  { tab: "getting-started", label: "Getting Started", icon: ArrowRight },
-  { tab: "experts", label: "The Minds", icon: Users },
-  { tab: "symposium", label: "Symposium Process", icon: Flame },
-  { tab: "api", label: "API Setup & Config", icon: Cog },
-  { tab: "reports", label: "Reports & Insights", icon: Scroll },
-  { tab: "advanced", label: "Advanced & Tips", icon: HelpCircle },
-];
-
+const GUIDE_TABS = [{
+  tab: "welcome",
+  label: "Welcome",
+  icon: BookOpen
+}, {
+  tab: "getting-started",
+  label: "Getting Started",
+  icon: ArrowRight
+}, {
+  tab: "experts",
+  label: "The Minds",
+  icon: Users
+}, {
+  tab: "symposium",
+  label: "Symposium Process",
+  icon: Flame
+}, {
+  tab: "api",
+  label: "API Setup & Config",
+  icon: Cog
+}, {
+  tab: "reports",
+  label: "Reports & Insights",
+  icon: Scroll
+}, {
+  tab: "advanced",
+  label: "Advanced & Tips",
+  icon: HelpCircle
+}];
 export default function UserGuide() {
   // Default to 'welcome' tab
   const [tab, setTab] = React.useState('welcome');
-
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+  return <div className="max-w-3xl mx-auto px-4 py-8">
       {/* Guide HEADER */}
       <div className="mb-6 flex items-center gap-6">
-        <img
-          src="/lovable-uploads/442cd3f7-0a66-40f7-bdb1-4874b741a816.png"
-          alt="Agora Logo"
-          className="w-16 h-16 object-contain drop-shadow-lg"
-        />
+        <img src="/lovable-uploads/442cd3f7-0a66-40f7-bdb1-4874b741a816.png" alt="Agora Logo" className="w-16 h-16 object-contain drop-shadow-lg" />
         <div>
           <h1 className="text-3xl font-thin tracking-wider text-slate-900 mb-1">AGORA User Guide</h1>
           <p className="text-lg text-amber-600 font-light">
@@ -41,16 +53,14 @@ export default function UserGuide() {
       {/* Tabs Navigation */}
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap gap-2 mb-8 bg-slate-50 p-2 rounded-lg border border-slate-100">
-          {GUIDE_TABS.map(({ tab: t, label, icon: Icon }) => (
-            <TabsTrigger
-              key={t}
-              value={t}
-              className="flex items-center gap-2"
-            >
+          {GUIDE_TABS.map(({
+          tab: t,
+          label,
+          icon: Icon
+        }) => <TabsTrigger key={t} value={t} className="flex items-center gap-2">
               <Icon className="h-4 w-4" />
               <span>{label}</span>
-            </TabsTrigger>
-          ))}
+            </TabsTrigger>)}
         </TabsList>
 
         {/* WELCOME */}
@@ -229,9 +239,7 @@ export default function UserGuide() {
                 Use your own provider key, optimize round count, use desktop for longer debates.
               </li>
             </ul>
-            <div>
-              <strong>Need more help?</strong> Join our <a href="https://discord.com/channels/1119885301872070706/1280461670979993613" className="text-blue-800 underline" target="_blank">community Discord</a> for support and ideas.
-            </div>
+            
           </section>
         </TabsContent>
       </Tabs>
@@ -244,6 +252,5 @@ export default function UserGuide() {
           </Button>
         </Link>
       </div>
-    </div>
-  );
+    </div>;
 }
