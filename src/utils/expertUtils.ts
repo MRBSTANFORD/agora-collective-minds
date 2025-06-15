@@ -1,14 +1,13 @@
-
 export function getExpertImage(id: string): string {
   const images: Record<string, string> = {
     leonardo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Leonardo_self.jpg',
     curie: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Marie_Curie_c1920.jpg',
     socrates: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Socrates_Louvre.jpg',
-    hypatia: '/lovable-uploads/7fa67e56-1a42-4648-be84-9213f73f953c.png',
+    hypatia: '/lovable-uploads/d1f7c4e9-a220-4971-a95f-c627572fd57f.png',
     einstein: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Einstein_1921_by_F_Schmutzer_-_restoration.jpg',
     confucius: '/lovable-uploads/439f1d74-152a-43a7-9aac-9aa5efa8e31d.png',
     lovelace: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Ada_Lovelace_portrait.jpg',
-    machiavelli: '/lovable-uploads/d1f7c4e9-a220-4971-a95f-c627572fd57f.png'
+    machiavelli: '/lovable-uploads/7fa67e56-1a42-4648-be84-9213f73f953c.png'
   };
   return images[id] || '';
 }
