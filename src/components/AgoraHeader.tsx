@@ -2,7 +2,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Columns, Users, Flame, Scroll, Shield, Info } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Columns, Users, Flame, Scroll, Shield, Info, ChevronDown, Brain, Zap, Star, Lightbulb } from 'lucide-react';
 
 interface AgoraHeaderProps {
   activeTab: string;
@@ -106,6 +112,44 @@ const AgoraHeader: React.FC<AgoraHeaderProps> = ({
                 <span>About</span>
               </Link>
             </Button>
+
+            {/* Core Concepts Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800 flex items-center space-x-1">
+                  <Brain className="w-4 h-4" />
+                  <span>Core Concepts</span>
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/eight-immortal-minds" className="flex items-center space-x-2 cursor-pointer">
+                    <Star className="w-4 h-4 text-amber-500" />
+                    <span>Eight Immortal Minds</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/iterative-discourse" className="flex items-center space-x-2 cursor-pointer">
+                    <Zap className="w-4 h-4 text-blue-500" />
+                    <span>Iterative Discourse</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/synthesis-of-wisdom" className="flex items-center space-x-2 cursor-pointer">
+                    <Lightbulb className="w-4 h-4 text-green-500" />
+                    <span>Synthesis of Wisdom</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/transcendent-insights" className="flex items-center space-x-2 cursor-pointer">
+                    <Brain className="w-4 h-4 text-purple-500" />
+                    <span>Transcendent Insights</span>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button asChild variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
               <Link to="/faq">FAQ</Link>
             </Button>

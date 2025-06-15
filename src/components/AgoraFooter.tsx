@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Star, Zap, Lightbulb, Brain } from 'lucide-react';
 
 const AgoraFooter: React.FC = () => {
   return (
@@ -13,7 +14,7 @@ const AgoraFooter: React.FC = () => {
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-8">
-        <div className="grid md:grid-cols-4 gap-12">
+        <div className="grid md:grid-cols-5 gap-12">
           {/* AGORA Brand */}
           <div>
             <div className="flex items-center mb-6">
@@ -43,6 +44,37 @@ const AgoraFooter: React.FC = () => {
             </div>
           </div>
           
+          {/* Core Concepts */}
+          <div>
+            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Core Concepts</h4>
+            <ul className="space-y-3 text-slate-300 font-light">
+              <li>
+                <Link to="/eight-immortal-minds" className="hover:text-amber-300 transition-colors flex items-center">
+                  <Star className="w-4 h-4 mr-2 text-amber-400" />
+                  Eight Immortal Minds
+                </Link>
+              </li>
+              <li>
+                <Link to="/iterative-discourse" className="hover:text-amber-300 transition-colors flex items-center">
+                  <Zap className="w-4 h-4 mr-2 text-blue-400" />
+                  Iterative Discourse
+                </Link>
+              </li>
+              <li>
+                <Link to="/synthesis-of-wisdom" className="hover:text-amber-300 transition-colors flex items-center">
+                  <Lightbulb className="w-4 h-4 mr-2 text-green-400" />
+                  Synthesis of Wisdom
+                </Link>
+              </li>
+              <li>
+                <Link to="/transcendent-insights" className="hover:text-amber-300 transition-colors flex items-center">
+                  <Brain className="w-4 h-4 mr-2 text-purple-400" />
+                  Transcendent Insights
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* Navigation */}
           <div>
             <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Navigation</h4>
