@@ -9,7 +9,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Info, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { testApiConnection, ProviderApiStatus } from "@/services/apiTester";
 import { useAvailableModels, LLMModel } from "@/hooks/useAvailableModels";
-import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 
 export type ExpertConfig = {
   id: string;
@@ -223,8 +222,6 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
   onProviderChange,
   onModelChange,
 }) => {
-  usePerformanceMonitor('ExpertCardList', 50);
-
   // Memoize provider list to prevent unnecessary re-fetching
   const providerList = useMemo(() => 
     [...new Set(experts.map(e => e.provider || "HuggingFace"))],

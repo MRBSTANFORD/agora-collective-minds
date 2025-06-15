@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 
 interface PerformanceMetrics {
@@ -9,6 +10,7 @@ interface PerformanceMetrics {
 export function usePerformanceMonitor(componentName: string, threshold = 100) {
   const renderStartRef = useRef<number>(0);
   const metricsRef = useRef<PerformanceMetrics[]>([]);
+  const isFirstRenderRef = useRef(true);
 
   const startMeasurement = useCallback(() => {
     renderStartRef.current = performance.now();
@@ -18,9 +20,12 @@ export function usePerformanceMonitor(componentName: string, threshold = 100) {
     if (renderStartRef.current > 0) {
       const renderTime = performance.now() - renderStartRef.current;
       
-      if (renderTime > threshold) {
+      // Skip performance warning on first render
+      if (!isFirstRenderRef.current && renderTime > threshold) {
         console.warn(`⚠️ Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
       }
+      
+      isFirstRenderRef.current = false;
 
       metricsRef.current.push({
         renderTime,
@@ -45,6 +50,9 @@ export function usePerformanceMonitor(componentName: string, threshold = 100) {
 
   return {
     getMetrics: () => metricsRef.current,
-    clearMetrics: () => { metricsRef.current = []; }
+    clearMetrics: () => { 
+      metricsRef.current = []; 
+      isFirstRenderRef.current = true;
+    }
   };
 }

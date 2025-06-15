@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
 import { useToast } from "@/hooks/use-toast";
+import { useDiscussionPersistence } from '@/hooks/useDiscussionPersistence';
+import { DiscussionErrorBoundary } from '@/components/ui/DiscussionErrorBoundary';
 import DiscussionHeader from './discussion/DiscussionHeader';
 import DiscussionControls from './discussion/DiscussionControls';
 import ExpertsPanel from './discussion/ExpertsPanel';
 import MessagesPanel from './discussion/MessagesPanel';
+import DiscussionRecovery from './discussion/DiscussionRecovery';
 
 const DiscussionInterface = ({
   challenge,
@@ -21,6 +24,14 @@ const DiscussionInterface = ({
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
   const [discussionSpeed, setDiscussionSpeed] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Persistence hook
+  const { 
+    savedState, 
+    saveDiscussion, 
+    clearSavedDiscussion, 
+    hasSavedState 
+  } = useDiscussionPersistence();
   
   // Use refs to track state that needs to be accessed in async operations
   const isRunningRef = useRef(false);
@@ -59,6 +70,7 @@ const DiscussionInterface = ({
   const [typingMessage, setTypingMessage] = useState<string>('');
   const [roundProgress, setRoundProgress] = useState<number[]>([]);
   const [hasError, setHasError] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
 
   // Use configured experts instead of hardcoded ones
   const experts = config?.experts?.map(expert => ({
@@ -70,6 +82,20 @@ const DiscussionInterface = ({
     participation: 0
   })) || [];
 
+  // Check for saved state on mount
+  useEffect(() => {
+    if (hasSavedState && savedState && savedState.challenge === challenge) {
+      setShowRecovery(true);
+    }
+  }, [hasSavedState, savedState, challenge]);
+
+  // Auto-save discussion progress
+  useEffect(() => {
+    if (messages.length > 0 && currentRound > 0) {
+      saveDiscussion(messages, currentRound, challenge);
+    }
+  }, [messages, currentRound, challenge, saveDiscussion]);
+
   // Sync refs with state
   useEffect(() => {
     isRunningRef.current = isRunning;
@@ -78,6 +104,37 @@ const DiscussionInterface = ({
   useEffect(() => {
     isGeneratingRef.current = isGenerating;
   }, [isGenerating]);
+
+  const handleRestoreSession = useCallback(() => {
+    if (savedState) {
+      setMessages(savedState.messages);
+      setCurrentRound(savedState.currentRound);
+      setProgress((savedState.currentRound / maxRounds) * 100);
+      setRoundProgress(Array(maxRounds).fill(0).map((_, i) => i < savedState.currentRound ? 100 : 0));
+      setShowRecovery(false);
+      
+      toast({
+        title: "Session Restored",
+        description: `Resumed at round ${savedState.currentRound} with ${savedState.messages.length} messages.`,
+      });
+    }
+  }, [savedState, maxRounds, toast]);
+
+  const handleDiscardSession = useCallback(() => {
+    clearSavedDiscussion();
+    setShowRecovery(false);
+  }, [clearSavedDiscussion]);
+
+  const handleErrorReset = useCallback(() => {
+    console.log('🔄 Resetting after error...');
+    setHasError(false);
+    setIsRunning(false);
+    isRunningRef.current = false;
+    setIsGenerating(false);
+    isGeneratingRef.current = false;
+    setCurrentSpeaker(null);
+    setTypingMessage('');
+  }, []);
 
   const startDiscussion = useCallback(async () => {
     console.log('🚀 Starting discussion...', { 
@@ -118,18 +175,6 @@ const DiscussionInterface = ({
       return;
     }
 
-    // Validate expert configurations
-    const expertsWithoutProviders = config.experts.filter(e => !e.provider);
-    const expertsWithoutApiKeys = config.experts.filter(e => e.provider !== 'HuggingFace' && !e.apiKey);
-    
-    if (expertsWithoutProviders.length > 0) {
-      console.warn('⚠️ Experts without providers:', expertsWithoutProviders.map(e => e.name));
-    }
-    
-    if (expertsWithoutApiKeys.length > 0) {
-      console.warn('⚠️ Experts without API keys for paid providers:', expertsWithoutApiKeys.map(e => `${e.name} (${e.provider})`));
-    }
-
     console.log('✅ Validation passed, starting discussion...');
     
     // Reset state
@@ -141,6 +186,8 @@ const DiscussionInterface = ({
     setCurrentSpeaker(null);
     setTypingMessage('');
     setIsGenerating(false);
+    setShowRecovery(false);
+    clearSavedDiscussion();
     
     // Set running state and start immediately
     setIsRunning(true);
@@ -155,7 +202,7 @@ const DiscussionInterface = ({
     
     // Start generation immediately without setTimeout
     generateNextRound();
-  }, [orchestrator, challenge, config?.experts, maxRounds, toast]);
+  }, [orchestrator, challenge, config?.experts, maxRounds, toast, clearSavedDiscussion]);
 
   const generateNextRound = useCallback(async () => {
     console.log('🔄 generateNextRound called with state:', {
@@ -328,12 +375,14 @@ const DiscussionInterface = ({
     setTypingMessage('');
     setRoundProgress(Array(maxRounds).fill(0));
     setHasError(false);
+    setShowRecovery(false);
+    clearSavedDiscussion();
     
     if (config?.experts && challenge?.trim()) {
       console.log('🔄 Recreating orchestrator after reset');
       setOrchestrator(new DiscussionOrchestrator(config.experts, challenge, config.rounds || 5));
     }
-  }, [config?.experts, challenge, config?.rounds, maxRounds]);
+  }, [config?.experts, challenge, config?.rounds, maxRounds, clearSavedDiscussion]);
 
   const adjustSpeed = useCallback((speed: number) => {
     console.log(`⚡ Adjusting discussion speed to ${speed}x`);
@@ -371,50 +420,60 @@ const DiscussionInterface = ({
   }, [messages, orchestrator, onDiscussionUpdate]);
 
   return (
-    <div className="space-y-8 py-8">
-      <DiscussionHeader
-        challenge={challenge}
-        expertsCount={experts.length}
-        maxRounds={maxRounds}
-        currentRound={currentRound}
-        progress={progress}
-        roundProgress={roundProgress}
-        isRunning={isRunning}
-        isGenerating={isGenerating}
-        hasError={hasError}
-        orchestrator={orchestrator}
-      />
+    <DiscussionErrorBoundary onReset={handleErrorReset}>
+      <div className="space-y-8 py-8">
+        {showRecovery && savedState && (
+          <DiscussionRecovery
+            savedState={savedState}
+            onRestore={handleRestoreSession}
+            onDiscard={handleDiscardSession}
+          />
+        )}
 
-      <div className="space-y-4">
-        <DiscussionControls
+        <DiscussionHeader
+          challenge={challenge}
+          expertsCount={experts.length}
+          maxRounds={maxRounds}
+          currentRound={currentRound}
+          progress={progress}
+          roundProgress={roundProgress}
           isRunning={isRunning}
           isGenerating={isGenerating}
+          hasError={hasError}
           orchestrator={orchestrator}
-          challenge={challenge}
-          discussionSpeed={discussionSpeed}
-          onStart={startDiscussion}
-          onPause={pauseDiscussion}
-          onReset={resetDiscussion}
-          onSpeedChange={adjustSpeed}
-        />
-      </div>
-
-      <div className="grid lg:grid-cols-4 gap-8">
-        <ExpertsPanel
-          experts={experts}
-          currentSpeaker={currentSpeaker}
         />
 
-        <MessagesPanel
-          messages={messages}
-          currentSpeaker={currentSpeaker}
-          typingMessage={typingMessage}
-          experts={experts}
-          getExpertInfo={getExpertInfo}
-          getRelativeTime={getRelativeTime}
-        />
+        <div className="space-y-4">
+          <DiscussionControls
+            isRunning={isRunning}
+            isGenerating={isGenerating}
+            orchestrator={orchestrator}
+            challenge={challenge}
+            discussionSpeed={discussionSpeed}
+            onStart={startDiscussion}
+            onPause={pauseDiscussion}
+            onReset={resetDiscussion}
+            onSpeedChange={adjustSpeed}
+          />
+        </div>
+
+        <div className="grid lg:grid-cols-4 gap-8">
+          <ExpertsPanel
+            experts={experts}
+            currentSpeaker={currentSpeaker}
+          />
+
+          <MessagesPanel
+            messages={messages}
+            currentSpeaker={currentSpeaker}
+            typingMessage={typingMessage}
+            experts={experts}
+            getExpertInfo={getExpertInfo}
+            getRelativeTime={getRelativeTime}
+          />
+        </div>
       </div>
-    </div>
+    </DiscussionErrorBoundary>
   );
 };
 
