@@ -230,10 +230,7 @@ export default function UserGuide() {
                 <span className="font-semibold">Responses are slow?</span><br />
                 Try simpler prompts, reduce rounds, or use paid providers.
               </li>
-              <li>
-                <span className="font-semibold">Error or broken behavior?</span><br />
-                Check your configuration, browser console, or reload. For persistent issues, visit our <a href="https://docs.lovable.dev/tips-tricks/troubleshooting" target="_blank" className="text-blue-800 underline">Troubleshooting Docs</a>.
-              </li>
+              
               <li>
                 <span className="font-semibold">Best experience:</span><br />
                 Use your own provider key, optimize round count, use desktop for longer debates.
