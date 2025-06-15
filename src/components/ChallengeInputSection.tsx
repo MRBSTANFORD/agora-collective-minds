@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, AlertCircle, CheckCircle, Key } from 'lucide-react';
+import { ArrowRight, AlertCircle, CheckCircle, Key, Sparkles } from 'lucide-react';
 import { DiscussionConfigPanel, DiscussionConfig } from "@/components/DiscussionConfigPanel";
 
 interface ChallengeInputSectionProps {
@@ -35,6 +35,17 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
   const totalExperts = discussionConfig.experts.length;
   const allUsingHuggingFace = discussionConfig.experts.every(e => e.provider === 'HuggingFace');
 
+  const exampleChallenges = [
+    "How can we create a sustainable business model for a food delivery startup that benefits restaurants, drivers, and customers equally?",
+    "What's the most ethical approach to implementing AI in hiring processes while ensuring fairness and reducing bias?",
+    "How should we balance remote work flexibility with team collaboration and company culture in a post-pandemic world?",
+    "What innovation strategy should a traditional manufacturing company adopt to compete with tech-enabled startups?"
+  ];
+
+  const handleExampleClick = (example: string) => {
+    setChallenge(example);
+  };
+
   return (
     <section className="relative">
       <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-slate-200/50 p-12 relative overflow-hidden">
@@ -54,30 +65,52 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
                 Present Your Challenge
               </h3>
             </div>
-            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto"></div>
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto mb-4"></div>
+            <p className="text-slate-600 font-light">
+              Describe any complex challenge - from business strategy to ethical dilemmas to innovation problems
+            </p>
+          </div>
+
+          {/* Quick Examples Section */}
+          <div className="mb-8 bg-amber-50/50 rounded-xl p-6 border border-amber-200">
+            <div className="flex items-center mb-4">
+              <Sparkles className="w-5 h-5 text-amber-600 mr-2" />
+              <h4 className="text-sm font-medium text-slate-700 tracking-wide uppercase">Try These Examples</h4>
+            </div>
+            <div className="grid md:grid-cols-2 gap-3">
+              {exampleChallenges.map((example, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleExampleClick(example)}
+                  className="text-left p-3 bg-white/80 hover:bg-white border border-amber-200 hover:border-amber-300 rounded-lg transition-all duration-200 text-sm text-slate-600 hover:text-slate-800"
+                >
+                  "{example.slice(0, 80)}..."
+                </button>
+              ))}
+            </div>
           </div>
           
           <div className="space-y-8">
             <div>
               <label htmlFor="challenge-title" className="block text-sm font-medium text-slate-600 mb-3 tracking-wide uppercase">
-                Challenge Proposition
+                Challenge Title (Optional)
               </label>
               <Input
                 id="challenge-title"
-                placeholder="e.g., Sustainable Urban Development in the Digital Age"
+                placeholder="e.g., Sustainable Urban Development Strategy"
                 className="w-full border-slate-200 focus:border-amber-400 focus:ring-amber-400/30 bg-white/80 font-light text-lg py-4"
               />
             </div>
             
             <div>
               <label htmlFor="challenge-description" className="block text-sm font-medium text-slate-600 mb-3 tracking-wide uppercase">
-                Detailed Exposition
+                Detailed Challenge Description
               </label>
               <Textarea
                 id="challenge-description"
                 value={challenge}
                 onChange={(e) => setChallenge(e.target.value)}
-                placeholder="Illuminate your challenge with precision. What complexities seek resolution? What constraints must be honored? What vision guides your inquiry?"
+                placeholder="Describe your challenge in detail. What are you trying to solve? What constraints do you face? What outcomes are you hoping for? The more context you provide, the better the discussion will be."
                 className="w-full h-40 border-slate-200 focus:border-amber-400 focus:ring-amber-400/30 bg-white/80 font-light text-base leading-relaxed"
               />
             </div>
@@ -90,7 +123,7 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
                     Discussion Rounds
                   </Label>
                   <p className="text-xs text-slate-500 mt-1">
-                    Number of iterative exchanges between the experts
+                    More rounds = deeper analysis and more refined solutions
                   </p>
                 </div>
                 <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
@@ -106,9 +139,9 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-slate-500 mt-2">
-                <span>3 (Quick)</span>
-                <span>5 (Balanced)</span>
-                <span>10 (Deep)</span>
+                <span>3 (Quick insights)</span>
+                <span>5 (Balanced depth)</span>
+                <span>10 (Comprehensive analysis)</span>
               </div>
             </div>
 
@@ -120,19 +153,19 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
                   <div>
                     <p className="text-sm font-medium text-slate-700">
                       {allUsingHuggingFace 
-                        ? `Ready to Begin • ${totalExperts} Experts Using Free HuggingFace`
-                        : `Configuration Active • ${expertsWithApiKeys}/${totalExperts} Experts with API Keys`
+                        ? `Ready to Begin • All ${totalExperts} Experts Using Free AI Models`
+                        : `Configuration Active • ${expertsWithApiKeys}/${totalExperts} Experts with Premium APIs`
                       }
                     </p>
                     <div className="flex items-center space-x-4 mt-2">
                       <div className="flex items-center space-x-1 text-xs text-slate-500">
                         <CheckCircle className="w-3 h-3 text-green-600" />
-                        <span>Free tier ready</span>
+                        <span>Free tier ready - no API keys needed</span>
                       </div>
                       {expertsWithApiKeys > 0 && (
                         <div className="flex items-center space-x-1 text-xs text-slate-500">
                           <Key className="w-3 h-3 text-blue-600" />
-                          <span>{expertsWithApiKeys} premium configured</span>
+                          <span>{expertsWithApiKeys} premium models configured</span>
                         </div>
                       )}
                     </div>
@@ -147,8 +180,8 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
               {!allUsingHuggingFace && expertsWithApiKeys < totalExperts && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
                   <p className="text-xs text-blue-700">
-                    💡 <strong>Mixed Configuration:</strong> {totalExperts - expertsWithApiKeys} experts will use free HuggingFace, 
-                    {expertsWithApiKeys} will use premium APIs for enhanced responses.
+                    💡 <strong>Hybrid Setup:</strong> {totalExperts - expertsWithApiKeys} experts using free models, 
+                    {expertsWithApiKeys} using premium APIs for enhanced responses.
                   </p>
                 </div>
               )}
@@ -160,7 +193,7 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
                 className="px-12 py-4 text-lg font-light tracking-wider text-white bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 shadow-lg hover:shadow-xl transition-all duration-300 rounded-full"
                 disabled={!canStart}
               >
-                {canStart ? 'Convene the Symposium' : 'Enter Your Challenge Above'}
+                {canStart ? 'Start the Discussion' : 'Enter Your Challenge Above'}
                 <ArrowRight className="w-5 h-5 ml-3" />
               </Button>
             </div>
@@ -168,7 +201,7 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
             {!canStart && (
               <div className="flex items-center justify-center space-x-2 text-amber-600">
                 <AlertCircle className="w-4 h-4" />
-                <span className="text-sm">Please describe your challenge to begin the symposium</span>
+                <span className="text-sm">Please describe your challenge to begin the discussion</span>
               </div>
             )}
           </div>

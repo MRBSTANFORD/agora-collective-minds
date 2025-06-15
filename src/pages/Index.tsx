@@ -8,6 +8,7 @@ import { DiscussionConfig } from "@/components/DiscussionConfigPanel";
 import HeroSection from '@/components/HeroSection';
 import ChallengeInputSection from '@/components/ChallengeInputSection';
 import HowItWorksSection from '@/components/HowItWorksSection';
+import TestimonialsSection from '@/components/TestimonialsSection';
 import AgoraHeader from '@/components/AgoraHeader';
 import AgoraFooter from '@/components/AgoraFooter';
 import { defaultExperts, createDefaultConfig } from '@/config/defaultExperts';
@@ -98,6 +99,8 @@ const Index = () => {
               />
 
               <HowItWorksSection />
+              
+              <TestimonialsSection />
             </div>
           </TabsContent>
 
