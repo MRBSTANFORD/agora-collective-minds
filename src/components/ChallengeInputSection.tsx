@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Users, MessageCircle, Settings } from 'lucide-react';
-import { DiscussionConfig } from "@/components/DiscussionConfigPanel";
-import DiscussionConfigPanel from "@/components/DiscussionConfigPanel";
+import { DiscussionConfig, DiscussionConfigPanel } from "@/components/DiscussionConfigPanel";
 
 interface ChallengeInputSectionProps {
   challenge: string;
