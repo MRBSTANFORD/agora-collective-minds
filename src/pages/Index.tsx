@@ -103,12 +103,6 @@ const Index = () => {
 
               <HowItWorksSection />
               
-              <InteractiveDemo />
-              
-              <FeaturesComparison />
-              
-              <ApiCostCalculator />
-              
               <TestimonialsSection />
             </div>
           </TabsContent>
