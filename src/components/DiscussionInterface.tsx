@@ -15,12 +15,10 @@ import AnalyticsDashboard from './analytics/AnalyticsDashboard';
 import ApiMonitoringDashboard from './monitoring/ApiMonitoringDashboard';
 import MobileDiscussionInterface from './mobile/MobileDiscussionInterface';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 export interface DiscussionConfig {
   rounds: number;
   experts: ExpertConfig[];
 }
-
 interface DiscussionInterfaceProps {
   challenge: string;
   discussionConfig: DiscussionConfig;
@@ -44,34 +42,32 @@ const validateExpertConfig = (expert: ExpertConfig): boolean => {
     console.warn(`❌ Expert missing id or name:`, expert);
     return false;
   }
-  
+
   // Clean the API key
   if (expert.apiKey) {
     expert.apiKey = cleanApiKey(expert.apiKey);
   }
-  
+
   // Set default provider if missing
   if (!expert.provider) {
     console.warn(`⚠️ Expert ${expert.name} missing provider, defaulting to HuggingFace`);
     expert.provider = 'HuggingFace';
   }
-  
   return true;
 };
-
 const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
   discussionConfig,
   challenge,
   onDiscussionUpdate
 }) => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('discussion');
-  
   const discussionState = useDiscussionState(discussionConfig.rounds);
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
   const [apiFailures, setApiFailures] = useState(0);
-
   const startFreshDiscussion = useCallback(() => {
     console.log('🔄 Starting fresh discussion - resetting all state');
     discussionState.resetState();
@@ -81,7 +77,6 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
     setOrchestrator(null);
     setApiFailures(0);
   }, [discussionState, orchestrator]);
-
   const startDiscussion = useCallback(async () => {
     console.log('🚀 Start discussion button clicked');
     console.log('📊 Current state before start:', {
@@ -90,7 +85,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
       currentRound: discussionState.currentRound,
       messagesCount: discussionState.messages.length
     });
-    
+
     // Prevent multiple simultaneous starts
     if (discussionState.isRunningRef.current) {
       console.log('⚠️ Discussion already running, ignoring start request');
@@ -102,16 +97,15 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
       toast({
         title: "Challenge Required",
         description: "Please enter a challenge before starting the discussion.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     if (!discussionConfig.experts || discussionConfig.experts.length === 0) {
       toast({
         title: "No Experts",
         description: "At least one expert is required to start a discussion.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -122,11 +116,10 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
       toast({
         title: "Invalid Expert Configuration",
         description: "No valid experts found. Please check your expert configurations.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     console.log(`✅ Starting discussion with ${validExperts.length} valid experts`);
 
     // Only reset if this is a completely fresh start (no existing messages)
@@ -140,7 +133,6 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
     // Set running state
     discussionState.setIsRunning(true);
     discussionState.setHasError(false);
-
     try {
       // Create orchestrator
       let currentOrchestrator = orchestrator;
@@ -149,7 +141,6 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
         currentOrchestrator = new DiscussionOrchestrator(validExperts, challenge, discussionConfig.rounds);
         setOrchestrator(currentOrchestrator);
       }
-
       console.log('🎯 Starting discussion loop:', {
         isRunningRef: discussionState.isRunningRef.current,
         orchestratorRound: currentOrchestrator.getCurrentRound(),
@@ -162,56 +153,43 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
       const MAX_SAFETY_ROUNDS = discussionConfig.rounds * 2; // Double the expected rounds as safety
 
       // Run the discussion rounds with improved loop logic
-      while (discussionState.isRunningRef.current && 
-             !currentOrchestrator.isComplete() && 
-             safetyCounter < MAX_SAFETY_ROUNDS) {
-        
+      while (discussionState.isRunningRef.current && !currentOrchestrator.isComplete() && safetyCounter < MAX_SAFETY_ROUNDS) {
         safetyCounter++;
-        
         console.log(`🎯 About to start new round (safety: ${safetyCounter}/${MAX_SAFETY_ROUNDS})`);
         console.log(`📊 Pre-round state: Orchestrator=${currentOrchestrator.getCurrentRound()}, UI=${discussionState.currentRound}`);
-        
         discussionState.setIsGenerating(true);
         discussionState.setCurrentSpeaker(null);
-
         try {
           const newMessages = await currentOrchestrator.generateRound();
-          
+
           // Check if we're still supposed to be running (user might have paused)
           if (!discussionState.isRunningRef.current) {
             console.log('⏸️ Discussion was paused during round generation');
             break;
           }
-          
           if (newMessages && newMessages.length > 0) {
             const orchestratorRound = currentOrchestrator.getCurrentRound();
             console.log(`✅ Round ${orchestratorRound} generated ${newMessages.length} messages`);
-            
+
             // Sync UI state with orchestrator state
             discussionState.setCurrentRound(orchestratorRound);
             discussionState.setProgress(currentOrchestrator.getProgress());
-            
+
             // Check for API failures
-            const fallbackCount = newMessages.filter(msg => 
-              msg.content.includes("This challenge reminds me") || 
-              msg.content.includes("We must approach this systematically") ||
-              msg.content.includes("But first, we must ask ourselves")
-            ).length;
-            
+            const fallbackCount = newMessages.filter(msg => msg.content.includes("This challenge reminds me") || msg.content.includes("We must approach this systematically") || msg.content.includes("But first, we must ask ourselves")).length;
             if (fallbackCount === newMessages.length) {
               setApiFailures(prev => prev + 1);
               console.warn(`⚠️ All responses were fallbacks in round ${orchestratorRound}`);
-              
+
               // If too many API failures, warn the user
               if (apiFailures >= 2) {
                 toast({
                   title: "API Issues Detected",
                   description: "All AI providers are failing. Consider adding valid API keys for better responses.",
-                  variant: "destructive",
+                  variant: "destructive"
                 });
               }
             }
-
             discussionState.setMessages(prevMessages => [...prevMessages, ...newMessages]);
 
             // Update current speaker based on the last message
@@ -226,19 +204,17 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
               updated[orchestratorRound - 1] = 100;
               return updated;
             });
-            
+
             // Call the update callback if provided
             if (onDiscussionUpdate) {
               const allMessages = [...discussionState.messages, ...newMessages];
               onDiscussionUpdate(allMessages, currentOrchestrator.isComplete());
             }
-            
             console.log(`✅ Round ${orchestratorRound} completed successfully and UI synchronized`);
           } else {
             console.warn(`⚠️ Round generation produced no messages`);
             break;
           }
-          
         } catch (error) {
           const currentRoundAttempt = currentOrchestrator.getCurrentRound();
           console.error(`💥 Error in round ${currentRoundAttempt}:`, error);
@@ -246,7 +222,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           toast({
             title: "Discussion Error",
             description: `An error occurred during round ${currentRoundAttempt}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            variant: "destructive",
+            variant: "destructive"
           });
           break;
         } finally {
@@ -267,85 +243,61 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
         toast({
           title: "Discussion Stopped",
           description: "Discussion stopped due to safety limits. Please check your configuration.",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
-
       const finalRound = currentOrchestrator.getCurrentRound();
       console.log(`🏁 Discussion completed. Final round: ${finalRound}/${discussionConfig.rounds}`);
 
       // Final sync of UI state
       discussionState.setCurrentRound(finalRound);
       discussionState.setProgress(currentOrchestrator.getProgress());
-
     } catch (error) {
       console.error('💥 Failed to initialize or run discussion:', error);
       discussionState.setHasError(true);
       toast({
         title: "Discussion Failed",
         description: `Failed to start discussion: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       discussionState.setIsRunning(false);
       console.log('🛑 Discussion process completed');
     }
   }, [discussionConfig, challenge, orchestrator, discussionState, toast, onDiscussionUpdate, apiFailures]);
-
   const pauseDiscussion = useCallback(() => {
     console.log('⏸️ Pausing discussion');
     discussionState.setIsRunning(false);
     discussionState.setIsGenerating(false);
-    
     toast({
       title: "Discussion Paused",
-      description: "You can resume the discussion by clicking Start Discussion again.",
+      description: "You can resume the discussion by clicking Start Discussion again."
     });
   }, [discussionState, toast]);
-
   const resetDiscussion = useCallback(() => {
     console.log('🔄 Resetting discussion state completely');
     startFreshDiscussion();
-    
     toast({
       title: "Discussion Reset",
-      description: "Discussion has been reset. You can start a new discussion now.",
+      description: "Discussion has been reset. You can start a new discussion now."
     });
   }, [startFreshDiscussion, toast]);
 
   // Mobile interface takes precedence on mobile devices
   if (isMobile) {
-    return (
-      <MobileDiscussionInterface
-        messages={discussionState.messages}
-        experts={discussionConfig.experts}
-        isRunning={discussionState.isRunning}
-        currentRound={discussionState.currentRound}
-        maxRounds={discussionConfig.rounds}
-        progress={discussionState.progress}
-        currentSpeaker={discussionState.currentSpeaker}
-        onStart={startDiscussion}
-        onPause={pauseDiscussion}
-        onReset={resetDiscussion}
-        onExpertConfigChange={(experts) => {
-          console.log('Expert config change requested:', experts);
-        }}
-      />
-    );
+    return <MobileDiscussionInterface messages={discussionState.messages} experts={discussionConfig.experts} isRunning={discussionState.isRunning} currentRound={discussionState.currentRound} maxRounds={discussionConfig.rounds} progress={discussionState.progress} currentSpeaker={discussionState.currentSpeaker} onStart={startDiscussion} onPause={pauseDiscussion} onReset={resetDiscussion} onExpertConfigChange={experts => {
+      console.log('Expert config change requested:', experts);
+    }} />;
   }
-
-  return (
-    <ErrorBoundary>
+  return <ErrorBoundary>
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Enhanced Header with AGORA Branding */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg border border-indigo-100 p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white">
+          <div className="flex items-center justify-between mb-4 bg-[#23566b]">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                <span className="text-indigo-600 font-bold text-xl">A</span>
-              </div>
+              
               <div>
-                <h1 className="text-2xl font-bold">AGORA Discussion</h1>
+                <h1 className="text-2xl font-extrabold">AGORA Discussion</h1>
                 <p className="text-indigo-100">Collective Minds & Wisdom in Action</p>
               </div>
             </div>
@@ -360,26 +312,19 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
             </div>
           </div>
           
-          <Progress 
-            value={discussionState.progress} 
-            className="h-2 bg-indigo-400"
-          />
+          <Progress value={discussionState.progress} className="h-2 bg-indigo-400" />
           
-          {discussionState.currentSpeaker && (
-            <div className="mt-3 text-center">
+          {discussionState.currentSpeaker && <div className="mt-3 text-center">
               <Badge className="bg-white text-indigo-600">
                 {discussionConfig.experts.find(e => e.id === discussionState.currentSpeaker)?.name || discussionState.currentSpeaker} is contributing...
               </Badge>
-            </div>
-          )}
+            </div>}
 
-          {apiFailures > 0 && (
-            <div className="mt-3 text-center">
+          {apiFailures > 0 && <div className="mt-3 text-center">
               <Badge variant="destructive" className="bg-red-100 text-red-700">
                 API Issues Detected - Consider adding valid API keys
               </Badge>
-            </div>
-          )}
+            </div>}
         </div>
 
         {/* Simplified Tabs Navigation - 4 tabs total */}
@@ -410,28 +355,16 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
                 <CardTitle className="flex items-center justify-between">
                   <span>Discussion Controls</span>
                   <div className="flex space-x-2">
-                    <Button
-                      onClick={discussionState.isRunning ? pauseDiscussion : startDiscussion}
-                      disabled={discussionState.isGenerating}
-                      className={discussionState.isRunning ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
-                    >
-                      {discussionState.isRunning ? (
-                        <>
+                    <Button onClick={discussionState.isRunning ? pauseDiscussion : startDiscussion} disabled={discussionState.isGenerating} className={discussionState.isRunning ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}>
+                      {discussionState.isRunning ? <>
                           <Pause className="w-4 h-4 mr-2" />
                           Pause Discussion
-                        </>
-                      ) : (
-                        <>
+                        </> : <>
                           <Play className="w-4 h-4 mr-2" />
                           {discussionState.messages.length > 0 ? 'Resume Discussion' : 'Start Discussion'}
-                        </>
-                      )}
+                        </>}
                     </Button>
-                    <Button
-                      onClick={resetDiscussion}
-                      variant="outline"
-                      disabled={discussionState.isRunning || discussionState.isGenerating}
-                    >
+                    <Button onClick={resetDiscussion} variant="outline" disabled={discussionState.isRunning || discussionState.isGenerating}>
                       <RotateCcw className="w-4 h-4 mr-2" />
                       Reset
                     </Button>
@@ -469,14 +402,10 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {discussionState.messages.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                  {discussionState.messages.length === 0 ? <div className="text-center py-8 text-gray-500">
                       <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                       <p>No messages yet. Start the discussion to see expert insights.</p>
-                    </div>
-                  ) : (
-                    discussionState.messages.map((message, index) => (
-                      <div key={index} className="border-l-4 border-l-indigo-500 pl-4 py-2">
+                    </div> : discussionState.messages.map((message, index) => <div key={index} className="border-l-4 border-l-indigo-500 pl-4 py-2">
                         <div className="flex justify-between items-center mb-1">
                           <span className="font-medium text-indigo-900">
                             {discussionConfig.experts.find(e => e.id === message.speaker)?.name || message.speaker}
@@ -489,21 +418,14 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
                           </div>
                         </div>
                         <p className="text-gray-700 leading-relaxed">{message.content}</p>
-                      </div>
-                    ))
-                  )}
+                      </div>)}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="analytics">
-            <AnalyticsDashboard
-              messages={discussionState.messages}
-              experts={discussionConfig.experts}
-              currentRound={discussionState.currentRound}
-              maxRounds={discussionConfig.rounds}
-            />
+            <AnalyticsDashboard messages={discussionState.messages} experts={discussionConfig.experts} currentRound={discussionState.currentRound} maxRounds={discussionConfig.rounds} />
           </TabsContent>
 
           <TabsContent value="monitoring">
@@ -511,19 +433,10 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           </TabsContent>
 
           <TabsContent value="reports">
-            <ReportsModule
-              discussionMessages={discussionState.messages}
-              challenge={challenge}
-              isDiscussionComplete={discussionState.currentRound >= discussionConfig.rounds}
-              experts={discussionConfig.experts}
-              currentRound={discussionState.currentRound}
-              maxRounds={discussionConfig.rounds}
-            />
+            <ReportsModule discussionMessages={discussionState.messages} challenge={challenge} isDiscussionComplete={discussionState.currentRound >= discussionConfig.rounds} experts={discussionConfig.experts} currentRound={discussionState.currentRound} maxRounds={discussionConfig.rounds} />
           </TabsContent>
         </Tabs>
       </div>
-    </ErrorBoundary>
-  );
+    </ErrorBoundary>;
 };
-
 export default DiscussionInterface;
