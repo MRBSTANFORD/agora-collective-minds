@@ -2,7 +2,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Columns, Users, Flame, Scroll, Shield, Info } from 'lucide-react';
+import { Columns, Users, Flame, Scroll, Shield, Info, ChevronDown } from 'lucide-react';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 interface AgoraHeaderProps {
   activeTab: string;
@@ -37,6 +45,29 @@ const AgoraHeader: React.FC<AgoraHeaderProps> = ({
       label: 'Codex',
       icon: Scroll,
       disabled: !discussionStarted
+    }
+  ];
+
+  const pillarPages = [
+    {
+      title: 'The Eight Immortal Minds',
+      href: '/eight-immortal-minds',
+      description: 'Meet the historical figures who guide our discussions'
+    },
+    {
+      title: 'Iterative Discourse',
+      href: '/iterative-discourse',
+      description: 'Understanding the structured dialogue process'
+    },
+    {
+      title: 'Synthesis of Wisdom',
+      href: '/synthesis-of-wisdom',
+      description: 'How collective insights are distilled into wisdom'
+    },
+    {
+      title: 'Transcendent Insights',
+      href: '/transcendent-insights',
+      description: 'The emergence of breakthrough understanding'
     }
   ];
 
@@ -100,6 +131,33 @@ const AgoraHeader: React.FC<AgoraHeaderProps> = ({
 
           {/* Secondary Navigation */}
           <div className="flex items-center space-x-4">
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-slate-600 hover:text-slate-800 bg-transparent">
+                    Core Concepts
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid w-[400px] gap-3 p-4">
+                      {pillarPages.map((page) => (
+                        <NavigationMenuLink key={page.href} asChild>
+                          <Link
+                            to={page.href}
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">{page.title}</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              {page.description}
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      ))}
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+
             <Button asChild variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
               <Link to="/about" className="flex items-center space-x-1">
                 <Info className="w-4 h-4" />
