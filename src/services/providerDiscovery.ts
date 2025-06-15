@@ -148,8 +148,8 @@ export async function discoverAvailableProviders(apiKeys: Record<string, string>
     const apiKey = apiKeys[provider];
     const { available, error, responseTime } = await testProviderConnectivity(provider, apiKey);
     
-    // Determine if provider offers free models
-    const freeModelsAvailable = provider === 'HuggingFace' || (provider === 'Groq' && apiKey);
+    // Determine if provider offers free models - fix the boolean logic
+    const freeModelsAvailable = provider === 'HuggingFace' || (provider === 'Groq' && Boolean(apiKey));
     
     results[provider] = {
       name: provider,
