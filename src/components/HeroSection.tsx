@@ -32,7 +32,7 @@ const HeroSection = () => {
             <img 
               src="/lovable-uploads/442cd3f7-0a66-40f7-bdb1-4874b741a816.png"
               alt="AGORA Logo" 
-              className="w-160 h-160 object-contain drop-shadow-2xl"
+              className="w-96 h-96 object-contain drop-shadow-2xl"
             />
             <div className="absolute -inset-8 bg-gradient-to-r from-slate-200/20 via-amber-200/20 to-slate-200/20 rounded-full blur-xl"></div>
           </div>
