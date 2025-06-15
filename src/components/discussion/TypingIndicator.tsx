@@ -7,6 +7,8 @@ interface Expert {
   id: string;
   name: string;
   image: string;
+  provider?: string;
+  model?: string;
 }
 
 interface TypingIndicatorProps {
@@ -17,6 +19,15 @@ interface TypingIndicatorProps {
 const TypingIndicator: React.FC<TypingIndicatorProps> = ({ expert, typingMessage }) => {
   if (!expert) return null;
 
+  const getProviderDisplay = (provider?: string, model?: string) => {
+    if (!provider) return '';
+    
+    if (model && model !== provider) {
+      return `${provider} ${model}`;
+    }
+    return provider;
+  };
+
   return (
     <div className="flex space-x-4 animate-fade-in">
       <Avatar className="w-12 h-12 border-2 border-white shadow-lg">
@@ -24,8 +35,15 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ expert, typingMessage
         <AvatarFallback className="text-sm">{expert.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-3 mb-2">
-          <p className="text-sm font-medium text-slate-900">{expert.name}</p>
+        <div className="flex items-center space-x-3 mb-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+            <p className="text-sm font-medium text-slate-900">{expert.name}</p>
+            {expert.provider && (
+              <span className="text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded-full">
+                {getProviderDisplay(expert.provider, expert.model)}
+              </span>
+            )}
+          </div>
           <Badge className="text-xs bg-green-100 text-green-700 animate-pulse">
             Thinking...
           </Badge>
@@ -37,10 +55,13 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ expert, typingMessage
               <span className="animate-pulse">|</span>
             </p>
           ) : (
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="flex items-center space-x-2">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+              <span className="text-xs text-slate-500">Processing with AI...</span>
             </div>
           )}
         </div>

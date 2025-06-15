@@ -314,6 +314,23 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           
           <Progress value={discussionState.progress} className="h-2 bg-indigo-400" />
           
+          {/* Enhanced thinking/waiting message */}
+          {discussionState.isGenerating && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-center space-x-3">
+                <div className="flex space-x-1">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+                <div className="text-center">
+                  <p className="text-blue-800 font-medium">Please wait while experts think...</p>
+                  <p className="text-blue-600 text-sm">This may take a few moments as each AI processes the challenge</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {discussionState.currentSpeaker && <div className="mt-3 text-center">
               <Badge className="bg-white text-indigo-600">
                 {discussionConfig.experts.find(e => e.id === discussionState.currentSpeaker)?.name || discussionState.currentSpeaker} is contributing...
@@ -406,10 +423,22 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
                       <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                       <p>No messages yet. Start the discussion to see expert insights.</p>
                     </div> : discussionState.messages.map((message, index) => <div key={index} className="border-l-4 border-l-indigo-500 pl-4 py-2">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="font-medium text-indigo-900">
-                            {discussionConfig.experts.find(e => e.id === message.speaker)?.name || message.speaker}
-                          </span>
+                        <div className="flex justify-between items-center mb-1 flex-wrap">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+                            <span className="font-medium text-indigo-900">
+                              {discussionConfig.experts.find(e => e.id === message.speaker)?.name || message.speaker}
+                            </span>
+                            {(() => {
+                              const expert = discussionConfig.experts.find(e => e.id === message.speaker);
+                              return expert?.provider && (
+                                <span className="text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded-full">
+                                  {expert.model && expert.model !== expert.provider 
+                                    ? `${expert.provider} ${expert.model}` 
+                                    : expert.provider}
+                                </span>
+                              );
+                            })()}
+                          </div>
                           <div className="flex items-center space-x-2">
                             <Badge variant="outline">Round {message.round}</Badge>
                             <span className="text-xs text-gray-500">
