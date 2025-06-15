@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Play, Pause, RotateCcw, MessageSquare, Users, BarChart3, Activity, FileText } from "lucide-react";
 import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
 import { ExpertConfig } from './ExpertCardList';
+import ExpertCardList from './ExpertCardList';
 import { useDiscussionState } from '@/hooks/useDiscussionState';
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -22,21 +24,21 @@ export interface DiscussionConfig {
 }
 
 interface DiscussionInterfaceProps {
-  config: DiscussionConfig;
   challenge: string;
-  onConfigChange?: (config: DiscussionConfig) => void;
+  discussionConfig: DiscussionConfig;
+  onDiscussionUpdate?: (messages: any[], complete: boolean) => void;
 }
 
 const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
-  config,
+  discussionConfig,
   challenge,
-  onConfigChange
+  onDiscussionUpdate
 }) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('discussion');
   
-  const discussionState = useDiscussionState(config.rounds);
+  const discussionState = useDiscussionState(discussionConfig.rounds);
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
 
   const startDiscussion = useCallback(async () => {
@@ -48,19 +50,19 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
 
     if (discussionState.currentRound === 0) {
       discussionState.resetState();
-      console.log('🚀 Starting new discussion with config:', config, 'challenge:', challenge);
+      console.log('🚀 Starting new discussion with config:', discussionConfig, 'challenge:', challenge);
     } else {
       console.log('⏯️ Resuming discussion from round:', discussionState.currentRound);
     }
 
     // Initialize orchestrator only once at the start or after reset
     if (!orchestrator) {
-      const newOrchestrator = new DiscussionOrchestrator(config.experts, challenge, config.rounds);
+      const newOrchestrator = new DiscussionOrchestrator(discussionConfig.experts, challenge, discussionConfig.rounds);
       setOrchestrator(newOrchestrator);
     }
 
     // Run the discussion rounds
-    while (discussionState.isRunningRef.current && discussionState.currentRound < config.rounds) {
+    while (discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds) {
       const round = discussionState.currentRound + 1;
       discussionState.setIsGenerating(true);
       discussionState.isGeneratingRef.current = true;
@@ -81,6 +83,11 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
 
         discussionState.updateProgress(round);
         console.log(`✅ Round ${round} completed successfully`);
+        
+        // Call the update callback if provided
+        if (onDiscussionUpdate) {
+          onDiscussionUpdate(discussionState.messages, discussionState.currentRound >= discussionConfig.rounds);
+        }
       } catch (error) {
         console.error(`💥 Error in round ${round}:`, error);
         discussionState.setHasError(true);
@@ -99,7 +106,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
     discussionState.setIsRunning(false);
     discussionState.isRunningRef.current = false;
     console.log('🛑 Discussion completed or stopped.');
-  }, [config, challenge, orchestrator, discussionState, toast]);
+  }, [discussionConfig, challenge, orchestrator, discussionState, toast, onDiscussionUpdate]);
 
   const pauseDiscussion = useCallback(() => {
     console.log('⏸️ Pausing discussion');
@@ -118,16 +125,19 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
     return (
       <MobileDiscussionInterface
         messages={discussionState.messages}
-        experts={config.experts}
+        experts={discussionConfig.experts}
         isRunning={discussionState.isRunning}
         currentRound={discussionState.currentRound}
-        maxRounds={config.rounds}
+        maxRounds={discussionConfig.rounds}
         progress={discussionState.progress}
         currentSpeaker={discussionState.currentSpeaker}
         onStart={startDiscussion}
         onPause={() => discussionState.setIsRunning(false)}
         onReset={resetDiscussion}
-        onExpertConfigChange={(experts) => onConfigChange?.({ ...config, experts })}
+        onExpertConfigChange={(experts) => {
+          // Note: This would need to be handled by parent component
+          console.log('Expert config change requested:', experts);
+        }}
       />
     );
   }
@@ -150,7 +160,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
             
             <div className="text-right">
               <div className="text-sm text-indigo-100">
-                Round {discussionState.currentRound} of {config.rounds}
+                Round {discussionState.currentRound} of {discussionConfig.rounds}
               </div>
               <div className="text-2xl font-bold">
                 {Math.round(discussionState.progress)}%
@@ -166,7 +176,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           {discussionState.currentSpeaker && (
             <div className="mt-3 text-center">
               <Badge className="bg-white text-indigo-600">
-                {config.experts.find(e => e.id === discussionState.currentSpeaker)?.name || discussionState.currentSpeaker} is contributing...
+                {discussionConfig.experts.find(e => e.id === discussionState.currentSpeaker)?.name || discussionState.currentSpeaker} is contributing...
               </Badge>
             </div>
           )}
@@ -239,7 +249,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
                     <div className="text-sm text-blue-700">Messages</div>
                   </div>
                   <div className="p-3 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{config.experts.length}</div>
+                    <div className="text-2xl font-bold text-green-600">{discussionConfig.experts.length}</div>
                     <div className="text-sm text-green-700">Active Experts</div>
                   </div>
                   <div className="p-3 bg-purple-50 rounded-lg">
@@ -273,7 +283,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
                       <div key={index} className="border-l-4 border-l-indigo-500 pl-4 py-2">
                         <div className="flex justify-between items-center mb-1">
                           <span className="font-medium text-indigo-900">
-                            {config.experts.find(e => e.id === message.speaker)?.name || message.speaker}
+                            {discussionConfig.experts.find(e => e.id === message.speaker)?.name || message.speaker}
                           </span>
                           <div className="flex items-center space-x-2">
                             <Badge variant="outline">Round {message.round}</Badge>
@@ -293,30 +303,22 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
 
           <TabsContent value="experts">
             <ExpertCardList
-              experts={config.experts}
+              experts={discussionConfig.experts}
               onTraitChange={(id, trait, value) => {
-                const updatedExperts = config.experts.map(expert =>
-                  expert.id === id ? { ...expert, cognitive: { ...expert.cognitive, [trait]: value } } : expert
-                );
-                onConfigChange?.({ ...config, experts: updatedExperts });
+                // Note: This would need to be handled by parent component
+                console.log('Trait change requested:', id, trait, value);
               }}
               onApiKeyChange={(id, value) => {
-                const updatedExperts = config.experts.map(expert =>
-                  expert.id === id ? { ...expert, apiKey: value } : expert
-                );
-                onConfigChange?.({ ...config, experts: updatedExperts });
+                // Note: This would need to be handled by parent component
+                console.log('API key change requested:', id, value);
               }}
               onProviderChange={(id, value) => {
-                const updatedExperts = config.experts.map(expert =>
-                  expert.id === id ? { ...expert, provider: value } : expert
-                );
-                onConfigChange?.({ ...config, experts: updatedExperts });
+                // Note: This would need to be handled by parent component
+                console.log('Provider change requested:', id, value);
               }}
               onModelChange={(id, value) => {
-                const updatedExperts = config.experts.map(expert =>
-                  expert.id === id ? { ...expert, model: value } : expert
-                );
-                onConfigChange?.({ ...config, experts: updatedExperts });
+                // Note: This would need to be handled by parent component
+                console.log('Model change requested:', id, value);
               }}
             />
           </TabsContent>
@@ -324,24 +326,24 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           <TabsContent value="analytics">
             <AnalyticsDashboard
               messages={discussionState.messages}
-              experts={config.experts}
+              experts={discussionConfig.experts}
               currentRound={discussionState.currentRound}
-              maxRounds={config.rounds}
+              maxRounds={discussionConfig.rounds}
             />
           </TabsContent>
 
           <TabsContent value="monitoring">
-            <ApiMonitoringDashboard experts={config.experts} />
+            <ApiMonitoringDashboard experts={discussionConfig.experts} />
           </TabsContent>
 
           <TabsContent value="reports">
             <ReportsModule
               discussionMessages={discussionState.messages}
               challenge={challenge}
-              isDiscussionComplete={discussionState.currentRound >= config.rounds}
-              experts={config.experts}
+              isDiscussionComplete={discussionState.currentRound >= discussionConfig.rounds}
+              experts={discussionConfig.experts}
               currentRound={discussionState.currentRound}
-              maxRounds={config.rounds}
+              maxRounds={discussionConfig.rounds}
             />
           </TabsContent>
         </Tabs>
