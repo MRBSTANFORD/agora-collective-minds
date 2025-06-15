@@ -13,7 +13,7 @@ const AgoraFooter: React.FC = () => {
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-8">
-        <div className="grid md:grid-cols-5 gap-12">
+        <div className="grid md:grid-cols-4 gap-12">
           {/* AGORA Brand */}
           <div>
             <div className="flex items-center mb-6">
@@ -70,33 +70,6 @@ const AgoraFooter: React.FC = () => {
               <li>
                 <Link to="/user-guide" className="hover:text-amber-300 transition-colors">
                   User Guide
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Core Concepts */}
-          <div>
-            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Core Concepts</h4>
-            <ul className="space-y-3 text-slate-300 font-light">
-              <li>
-                <Link to="/eight-immortal-minds" className="hover:text-amber-300 transition-colors">
-                  The Eight Immortal Minds
-                </Link>
-              </li>
-              <li>
-                <Link to="/iterative-discourse" className="hover:text-amber-300 transition-colors">
-                  Iterative Discourse
-                </Link>
-              </li>
-              <li>
-                <Link to="/synthesis-of-wisdom" className="hover:text-amber-300 transition-colors">
-                  Synthesis of Wisdom
-                </Link>
-              </li>
-              <li>
-                <Link to="/transcendent-insights" className="hover:text-amber-300 transition-colors">
-                  Transcendent Insights
                 </Link>
               </li>
             </ul>

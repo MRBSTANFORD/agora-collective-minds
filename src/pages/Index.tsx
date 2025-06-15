@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ExpertProfiles from '@/components/ExpertProfiles';
@@ -103,12 +104,6 @@ const Index = () => {
               <HowItWorksSection />
               
               <TestimonialsSection />
-              
-              <InteractiveDemo />
-              
-              <FeaturesComparison />
-              
-              <ApiCostCalculator />
             </div>
           </TabsContent>
 
