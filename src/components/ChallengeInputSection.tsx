@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +46,7 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
   };
 
   return (
-    <section className="relative">
+    <section className="relative" data-section="challenge-input">
       <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-slate-200/50 p-12 relative overflow-hidden">
         {/* Subtle Greek key pattern */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
