@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,9 +75,12 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
   const startFreshDiscussion = useCallback(() => {
     console.log('🔄 Starting fresh discussion - resetting all state');
     discussionState.resetState();
+    if (orchestrator) {
+      orchestrator.reset();
+    }
     setOrchestrator(null);
     setApiFailures(0);
-  }, [discussionState]);
+  }, [discussionState, orchestrator]);
 
   const startDiscussion = useCallback(async () => {
     console.log('🚀 Start discussion button clicked');
@@ -150,7 +152,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
 
       console.log('🎯 Starting discussion loop:', {
         isRunningRef: discussionState.isRunningRef.current,
-        currentRound: discussionState.currentRound,
+        orchestratorRound: currentOrchestrator.getCurrentRound(),
         maxRounds: discussionConfig.rounds,
         orchestratorComplete: currentOrchestrator.isComplete()
       });
@@ -165,9 +167,9 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
              safetyCounter < MAX_SAFETY_ROUNDS) {
         
         safetyCounter++;
-        const nextRound = discussionState.currentRound + 1;
         
-        console.log(`🎯 Starting round ${nextRound}/${discussionConfig.rounds} (safety: ${safetyCounter}/${MAX_SAFETY_ROUNDS})`);
+        console.log(`🎯 About to start new round (safety: ${safetyCounter}/${MAX_SAFETY_ROUNDS})`);
+        console.log(`📊 Pre-round state: Orchestrator=${currentOrchestrator.getCurrentRound()}, UI=${discussionState.currentRound}`);
         
         discussionState.setIsGenerating(true);
         discussionState.setCurrentSpeaker(null);
@@ -182,7 +184,12 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           }
           
           if (newMessages && newMessages.length > 0) {
-            console.log(`✅ Round ${nextRound} generated ${newMessages.length} messages`);
+            const orchestratorRound = currentOrchestrator.getCurrentRound();
+            console.log(`✅ Round ${orchestratorRound} generated ${newMessages.length} messages`);
+            
+            // Sync UI state with orchestrator state
+            discussionState.setCurrentRound(orchestratorRound);
+            discussionState.setProgress(currentOrchestrator.getProgress());
             
             // Check for API failures
             const fallbackCount = newMessages.filter(msg => 
@@ -193,7 +200,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
             
             if (fallbackCount === newMessages.length) {
               setApiFailures(prev => prev + 1);
-              console.warn(`⚠️ All responses were fallbacks in round ${nextRound}`);
+              console.warn(`⚠️ All responses were fallbacks in round ${orchestratorRound}`);
               
               // If too many API failures, warn the user
               if (apiFailures >= 2) {
@@ -213,7 +220,12 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
               discussionState.setCurrentSpeaker(lastMessage.speaker);
             }
 
-            discussionState.updateProgress(nextRound);
+            // Update round progress tracking
+            discussionState.setRoundProgress(prev => {
+              const updated = [...prev];
+              updated[orchestratorRound - 1] = 100;
+              return updated;
+            });
             
             // Call the update callback if provided
             if (onDiscussionUpdate) {
@@ -221,21 +233,19 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
               onDiscussionUpdate(allMessages, currentOrchestrator.isComplete());
             }
             
-            // Important: Only advance round if we got valid responses
-            if (newMessages.length === validExperts.length) {
-              console.log(`✅ Round ${nextRound} completed successfully`);
-            }
+            console.log(`✅ Round ${orchestratorRound} completed successfully and UI synchronized`);
           } else {
-            console.warn(`⚠️ Round ${nextRound} generated no messages`);
+            console.warn(`⚠️ Round generation produced no messages`);
             break;
           }
           
         } catch (error) {
-          console.error(`💥 Error in round ${nextRound}:`, error);
+          const currentRoundAttempt = currentOrchestrator.getCurrentRound();
+          console.error(`💥 Error in round ${currentRoundAttempt}:`, error);
           discussionState.setHasError(true);
           toast({
             title: "Discussion Error",
-            description: `An error occurred during round ${nextRound}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            description: `An error occurred during round ${currentRoundAttempt}: ${error instanceof Error ? error.message : 'Unknown error'}`,
             variant: "destructive",
           });
           break;
@@ -261,7 +271,12 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
         });
       }
 
-      console.log(`🏁 Discussion completed. Final round: ${discussionState.currentRound}/${discussionConfig.rounds}`);
+      const finalRound = currentOrchestrator.getCurrentRound();
+      console.log(`🏁 Discussion completed. Final round: ${finalRound}/${discussionConfig.rounds}`);
+
+      // Final sync of UI state
+      discussionState.setCurrentRound(finalRound);
+      discussionState.setProgress(currentOrchestrator.getProgress());
 
     } catch (error) {
       console.error('💥 Failed to initialize or run discussion:', error);

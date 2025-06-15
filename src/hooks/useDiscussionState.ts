@@ -32,17 +32,6 @@ export function useDiscussionState(maxRounds: number) {
     setHasError(false);
   }, [maxRounds]);
 
-  const updateProgress = useCallback((round: number) => {
-    console.log(`📊 Updating progress: round ${round}/${maxRounds}`);
-    setCurrentRound(round);
-    setProgress((round / maxRounds) * 100);
-    setRoundProgress(prev => {
-      const updated = [...prev];
-      updated[round - 1] = 100;
-      return updated;
-    });
-  }, [maxRounds]);
-
   // Enhanced setters with logging for debugging
   const setIsRunningWithLog = useCallback((value: boolean) => {
     console.log(`🏃 Setting isRunning: ${value}`);
@@ -54,6 +43,46 @@ export function useDiscussionState(maxRounds: number) {
     console.log(`⚙️ Setting isGenerating: ${value}`);
     setIsGenerating(value);
     isGeneratingRef.current = value;
+  }, []);
+
+  // Enhanced round setter with validation
+  const setCurrentRoundWithValidation = useCallback((round: number) => {
+    console.log(`📊 Setting current round: ${round} (max: ${maxRounds})`);
+    
+    // Validate round number
+    if (round < 0) {
+      console.warn(`⚠️ Invalid round number: ${round}, setting to 0`);
+      setCurrentRound(0);
+      return;
+    }
+    
+    if (round > maxRounds) {
+      console.warn(`⚠️ Round ${round} exceeds max rounds ${maxRounds}, capping at max`);
+      setCurrentRound(maxRounds);
+      return;
+    }
+    
+    setCurrentRound(round);
+  }, [maxRounds]);
+
+  // Enhanced progress setter with validation
+  const setProgressWithValidation = useCallback((progressValue: number) => {
+    console.log(`📈 Setting progress: ${progressValue}%`);
+    
+    // Validate progress value
+    if (progressValue < 0) {
+      console.warn(`⚠️ Invalid progress: ${progressValue}%, setting to 0%`);
+      setProgress(0);
+      return;
+    }
+    
+    if (progressValue > 100) {
+      console.warn(`⚠️ Progress ${progressValue}% exceeds 100%, capping at 100%`);
+      setProgress(100);
+      return;
+    }
+    
+    setProgress(progressValue);
   }, []);
 
   return {
@@ -70,11 +99,11 @@ export function useDiscussionState(maxRounds: number) {
     isRunningRef,
     isGeneratingRef,
     
-    // Enhanced setters with logging
+    // Enhanced setters with logging and validation
     setIsRunning: setIsRunningWithLog,
     setIsGenerating: setIsGeneratingWithLog,
-    setCurrentRound,
-    setProgress,
+    setCurrentRound: setCurrentRoundWithValidation,
+    setProgress: setProgressWithValidation,
     setMessages,
     setCurrentSpeaker,
     setTypingMessage,
@@ -82,7 +111,6 @@ export function useDiscussionState(maxRounds: number) {
     setHasError,
     
     // Utilities
-    resetState,
-    updateProgress
+    resetState
   };
 }
