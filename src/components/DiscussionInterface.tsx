@@ -298,7 +298,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
               
               <div>
                 <h1 className="text-2xl font-extrabold text-gray-200">AGORA Discussion</h1>
-                <p className="text-gray-700">Collective Minds & Wisdom in Action</p>
+                <p className="text-gray-700 text-base font-bold">Collective Minds & Wisdom in Action</p>
               </div>
             </div>
             
