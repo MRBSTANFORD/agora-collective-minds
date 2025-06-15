@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, AlertCircle } from 'lucide-react';
+import { ArrowRight, AlertCircle, CheckCircle, Key } from 'lucide-react';
 import { DiscussionConfigPanel, DiscussionConfig } from "@/components/DiscussionConfigPanel";
 
 interface ChallengeInputSectionProps {
@@ -30,6 +30,11 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
   onStartDiscussion,
   canStart
 }) => {
+  // Calculate configuration status
+  const expertsWithApiKeys = discussionConfig.experts.filter(e => e.apiKey && e.apiKey.trim() !== '').length;
+  const totalExperts = discussionConfig.experts.length;
+  const allUsingHuggingFace = discussionConfig.experts.every(e => e.provider === 'HuggingFace');
+
   return (
     <section className="relative">
       <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-slate-200/50 p-12 relative overflow-hidden">
@@ -107,23 +112,46 @@ const ChallengeInputSection: React.FC<ChallengeInputSectionProps> = ({
               </div>
             </div>
 
-            {/* Configuration Status & Advanced Settings */}
-            <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <div>
-                  <p className="text-sm font-medium text-slate-700">
-                    Ready to Begin • 8 Experts Configured
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Using free HuggingFace models. Configure API keys for enhanced responses.
+            {/* Enhanced Configuration Status & Advanced Settings */}
+            <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${allUsingHuggingFace ? 'bg-green-500' : expertsWithApiKeys > 0 ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">
+                      {allUsingHuggingFace 
+                        ? `Ready to Begin • ${totalExperts} Experts Using Free HuggingFace`
+                        : `Configuration Active • ${expertsWithApiKeys}/${totalExperts} Experts with API Keys`
+                      }
+                    </p>
+                    <div className="flex items-center space-x-4 mt-2">
+                      <div className="flex items-center space-x-1 text-xs text-slate-500">
+                        <CheckCircle className="w-3 h-3 text-green-600" />
+                        <span>Free tier ready</span>
+                      </div>
+                      {expertsWithApiKeys > 0 && (
+                        <div className="flex items-center space-x-1 text-xs text-slate-500">
+                          <Key className="w-3 h-3 text-blue-600" />
+                          <span>{expertsWithApiKeys} premium configured</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <DiscussionConfigPanel
+                  initialConfig={discussionConfig}
+                  onChange={onConfigChange}
+                />
+              </div>
+              
+              {!allUsingHuggingFace && expertsWithApiKeys < totalExperts && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                  <p className="text-xs text-blue-700">
+                    💡 <strong>Mixed Configuration:</strong> {totalExperts - expertsWithApiKeys} experts will use free HuggingFace, 
+                    {expertsWithApiKeys} will use premium APIs for enhanced responses.
                   </p>
                 </div>
-              </div>
-              <DiscussionConfigPanel
-                initialConfig={discussionConfig}
-                onChange={onConfigChange}
-              />
+              )}
             </div>
             
             <div className="flex justify-center pt-4">

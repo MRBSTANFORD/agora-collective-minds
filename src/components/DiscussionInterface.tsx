@@ -1,14 +1,13 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Play, Pause, RotateCcw, MessageSquare, Users, BarChart3, Activity, FileText } from "lucide-react";
+import { Play, Pause, RotateCcw, MessageSquare, BarChart3, Activity, FileText } from "lucide-react";
 import { DiscussionOrchestrator, DiscussionMessage } from '@/services/aiOrchestrator';
 import { ExpertConfig } from './ExpertCardList';
-import ExpertCardList from './ExpertCardList';
 import { useDiscussionState } from '@/hooks/useDiscussionState';
 import { useToast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -287,16 +286,12 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           )}
         </div>
 
-        {/* Enhanced Tabs Navigation */}
+        {/* Simplified Tabs Navigation - Removed Experts Tab */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="discussion" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
               Discussion
-            </TabsTrigger>
-            <TabsTrigger value="experts" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Experts
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
@@ -404,28 +399,6 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="experts">
-            <ExpertCardList
-              experts={discussionConfig.experts}
-              onTraitChange={(id, trait, value) => {
-                // Note: This would need to be handled by parent component
-                console.log('Trait change requested:', id, trait, value);
-              }}
-              onApiKeyChange={(id, value) => {
-                // Note: This would need to be handled by parent component
-                console.log('API key change requested:', id, value);
-              }}
-              onProviderChange={(id, value) => {
-                // Note: This would need to be handled by parent component
-                console.log('Provider change requested:', id, value);
-              }}
-              onModelChange={(id, value) => {
-                // Note: This would need to be handled by parent component
-                console.log('Model change requested:', id, value);
-              }}
-            />
           </TabsContent>
 
           <TabsContent value="analytics">

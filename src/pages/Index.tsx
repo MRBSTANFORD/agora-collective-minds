@@ -27,6 +27,7 @@ const Index = () => {
 
   // Update config when rounds change
   const handleRoundsChange = (newRounds: number) => {
+    console.log('📊 Updating rounds:', newRounds);
     setRounds(newRounds);
     setDiscussionConfig(prev => ({
       ...prev,
@@ -34,8 +35,14 @@ const Index = () => {
     }));
   };
 
-  // Update config from advanced settings
+  // Properly handle configuration changes from DiscussionConfigPanel
   const handleConfigChange = (newConfig: DiscussionConfig) => {
+    console.log('🔧 Updating discussion config:', {
+      rounds: newConfig.rounds,
+      expertsCount: newConfig.experts.length,
+      expertsWithKeys: newConfig.experts.filter(e => e.apiKey && e.apiKey.trim() !== '').length
+    });
+    
     setDiscussionConfig(newConfig);
     setRounds(newConfig.rounds);
   };
@@ -48,6 +55,16 @@ const Index = () => {
 
   const handleStartDiscussion = () => {
     if (challenge.trim()) {
+      console.log('🚀 Starting discussion with current config:', {
+        challenge: challenge.slice(0, 50) + '...',
+        rounds: discussionConfig.rounds,
+        experts: discussionConfig.experts.map(e => ({
+          id: e.id,
+          name: e.name,
+          provider: e.provider,
+          hasApiKey: !!(e.apiKey && e.apiKey.trim())
+        }))
+      });
       setDiscussionStarted(true);
       setActiveTab('discussion');
     }
