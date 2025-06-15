@@ -1,4 +1,3 @@
-
 // Dynamic model discovery service that queries each platform's API for real-time model availability
 export interface DiscoveredModel {
   id: string;
@@ -149,7 +148,7 @@ export async function discoverAnthropicModels(apiKey?: string): Promise<Discover
         })
       });
       
-      if (response.ok || response.status === 400) { // 400 might be quota limit but key is valid
+      if (testResponse.ok || testResponse.status === 400) { // 400 might be quota limit but key is valid
         return knownModels.map(model => ({ ...model, available: true, note: undefined }));
       }
     } catch (error) {
