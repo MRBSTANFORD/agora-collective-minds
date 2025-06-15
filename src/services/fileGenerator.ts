@@ -23,9 +23,10 @@ export class FileGenerator {
     pdf.text(`Generated on ${report.generatedAt.toLocaleDateString()} at ${report.generatedAt.toLocaleTimeString()}`, margin, yPosition);
     yPosition += lineHeight + 10;
 
-    // Add content
+    // Clean and format content for PDF
+    const cleanContent = this.convertHTMLToText(report.content);
     pdf.setFontSize(11);
-    const contentLines = pdf.splitTextToSize(report.content, pageWidth - 2 * margin);
+    const contentLines = pdf.splitTextToSize(cleanContent, pageWidth - 2 * margin);
     
     for (let i = 0; i < contentLines.length; i++) {
       if (yPosition > pdf.internal.pageSize.height - margin) {
@@ -130,6 +131,32 @@ export class FileGenerator {
     URL.revokeObjectURL(url);
   }
 
+  // Convert HTML content to clean text for PDF generation
+  private static convertHTMLToText(htmlContent: string): string {
+    // Remove HTML tags and convert to plain text
+    let text = htmlContent
+      // Remove HTML tags but preserve content
+      .replace(/<[^>]*>/g, '')
+      // Convert HTML entities
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      // Handle markdown-style formatting
+      .replace(/^#{1,3}\s+(.+)$/gm, '\n$1\n')  // Convert headings
+      .replace(/\*\*(.*?)\*\*/g, '$1')         // Remove bold markers
+      .replace(/\*(.*?)\*/g, '$1')             // Remove italic markers
+      // Clean up extra whitespace
+      .replace(/\n{3,}/g, '\n\n')             // Max 2 consecutive newlines
+      .replace(/[ \t]+/g, ' ')                // Multiple spaces to single space
+      .trim();
+
+    return text;
+  }
+
+  // Enhanced HTML formatting for rich HTML export
   private static formatContentAsHTML(content: string): string {
     return content
       .replace(/^# (.*$)/gm, '<h2>$1</h2>')
@@ -142,5 +169,54 @@ export class FileGenerator {
       .replace(/\n\n/g, '</p><p>')
       .replace(/^(?!<[hul])/gm, '<p>')
       .replace(/(?<!>)$/gm, '</p>');
+  }
+
+  // Create PDF-specific branding content
+  static createPDFBrandingContent(title: string, generatedAt: Date, expertCount: number, messageCount: number, challenge: string): string {
+    return `
+AGORA - Collective Minds & Wisdom Platform
+
+Report: ${title}
+Generated: ${generatedAt.toLocaleDateString()} at ${generatedAt.toLocaleTimeString()}
+
+Expert Voices: ${expertCount}
+Total Insights: ${messageCount}
+Challenge: ${challenge}
+
+========================================
+
+`;
+  }
+
+  // Create HTML-specific enhanced content with rich formatting
+  static createHTMLBrandingContent(title: string, generatedAt: Date, expertCount: number, messageCount: number, challenge: string): string {
+    return `
+      <div style="margin-bottom: 30px;">
+        <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div style="width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #4F46E5; font-weight: bold; font-size: 18px;">A</span>
+              </div>
+              <div>
+                <h1 style="margin: 0; font-size: 24px; font-weight: bold;">AGORA</h1>
+                <p style="margin: 0; font-size: 14px; opacity: 0.8;">Collective Minds & Wisdom</p>
+              </div>
+            </div>
+            <div style="text-align: right; font-size: 12px; opacity: 0.8;">
+              <p style="margin: 0;">Generated: ${generatedAt.toLocaleDateString()}</p>
+              <p style="margin: 0;">${generatedAt.toLocaleTimeString()}</p>
+            </div>
+          </div>
+          <div style="border-top: 1px solid rgba(255,255,255,0.3); padding-top: 20px;">
+            <h2 style="margin: 0 0 10px 0; font-size: 28px; font-weight: bold;">${title}</h2>
+            <div style="display: flex; gap: 30px; font-size: 13px;">
+              <div><span style="opacity: 0.8;">Expert Voices:</span> <span style="font-weight: bold;">${expertCount}</span></div>
+              <div><span style="opacity: 0.8;">Insights:</span> <span style="font-weight: bold;">${messageCount}</span></div>
+              <div><span style="opacity: 0.8;">Challenge:</span> <span style="font-weight: bold;">${challenge}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
   }
 }
