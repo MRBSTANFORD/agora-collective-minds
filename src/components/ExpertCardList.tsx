@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { testApiConnection, ProviderApiStatus } from "@/services/apiTester";
 import { useAvailableModels, LLMModel } from "@/hooks/useAvailableModels";
 import { PROVIDERS_WITH_MODELS, traitDocs } from "@/config/providerConfig";
+import { useEnhancedModels, EnhancedLLMModel } from "@/hooks/useEnhancedModels";
 
 export type ExpertConfig = {
   id: string;
@@ -238,7 +239,15 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
     return keys;
   }, [experts]);
 
-  const { models: availableModels, loading: modelsLoading, error: modelsError, refreshModels, summary } = useAvailableModels(providerList, apiKeys);
+  // Use enhanced discovery system
+  const { 
+    loading: modelsLoading, 
+    providers: providerStatuses, 
+    models: availableModels, 
+    error: modelsError, 
+    refreshDiscovery, 
+    summary 
+  } = useEnhancedModels(providerList, apiKeys);
 
   const [testingStatus, setTestingStatus] = useState<Record<string, ProviderApiStatus>>({});
   const [apiMessages, setApiMessages] = useState<Record<string, string>>({});
@@ -291,17 +300,17 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
           apiMessage={apiMessages[expert.id] || ""}
           onTestApi={() => handleTestApi(expert)}
           isModelsLoading={modelsLoading}
-          onRefreshModels={refreshModels}
+          onRefreshModels={refreshDiscovery}
         />
       );
     }),
-    [experts, availableModels, testingStatus, apiMessages, modelsLoading, onTraitChange, onApiKeyChange, onProviderChange, onModelChange, handleTestApi, refreshModels]
+    [experts, availableModels, testingStatus, apiMessages, modelsLoading, onTraitChange, onApiKeyChange, onProviderChange, onModelChange, handleTestApi, refreshDiscovery]
   );
 
   return (
     <TooltipProvider>
       <div className="space-y-4">
-        {/* Model Discovery Status */}
+        {/* Enhanced Model Discovery Status */}
         {(modelsLoading || modelsError || summary.totalModels > 0) && (
           <Card className="bg-blue-50/50 border-blue-200">
             <CardContent className="pt-4">
@@ -310,29 +319,47 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
                   {modelsLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                      <span className="text-sm text-blue-700">Discovering available models...</span>
+                      <span className="text-sm text-blue-700">Discovering providers and models...</span>
                     </>
                   ) : modelsError ? (
                     <>
                       <AlertCircle className="w-4 h-4 text-red-600" />
-                      <span className="text-sm text-red-700">Model discovery failed: {modelsError}</span>
+                      <span className="text-sm text-red-700">Discovery failed: {modelsError}</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
                       <span className="text-sm text-green-700">
-                        Found {summary.totalModels} models ({summary.freeModels} free) across {summary.providersWithModels} providers
+                        Found {summary.availableProviders}/{summary.totalProviders} working providers, {summary.totalModels} models ({summary.freeModels} free)
                       </span>
                     </>
                   )}
                 </div>
                 {!modelsLoading && (
-                  <Button variant="ghost" size="sm" onClick={refreshModels}>
+                  <Button variant="ghost" size="sm" onClick={refreshDiscovery}>
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Refresh
                   </Button>
                 )}
               </div>
+              
+              {/* Show provider status indicators */}
+              {summary.workingProviders.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {summary.workingProviders.map(provider => {
+                    const status = providerStatuses[provider];
+                    return (
+                      <Badge 
+                        key={provider} 
+                        variant={status?.freeModelsAvailable ? "default" : "outline"}
+                        className="text-xs"
+                      >
+                        {provider} {status?.freeModelsAvailable && "🆓"}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

@@ -111,9 +111,9 @@ export async function testApiConnection({
         });
         break;
 
-      case "Gemini":
+      case "GoogleGemini":  // Fixed: was "Gemini"
         if (!finalApiKey) {
-          return { ok: false, message: "Gemini requires an API key" };
+          return { ok: false, message: "GoogleGemini requires an API key" };
         }
         headers = {
           "Content-Type": "application/json",
@@ -149,9 +149,9 @@ export async function testApiConnection({
         });
         break;
 
-      case "Mistral":
+      case "MistralAI":  // Fixed: was "Mistral"
         if (!finalApiKey) {
-          return { ok: false, message: "Mistral requires an API key" };
+          return { ok: false, message: "MistralAI requires an API key" };
         }
         headers = {
           "Authorization": `Bearer ${finalApiKey}`,
@@ -228,7 +228,7 @@ export async function testApiConnection({
       case "OpenAI":
       case "Perplexity":
       case "Groq":
-      case "Mistral":
+      case "MistralAI":  // Fixed: was "Mistral"
         if (data.error) {
           return { ok: false, message: data.error.message || JSON.stringify(data.error) };
         }
@@ -252,7 +252,7 @@ export async function testApiConnection({
         }
         break;
 
-      case "Gemini":
+      case "GoogleGemini":  // Fixed: was "Gemini"
         if (data.error) {
           return { ok: false, message: data.error.message || JSON.stringify(data.error) };
         }
