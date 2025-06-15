@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Lock, Eye, Server, Key, HardDrive, Network, Check } from 'lucide-react';
+import { Shield, Lock, Eye, Server, Key, HardDrive, Network, Check, X } from 'lucide-react';
 import AgoraHeader from '@/components/AgoraHeader';
 import AgoraFooter from '@/components/AgoraFooter';
 
