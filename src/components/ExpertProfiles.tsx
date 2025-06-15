@@ -41,7 +41,7 @@ const ExpertProfiles = () => {
       era: 'Late Antiquity (350-415 AD)',
       domain: 'Mathematics, Astronomy, Philosophy',
       description: 'A brilliant philosopher and astronomer who advanced mathematical knowledge.',
-      image: '/lovable-uploads/7fa67e56-1a42-4648-be84-9213f73f953c.png',
+      image: '/lovable-uploads/d1f7c4e9-a220-4971-a95f-c627572fd57f.png',
       traits: { creativity: 75, skepticism: 70, optimism: 80 },
       quote: "Reserve your right to think, for even to think wrongly is better than not to think at all."
     },
@@ -81,7 +81,7 @@ const ExpertProfiles = () => {
       era: 'Renaissance (1469-1527)',
       domain: 'Political Philosophy',
       description: 'Diplomat and political theorist, author of "The Prince".',
-      image: '/lovable-uploads/d1f7c4e9-a220-4971-a95f-c627572fd57f.png',
+      image: '/lovable-uploads/7fa67e56-1a42-4648-be84-9213f73f953c.png',
       traits: { creativity: 80, skepticism: 95, optimism: 40 },
       quote: "It is much safer to be feared than loved."
     }
