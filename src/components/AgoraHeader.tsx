@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Columns, Users, Flame, Scroll, Shield, Info } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Columns, Users, Flame, Scroll, Shield, Info, ChevronDown, BookOpen } from 'lucide-react';
 
 interface AgoraHeaderProps {
   activeTab: string;
@@ -100,6 +100,39 @@ const AgoraHeader: React.FC<AgoraHeaderProps> = ({
 
           {/* Secondary Navigation */}
           <div className="flex items-center space-x-4">
+            {/* Core Concepts Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
+                  <BookOpen className="w-4 h-4 mr-1" />
+                  <span>Core Concepts</span>
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/eight-immortal-minds" className="w-full cursor-pointer">
+                    The Eight Immortal Minds
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/iterative-discourse" className="w-full cursor-pointer">
+                    Iterative Discourse
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/synthesis-of-wisdom" className="w-full cursor-pointer">
+                    Synthesis of Wisdom
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/transcendent-insights" className="w-full cursor-pointer">
+                    Transcendent Insights
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button asChild variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
               <Link to="/about" className="flex items-center space-x-1">
                 <Info className="w-4 h-4" />
