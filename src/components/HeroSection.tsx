@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Brain, Lightbulb, BookOpen, Users, Clock, Target } from 'lucide-react';
+import { Brain, Lightbulb, BookOpen, Users, Clock, Target, Shield } from 'lucide-react';
 
 const HeroSection = () => {
   return (
@@ -56,8 +56,16 @@ const HeroSection = () => {
           </span>
         </p>
 
-        {/* New benefits section */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
+        {/* Privacy-First Badge - Prominent */}
+        <div className="mb-8">
+          <Badge className="bg-green-100 text-green-800 border-green-300 px-6 py-3 text-lg font-medium">
+            <Shield className="w-5 h-5 mr-3" />
+            100% Private • No Data Collection • Your Insights Stay Yours
+          </Badge>
+        </div>
+
+        {/* Enhanced benefits section with privacy emphasis */}
+        <div className="grid md:grid-cols-4 gap-6 mb-12 max-w-5xl mx-auto">
           <div className="flex items-center justify-center space-x-3 bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-slate-200">
             <Clock className="w-6 h-6 text-amber-600" />
             <span className="text-slate-700 font-medium">Minutes, not months</span>
@@ -69,6 +77,10 @@ const HeroSection = () => {
           <div className="flex items-center justify-center space-x-3 bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-slate-200">
             <Target className="w-6 h-6 text-amber-600" />
             <span className="text-slate-700 font-medium">Clear action plans</span>
+          </div>
+          <div className="flex items-center justify-center space-x-3 bg-green-50 backdrop-blur-sm rounded-lg p-4 border border-green-200">
+            <Shield className="w-6 h-6 text-green-600" />
+            <span className="text-green-700 font-medium">Privacy-first design</span>
           </div>
         </div>
         
@@ -83,6 +95,11 @@ const HeroSection = () => {
               {feature.label}
             </Badge>
           ))}
+        </div>
+
+        {/* RF Strategy Attribution */}
+        <div className="mt-12 text-slate-500 text-sm">
+          <p>Developed by <a href="https://www.razaofinal.com/" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 font-medium">RF Strategy</a> • Empowering strategic thinking for everyone</p>
         </div>
       </div>
     </section>

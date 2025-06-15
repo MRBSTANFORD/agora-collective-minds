@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,10 @@ import SynthesisOfWisdom from "./pages/SynthesisOfWisdom";
 import TranscendentInsights from "./pages/TranscendentInsights";
 import ApiSetupGuide from "./pages/ApiSetupGuide";
 import UserGuide from "./pages/UserGuide";
+import About from "./pages/About";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
 
@@ -22,11 +27,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/eight-immortal-minds" element={<EightImmortalMinds />} />
           <Route path="/iterative-discourse" element={<IterativeDiscourse />} />
           <Route path="/synthesis-of-wisdom" element={<SynthesisOfWisdom />} />
           <Route path="/transcendent-insights" element={<TranscendentInsights />} />
-          {/* API setup help page */}
           <Route path="/api-setup-guide" element={<ApiSetupGuide />} />
           <Route path="/user-guide" element={<UserGuide />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

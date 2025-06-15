@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ExternalLink } from 'lucide-react';
 
 const AgoraFooter: React.FC = () => {
   return (
@@ -13,7 +14,8 @@ const AgoraFooter: React.FC = () => {
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-8">
-        <div className="grid md:grid-cols-3 gap-12">
+        <div className="grid md:grid-cols-4 gap-12">
+          {/* AGORA Brand */}
           <div>
             <div className="flex items-center mb-6">
               <img 
@@ -26,57 +28,116 @@ const AgoraFooter: React.FC = () => {
                 <div className="w-16 h-0.5 bg-gradient-to-r from-amber-400 to-transparent mt-1"></div>
               </div>
             </div>
-            <p className="text-slate-300 leading-relaxed font-light">
+            <p className="text-slate-300 leading-relaxed font-light mb-6">
               The eternal marketplace of ideas where wisdom transcends time, 
               connecting ancient insight with modern innovation.
             </p>
+            
+            {/* Privacy Badge in Footer */}
+            <div className="bg-green-900/50 border border-green-700 rounded-lg p-4">
+              <div className="text-green-300 font-medium mb-2">Privacy-First Design</div>
+              <div className="text-green-200 text-sm space-y-1">
+                <div>• No data collection</div>
+                <div>• Local storage only</div>
+                <div>• Your API keys stay secure</div>
+              </div>
+            </div>
           </div>
           
+          {/* Navigation */}
           <div>
-            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">User Resources</h4>
+            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Navigation</h4>
             <ul className="space-y-3 text-slate-300 font-light">
               <li>
+                <Link to="/" className="hover:text-amber-300 transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="hover:text-amber-300 transition-colors">
+                  About AGORA
+                </Link>
+              </li>
+              <li>
+                <Link to="/faq" className="hover:text-amber-300 transition-colors">
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link to="/api-setup-guide" className="hover:text-amber-300 transition-colors">
+                  API Setup Guide
+                </Link>
+              </li>
+              <li>
                 <Link to="/user-guide" className="hover:text-amber-300 transition-colors">
-                  AGORA User Guide
-                </Link>
-              </li>
-              <li>
-                <Link to="/eight-immortal-minds" className="hover:text-amber-300 transition-colors">
-                  Eight Immortal Minds
-                </Link>
-              </li>
-              <li>
-                <Link to="/iterative-discourse" className="hover:text-amber-300 transition-colors">
-                  Iterative Discourse
-                </Link>
-              </li>
-              <li>
-                <Link to="/synthesis-of-wisdom" className="hover:text-amber-300 transition-colors">
-                  Synthesis of Wisdom
-                </Link>
-              </li>
-              <li>
-                <Link to="/transcendent-insights" className="hover:text-amber-300 transition-colors">
-                  Transcendent Insights
+                  User Guide
                 </Link>
               </li>
             </ul>
           </div>
-          
+
+          {/* Legal */}
           <div>
-            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Our Purpose</h4>
-            <p className="text-slate-300 leading-relaxed font-light">
-              To bridge the eternal and the immediate, where timeless wisdom 
-              illuminates the path through contemporary complexity.
+            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Legal</h4>
+            <ul className="space-y-3 text-slate-300 font-light">
+              <li>
+                <Link to="/privacy-policy" className="hover:text-amber-300 transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms-of-service" className="hover:text-amber-300 transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <a 
+                  href="https://www.razaofinal.com/contact-us" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-amber-300 transition-colors flex items-center"
+                >
+                  Contact Us
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </a>
+              </li>
+            </ul>
+          </div>
+          
+          {/* RF Strategy */}
+          <div>
+            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Developed by RF Strategy</h4>
+            <p className="text-slate-300 leading-relaxed font-light mb-6">
+              AGORA is created by RF Strategy in alignment with our mission to 
+              empower strategic thinking and decision-making for everyone.
             </p>
+            <div className="space-y-3">
+              <a 
+                href="https://www.razaofinal.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-amber-300 hover:text-amber-200 transition-colors font-medium"
+              >
+                Visit RF Strategy
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </a>
+              <div className="text-slate-400 text-sm">
+                Strategic consulting • Business transformation • Thought leadership
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="border-t border-slate-700 mt-12 pt-8 text-center">
+        <div className="border-t border-slate-700 mt-12 pt-8">
           <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mb-4"></div>
-          <p className="text-slate-400 font-light tracking-wide">
-            © 2025 AGORA. Where wisdom endures through the ages.
-          </p>
+          <div className="text-center space-y-2">
+            <p className="text-slate-400 font-light tracking-wide">
+              © 2025 RF Strategy. AGORA - Where wisdom endures through the ages.
+            </p>
+            <p className="text-slate-500 text-sm">
+              Proudly privacy-first • No data collection • Your insights remain yours
+            </p>
+          </div>
         </div>
       </div>
     </footer>
