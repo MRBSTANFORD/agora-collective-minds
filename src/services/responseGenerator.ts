@@ -41,6 +41,22 @@ const validateApiKey = (apiKey: string, provider: string): boolean => {
   }
 };
 
+// Check if response is likely a fallback
+const isFallbackResponse = (response: string): boolean => {
+  const fallbackIndicators = [
+    "This challenge reminds me",
+    "We must approach this systematically",
+    "But first, we must ask ourselves",
+    "Let us apply mathematical reasoning",
+    "This challenge invites us to think",
+    "The path to solving this challenge",
+    "This challenge has the characteristics",
+    "We must examine the practical realities"
+  ];
+  
+  return fallbackIndicators.some(indicator => response.includes(indicator));
+};
+
 // Generate AI response with enhanced error handling and fallbacks
 export async function generateAIResponse(prompt: string, provider: string, apiKey: string, expertId: string): Promise<string> {
   console.log(`🤖 Generating response for expert ${expertId}:`, { 
@@ -111,6 +127,12 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
       // Ensure response is meaningful (at least 50 characters)
       if (response && response.trim().length > 50) {
         console.log(`✅ Successfully generated response for ${expertId} using ${provider} on attempt ${attempt}: ${response.slice(0, 60)}...`);
+        
+        // Log if this was a fallback response even though API call succeeded
+        if (isFallbackResponse(response)) {
+          console.warn(`⚠️ Detected fallback-like response from ${provider} for ${expertId}`);
+        }
+        
         return response.trim();
       } else {
         throw new Error(`AI response too short: ${response?.length || 0} characters`);
@@ -119,15 +141,19 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
       lastError = error as Error;
       console.warn(`⚠️ AI Provider ${provider} attempt ${attempt} failed for expert ${expertId}:`, error);
       
-      // For API key errors, don't retry
-      if (error instanceof Error && (
-        error.message.includes('API key') || 
-        error.message.includes('unauthorized') || 
-        error.message.includes('authentication') ||
-        error.message.includes('invalid_api_key')
-      )) {
-        console.error(`🔑 API authentication failed for ${expertId} with ${provider}, using fallback`);
-        break;
+      // Check for specific API errors that indicate we should stop retrying
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+        if (errorMessage.includes('api key') || 
+            errorMessage.includes('unauthorized') || 
+            errorMessage.includes('authentication') ||
+            errorMessage.includes('invalid_api_key') ||
+            errorMessage.includes('credits') ||
+            errorMessage.includes('quota') ||
+            errorMessage.includes('billing')) {
+          console.error(`🔑 API authentication/billing failed for ${expertId} with ${provider}, using fallback`);
+          break;
+        }
       }
       
       if (attempt < maxRetries) {

@@ -71,11 +71,13 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
   
   const discussionState = useDiscussionState(discussionConfig.rounds);
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
+  const [apiFailures, setApiFailures] = useState(0);
 
   const startFreshDiscussion = useCallback(() => {
     console.log('🔄 Starting fresh discussion - resetting all state');
     discussionState.resetState();
     setOrchestrator(null);
+    setApiFailures(0);
   }, [discussionState]);
 
   const startDiscussion = useCallback(async () => {
@@ -127,42 +129,45 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
 
     // Only reset if this is a completely fresh start (no existing messages)
     if (discussionState.currentRound === 0 && discussionState.messages.length === 0) {
-      console.log('🔄 Fresh start detected - starting clean');
-      startFreshDiscussion();
-    } else {
-      console.log(`⏯️ Resuming discussion from round ${discussionState.currentRound}`);
+      console.log('🔄 Fresh start detected - resetting state');
+      discussionState.resetState();
+      setOrchestrator(null);
+      setApiFailures(0);
     }
 
-    // Set running state AFTER any reset operations
+    // Set running state
     discussionState.setIsRunning(true);
     discussionState.setHasError(false);
 
-    console.log('📊 State after setting isRunning:', {
-      isRunning: discussionState.isRunning,
-      isRunningRef: discussionState.isRunningRef.current,
-      currentRound: discussionState.currentRound
-    });
-
     try {
-      // Create orchestrator only once or if starting fresh
+      // Create orchestrator
       let currentOrchestrator = orchestrator;
-      if (!currentOrchestrator || (discussionState.currentRound === 0 && discussionState.messages.length === 0)) {
+      if (!currentOrchestrator) {
         console.log('🔧 Creating new orchestrator with validated experts');
         currentOrchestrator = new DiscussionOrchestrator(validExperts, challenge, discussionConfig.rounds);
         setOrchestrator(currentOrchestrator);
       }
 
-      console.log('🎯 About to enter discussion loop:', {
+      console.log('🎯 Starting discussion loop:', {
         isRunningRef: discussionState.isRunningRef.current,
         currentRound: discussionState.currentRound,
         maxRounds: discussionConfig.rounds,
-        canEnterLoop: discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds
+        orchestratorComplete: currentOrchestrator.isComplete()
       });
 
+      // Safety counter to prevent infinite loops
+      let safetyCounter = 0;
+      const MAX_SAFETY_ROUNDS = discussionConfig.rounds * 2; // Double the expected rounds as safety
+
       // Run the discussion rounds with improved loop logic
-      while (discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds) {
+      while (discussionState.isRunningRef.current && 
+             !currentOrchestrator.isComplete() && 
+             safetyCounter < MAX_SAFETY_ROUNDS) {
+        
+        safetyCounter++;
         const nextRound = discussionState.currentRound + 1;
-        console.log(`🎯 Starting round ${nextRound}/${discussionConfig.rounds}`);
+        
+        console.log(`🎯 Starting round ${nextRound}/${discussionConfig.rounds} (safety: ${safetyCounter}/${MAX_SAFETY_ROUNDS})`);
         
         discussionState.setIsGenerating(true);
         discussionState.setCurrentSpeaker(null);
@@ -178,6 +183,28 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           
           if (newMessages && newMessages.length > 0) {
             console.log(`✅ Round ${nextRound} generated ${newMessages.length} messages`);
+            
+            // Check for API failures
+            const fallbackCount = newMessages.filter(msg => 
+              msg.content.includes("This challenge reminds me") || 
+              msg.content.includes("We must approach this systematically") ||
+              msg.content.includes("But first, we must ask ourselves")
+            ).length;
+            
+            if (fallbackCount === newMessages.length) {
+              setApiFailures(prev => prev + 1);
+              console.warn(`⚠️ All responses were fallbacks in round ${nextRound}`);
+              
+              // If too many API failures, warn the user
+              if (apiFailures >= 2) {
+                toast({
+                  title: "API Issues Detected",
+                  description: "All AI providers are failing. Consider adding valid API keys for better responses.",
+                  variant: "destructive",
+                });
+              }
+            }
+
             discussionState.setMessages(prevMessages => [...prevMessages, ...newMessages]);
 
             // Update current speaker based on the last message
@@ -191,10 +218,16 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
             // Call the update callback if provided
             if (onDiscussionUpdate) {
               const allMessages = [...discussionState.messages, ...newMessages];
-              onDiscussionUpdate(allMessages, nextRound >= discussionConfig.rounds);
+              onDiscussionUpdate(allMessages, currentOrchestrator.isComplete());
+            }
+            
+            // Important: Only advance round if we got valid responses
+            if (newMessages.length === validExperts.length) {
+              console.log(`✅ Round ${nextRound} completed successfully`);
             }
           } else {
             console.warn(`⚠️ Round ${nextRound} generated no messages`);
+            break;
           }
           
         } catch (error) {
@@ -205,17 +238,27 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
             description: `An error occurred during round ${nextRound}: ${error instanceof Error ? error.message : 'Unknown error'}`,
             variant: "destructive",
           });
-          break; // Stop the discussion on error
+          break;
         } finally {
           discussionState.setIsGenerating(false);
           discussionState.setCurrentSpeaker(null);
         }
 
-        // Small delay between rounds to prevent overwhelming
-        if (discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds) {
+        // Check for pause between rounds
+        if (discussionState.isRunningRef.current && !currentOrchestrator.isComplete()) {
           console.log('⏱️ Brief pause between rounds...');
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
+      }
+
+      // Check why the loop ended
+      if (safetyCounter >= MAX_SAFETY_ROUNDS) {
+        console.error('🚨 Safety counter reached - stopping infinite loop');
+        toast({
+          title: "Discussion Stopped",
+          description: "Discussion stopped due to safety limits. Please check your configuration.",
+          variant: "destructive",
+        });
       }
 
       console.log(`🏁 Discussion completed. Final round: ${discussionState.currentRound}/${discussionConfig.rounds}`);
@@ -232,13 +275,18 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
       discussionState.setIsRunning(false);
       console.log('🛑 Discussion process completed');
     }
-  }, [discussionConfig, challenge, orchestrator, discussionState, toast, onDiscussionUpdate, startFreshDiscussion]);
+  }, [discussionConfig, challenge, orchestrator, discussionState, toast, onDiscussionUpdate, apiFailures]);
 
   const pauseDiscussion = useCallback(() => {
     console.log('⏸️ Pausing discussion');
     discussionState.setIsRunning(false);
     discussionState.setIsGenerating(false);
-  }, [discussionState]);
+    
+    toast({
+      title: "Discussion Paused",
+      description: "You can resume the discussion by clicking Start Discussion again.",
+    });
+  }, [discussionState, toast]);
 
   const resetDiscussion = useCallback(() => {
     console.log('🔄 Resetting discussion state completely');
@@ -306,6 +354,14 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
             <div className="mt-3 text-center">
               <Badge className="bg-white text-indigo-600">
                 {discussionConfig.experts.find(e => e.id === discussionState.currentSpeaker)?.name || discussionState.currentSpeaker} is contributing...
+              </Badge>
+            </div>
+          )}
+
+          {apiFailures > 0 && (
+            <div className="mt-3 text-center">
+              <Badge variant="destructive" className="bg-red-100 text-red-700">
+                API Issues Detected - Consider adding valid API keys
               </Badge>
             </div>
           )}

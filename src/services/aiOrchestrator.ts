@@ -1,3 +1,4 @@
+
 import { ExpertConfig } from '@/components/ExpertCardList';
 import { generateAIResponse } from './responseGenerator';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
@@ -18,7 +19,7 @@ export class DiscussionOrchestrator {
   private challenge: string;
   private maxRounds: number;
   private messages: DiscussionMessage[];
-  private currentRound: number;
+  private completedRounds: number;
   private enhancedMetaPromptService: EnhancedMetaPromptService;
 
   constructor(experts: ExpertConfig[], challenge: string, maxRounds: number) {
@@ -43,7 +44,7 @@ export class DiscussionOrchestrator {
     this.challenge = challenge || '';
     this.maxRounds = maxRounds || 5;
     this.messages = [];
-    this.currentRound = 0;
+    this.completedRounds = 0;
     this.enhancedMetaPromptService = new EnhancedMetaPromptService();
     
     // Validate inputs
@@ -58,8 +59,13 @@ export class DiscussionOrchestrator {
   }
 
   async generateRound(): Promise<DiscussionMessage[]> {
-    console.log(`🎬 Starting round ${this.currentRound + 1} of ${this.maxRounds}`);
-    this.currentRound++;
+    if (this.isComplete()) {
+      console.log('🏁 Discussion already complete, no more rounds to generate');
+      return [];
+    }
+
+    this.completedRounds++;
+    console.log(`🎬 Starting round ${this.completedRounds} of ${this.maxRounds}`);
     const roundMessages: DiscussionMessage[] = [];
 
     if (!this.experts || this.experts.length === 0) {
@@ -67,7 +73,7 @@ export class DiscussionOrchestrator {
       return [];
     }
 
-    console.log(`👥 Processing ${this.experts.length} experts for round ${this.currentRound}`);
+    console.log(`👥 Processing ${this.experts.length} experts for round ${this.completedRounds}`);
 
     // Process experts sequentially to avoid rate limiting
     for (let i = 0; i < this.experts.length; i++) {
@@ -80,7 +86,7 @@ export class DiscussionOrchestrator {
         const transcendentPrompt = this.enhancedMetaPromptService.generateTranscendentPrompt(
           expert,
           this.challenge,
-          this.currentRound,
+          this.completedRounds,
           this.maxRounds,
           this.messages
         );
@@ -93,7 +99,7 @@ export class DiscussionOrchestrator {
           expert.provider = 'HuggingFace';
         }
         
-        // Add timeout wrapper for AI response generation (60 seconds)
+        // Add timeout wrapper for AI response generation (30 seconds)
         const response = await Promise.race([
           generateAIResponse(
             transcendentPrompt,
@@ -102,7 +108,7 @@ export class DiscussionOrchestrator {
             expert.id
           ),
           new Promise<string>((_, reject) => 
-            setTimeout(() => reject(new Error('Response timeout after 60 seconds')), 60000)
+            setTimeout(() => reject(new Error('Response timeout after 30 seconds')), 30000)
           )
         ]);
 
@@ -113,7 +119,7 @@ export class DiscussionOrchestrator {
         const message: DiscussionMessage = {
           speaker: expert.id,
           content: response,
-          round: this.currentRound,
+          round: this.completedRounds,
           timestamp: new Date(),
         };
 
@@ -135,7 +141,7 @@ export class DiscussionOrchestrator {
         const fallbackMessage: DiscussionMessage = {
           speaker: expert.id,
           content: fallbackContent,
-          round: this.currentRound,
+          round: this.completedRounds,
           timestamp: new Date(),
         };
         
@@ -145,7 +151,7 @@ export class DiscussionOrchestrator {
       }
     }
 
-    console.log(`🏁 Round ${this.currentRound} completed with ${roundMessages.length} messages`);
+    console.log(`🏁 Round ${this.completedRounds} completed with ${roundMessages.length} messages`);
     
     if (roundMessages.length === 0) {
       console.error('❌ No messages generated in this round - this should not happen with fallbacks');
@@ -159,12 +165,12 @@ export class DiscussionOrchestrator {
   }
 
   getCurrentRound(): number {
-    return this.currentRound;
+    return this.completedRounds;
   }
 
   isComplete(): boolean {
-    const complete = this.currentRound >= this.maxRounds;
-    console.log(`🎯 Discussion complete check: ${complete} (round ${this.currentRound}/${this.maxRounds})`);
+    const complete = this.completedRounds >= this.maxRounds;
+    console.log(`🎯 Discussion complete check: ${complete} (completed rounds ${this.completedRounds}/${this.maxRounds})`);
     return complete;
   }
 }
