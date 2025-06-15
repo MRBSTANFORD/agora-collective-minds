@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import ExpertProfiles from '@/components/ExpertProfiles';
@@ -84,10 +83,10 @@ const Index = () => {
         discussionStarted={discussionStarted}
       />
 
-      <main className="max-w-7xl mx-auto px-8">
+      <main className="max-w-7xl mx-auto px-4 md:px-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsContent value="home" className="mt-0">
-            <div className="space-y-20">
+            <div className="space-y-16 md:space-y-20">
               <HeroSection />
               
               <ChallengeInputSection 

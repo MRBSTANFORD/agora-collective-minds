@@ -88,40 +88,40 @@ const ExpertProfiles = () => {
   ];
 
   return (
-    <div className="py-8">
+    <div className="py-6 md:py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-thin tracking-wider text-slate-900 mb-4">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-thin tracking-wider text-slate-900 mb-4">
             The Eight Immortal Minds
           </h2>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto mb-6"></div>
-          <p className="text-xl text-slate-600 font-light max-w-3xl mx-auto">
+          <div className="w-16 md:w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto mb-4 md:mb-6"></div>
+          <p className="text-lg md:text-xl text-slate-600 font-light max-w-3xl mx-auto px-4">
             Meet the legendary thinkers who will convene in your symposium, each bringing their unique perspective to illuminate your challenge.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {experts.map((expert) => (
             <Card key={expert.id} className="group hover:shadow-xl transition-all duration-300 border-slate-200 hover:border-amber-200 bg-gradient-to-br from-white to-slate-50/50">
-              <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  <Avatar className="w-20 h-20 mx-auto mb-4 border-2 border-white shadow-lg group-hover:scale-105 transition-transform">
+              <CardContent className="p-4 md:p-6">
+                <div className="text-center mb-3 md:mb-4">
+                  <Avatar className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-3 md:mb-4 border-2 border-white shadow-lg group-hover:scale-105 transition-transform">
                     <AvatarImage src={expert.image} alt={expert.name} />
-                    <AvatarFallback className="text-lg">{expert.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarFallback className="text-base md:text-lg">{expert.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   
-                  <h3 className="text-lg font-medium text-slate-900 mb-1">{expert.name}</h3>
-                  <p className="text-sm text-slate-600 mb-2">{expert.era}</p>
+                  <h3 className="text-base md:text-lg font-medium text-slate-900 mb-1">{expert.name}</h3>
+                  <p className="text-xs md:text-sm text-slate-600 mb-2">{expert.era}</p>
                   <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-700 border border-amber-200">
                     {expert.domain}
                   </Badge>
                 </div>
 
-                <p className="text-sm text-slate-700 mb-4 leading-relaxed">
+                <p className="text-xs md:text-sm text-slate-700 mb-3 md:mb-4 leading-relaxed">
                   {expert.description}
                 </p>
 
-                <div className="space-y-2 mb-4">
+                <div className="space-y-2 mb-3 md:mb-4">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-600">Creativity</span>
                     <span className="text-slate-900 font-medium">{expert.traits.creativity}%</span>
