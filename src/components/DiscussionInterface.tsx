@@ -55,57 +55,67 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
       console.log('⏯️ Resuming discussion from round:', discussionState.currentRound);
     }
 
-    // Initialize orchestrator only once at the start or after reset
-    if (!orchestrator) {
-      const newOrchestrator = new DiscussionOrchestrator(discussionConfig.experts, challenge, discussionConfig.rounds);
-      setOrchestrator(newOrchestrator);
-    }
-
-    // Run the discussion rounds
-    while (discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds) {
-      const round = discussionState.currentRound + 1;
-      discussionState.setIsGenerating(true);
-      discussionState.isGeneratingRef.current = true;
-      discussionState.setCurrentSpeaker(null);
-
-      try {
-        if (!orchestrator) {
-          throw new Error('Orchestrator is not initialized');
-        }
-
-        const newMessages = await orchestrator.generateRound();
-        discussionState.setMessages(prevMessages => [...prevMessages, ...newMessages]);
-
-        // Update current speaker based on the last message
-        if (newMessages.length > 0) {
-          discussionState.setCurrentSpeaker(newMessages[newMessages.length - 1].speaker);
-        }
-
-        discussionState.updateProgress(round);
-        console.log(`✅ Round ${round} completed successfully`);
-        
-        // Call the update callback if provided
-        if (onDiscussionUpdate) {
-          onDiscussionUpdate(discussionState.messages, discussionState.currentRound >= discussionConfig.rounds);
-        }
-      } catch (error) {
-        console.error(`💥 Error in round ${round}:`, error);
-        discussionState.setHasError(true);
-        toast({
-          title: "Discussion Error",
-          description: `An error occurred during round ${round}. Please check the console for details.`,
-          variant: "destructive",
-        });
-        break; // Stop the discussion on error
-      } finally {
-        discussionState.setIsGenerating(false);
-        discussionState.isGeneratingRef.current = false;
+    try {
+      // Initialize orchestrator if not already created or if starting fresh
+      let currentOrchestrator = orchestrator;
+      if (!currentOrchestrator || discussionState.currentRound === 0) {
+        console.log('🔧 Creating new orchestrator...');
+        currentOrchestrator = new DiscussionOrchestrator(discussionConfig.experts, challenge, discussionConfig.rounds);
+        setOrchestrator(currentOrchestrator);
       }
-    }
 
-    discussionState.setIsRunning(false);
-    discussionState.isRunningRef.current = false;
-    console.log('🛑 Discussion completed or stopped.');
+      // Run the discussion rounds
+      while (discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds) {
+        const round = discussionState.currentRound + 1;
+        discussionState.setIsGenerating(true);
+        discussionState.isGeneratingRef.current = true;
+        discussionState.setCurrentSpeaker(null);
+
+        try {
+          console.log(`🎯 Starting round ${round}/${discussionConfig.rounds}`);
+          const newMessages = await currentOrchestrator.generateRound();
+          discussionState.setMessages(prevMessages => [...prevMessages, ...newMessages]);
+
+          // Update current speaker based on the last message
+          if (newMessages.length > 0) {
+            discussionState.setCurrentSpeaker(newMessages[newMessages.length - 1].speaker);
+          }
+
+          discussionState.updateProgress(round);
+          console.log(`✅ Round ${round} completed successfully`);
+          
+          // Call the update callback if provided
+          if (onDiscussionUpdate) {
+            onDiscussionUpdate(discussionState.messages, discussionState.currentRound >= discussionConfig.rounds);
+          }
+        } catch (error) {
+          console.error(`💥 Error in round ${round}:`, error);
+          discussionState.setHasError(true);
+          toast({
+            title: "Discussion Error",
+            description: `An error occurred during round ${round}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            variant: "destructive",
+          });
+          break; // Stop the discussion on error
+        } finally {
+          discussionState.setIsGenerating(false);
+          discussionState.isGeneratingRef.current = false;
+        }
+      }
+
+    } catch (error) {
+      console.error('💥 Failed to initialize orchestrator:', error);
+      discussionState.setHasError(true);
+      toast({
+        title: "Initialization Error",
+        description: `Failed to start discussion: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      discussionState.setIsRunning(false);
+      discussionState.isRunningRef.current = false;
+      console.log('🛑 Discussion completed or stopped.');
+    }
   }, [discussionConfig, challenge, orchestrator, discussionState, toast, onDiscussionUpdate]);
 
   const pauseDiscussion = useCallback(() => {

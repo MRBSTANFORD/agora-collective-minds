@@ -11,135 +11,288 @@ export async function testApiConnection({
   apiKey: string;
 }): Promise<{ ok: boolean; message: string }> {
   try {
-    // Simple test: "Say hello as a world-class expert in one sentence."
+    console.log(`🧪 Testing API connection for ${provider} with key: ${apiKey ? apiKey.slice(0, 8) + '...' : 'NO KEY'}`);
+    
+    // Clean and validate API key
+    const cleanApiKey = apiKey?.trim() || '';
+    
+    // Remove duplicate prefixes (like "hf hf_")
+    const finalApiKey = cleanApiKey.startsWith('hf hf_') ? cleanApiKey.replace('hf ', '') : cleanApiKey;
+    
+    // Simple test prompt
     const prompt = "Say hello as a world-class expert in one sentence.";
-    let response = "";
+    let response: Response;
+    let requestBody: any;
+    let headers: Record<string, string>;
+
     switch (provider) {
       case "OpenAI":
-        response = await (await fetch("https://api.openai.com/v1/chat/completions", {
+        if (!finalApiKey) {
+          return { ok: false, message: "OpenAI requires an API key" };
+        }
+        headers = {
+          "Authorization": `Bearer ${finalApiKey}`,
+          "Content-Type": "application/json",
+        };
+        requestBody = {
+          model: model || "gpt-4.1-2025-04-14",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 32,
+          temperature: 0.6,
+        };
+        response = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: model || "gpt-4.1-2025-04-14",
-            messages: [{ role: "user", content: prompt }],
-            max_tokens: 32,
-            temperature: 0.6,
-          }),
-        })).text();
+          headers,
+          body: JSON.stringify(requestBody),
+        });
         break;
+
       case "Anthropic":
-        response = await (await fetch("https://api.anthropic.com/v1/messages", {
+        if (!finalApiKey) {
+          return { ok: false, message: "Anthropic requires an API key" };
+        }
+        headers = {
+          "x-api-key": finalApiKey,
+          "Content-Type": "application/json",
+          "anthropic-version": "2023-06-01",
+        };
+        requestBody = {
+          model: model || "claude-sonnet-4-20250514",
+          max_tokens: 32,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.6,
+        };
+        response = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
-          headers: {
-            "x-api-key": apiKey,
-            "Content-Type": "application/json",
-            "anthropic-version": "2023-06-01",
-          },
-          body: JSON.stringify({
-            model: model || "claude-sonnet-4-20250514",
-            max_tokens: 32,
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.6,
-          }),
-        })).text();
+          headers,
+          body: JSON.stringify(requestBody),
+        });
         break;
+
       case "Perplexity":
-        response = await (await fetch("https://api.perplexity.ai/chat/completions", {
+        if (!finalApiKey) {
+          return { ok: false, message: "Perplexity requires an API key" };
+        }
+        headers = {
+          "Authorization": `Bearer ${finalApiKey}`,
+          "Content-Type": "application/json",
+        };
+        requestBody = {
+          model: model || "llama-3.1-sonar-small-128k-online",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 32,
+          temperature: 0.6,
+        };
+        response = await fetch("https://api.perplexity.ai/chat/completions", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: model || "llama-3.1-sonar-small-128k-online",
-            messages: [{ role: "user", content: prompt }],
-            max_tokens: 32,
-            temperature: 0.6,
-          }),
-        })).text();
+          headers,
+          body: JSON.stringify(requestBody),
+        });
         break;
+
       case "Groq":
-        response = await (await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        if (!finalApiKey) {
+          return { ok: false, message: "Groq requires an API key" };
+        }
+        headers = {
+          "Authorization": `Bearer ${finalApiKey}`,
+          "Content-Type": "application/json",
+        };
+        requestBody = {
+          model: model || "mixtral-8x7b-32768",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 32,
+          temperature: 0.6,
+        };
+        response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: model || "mixtral-8x7b-32768",
-            messages: [{ role: "user", content: prompt }],
-            max_tokens: 32,
-            temperature: 0.6,
-          }),
-        })).text();
+          headers,
+          body: JSON.stringify(requestBody),
+        });
         break;
+
       case "Gemini":
-        response = await (await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + (model || "gemini-pro") + ":generateContent?key=" + apiKey, {
+        if (!finalApiKey) {
+          return { ok: false, message: "Gemini requires an API key" };
+        }
+        headers = {
+          "Content-Type": "application/json",
+        };
+        requestBody = {
+          contents: [{ parts: [{ text: prompt }] }]
+        };
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || "gemini-pro"}:generateContent?key=${finalApiKey}`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
-        })).text();
+          headers,
+          body: JSON.stringify(requestBody),
+        });
         break;
+
       case "Cohere":
-        response = await (await fetch("https://api.cohere.ai/v1/chat", {
+        if (!finalApiKey) {
+          return { ok: false, message: "Cohere requires an API key" };
+        }
+        headers = {
+          "Authorization": `Bearer ${finalApiKey}`,
+          "Content-Type": "application/json",
+        };
+        requestBody = {
+          model: model || "command-r",
+          message: prompt,
+          max_tokens: 32,
+          temperature: 0.6,
+        };
+        response = await fetch("https://api.cohere.ai/v1/chat", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: model || "command-r",
-            message: prompt,
-            max_tokens: 32,
-            temperature: 0.6,
-          }),
-        })).text();
+          headers,
+          body: JSON.stringify(requestBody),
+        });
         break;
+
       case "Mistral":
-        response = await (await fetch("https://api.mistral.ai/v1/chat/completions", {
+        if (!finalApiKey) {
+          return { ok: false, message: "Mistral requires an API key" };
+        }
+        headers = {
+          "Authorization": `Bearer ${finalApiKey}`,
+          "Content-Type": "application/json",
+        };
+        requestBody = {
+          model: model || "mistral-large-latest",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 32,
+          temperature: 0.6,
+        };
+        response = await fetch("https://api.mistral.ai/v1/chat/completions", {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: model || "mistral-large-latest",
-            messages: [{ role: "user", content: prompt }],
-            max_tokens: 32,
-            temperature: 0.6,
-          }),
-        })).text();
+          headers,
+          body: JSON.stringify(requestBody),
+        });
         break;
+
       case "HuggingFace":
-        // For free: no-key needed, just model selection
-        response = await (await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+        headers = {
+          "Content-Type": "application/json",
+          ...(finalApiKey ? { "Authorization": `Bearer ${finalApiKey}` } : {})
+        };
+        requestBody = {
+          inputs: prompt,
+          parameters: { max_new_tokens: 32 },
+          options: { wait_for_model: true },
+        };
+        response = await fetch(`https://api-inference.huggingface.co/models/${model || "microsoft/DialoGPT-large"}`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(apiKey ? { "Authorization": "Bearer " + apiKey } : {})
-          },
-          body: JSON.stringify({
-            inputs: prompt,
-            parameters: { max_new_tokens: 32 },
-            options: { wait_for_model: true },
-          }),
-        })).text();
+          headers,
+          body: JSON.stringify(requestBody),
+        });
         break;
+
       default:
         return { ok: false, message: "Unrecognized provider." };
     }
-    if (response && response.length > 0) {
-      return { ok: true, message: "Connection test successful!" };
+
+    console.log(`📊 API Response Status: ${response.status} ${response.statusText}`);
+
+    // First check: HTTP status code
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ HTTP Error ${response.status}:`, errorText);
+      
+      // Parse common error messages
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error) {
+          const errorMsg = typeof errorJson.error === 'string' ? errorJson.error : errorJson.error.message || JSON.stringify(errorJson.error);
+          return { ok: false, message: `HTTP ${response.status}: ${errorMsg}` };
+        }
+      } catch (e) {
+        // Not JSON, return raw error
+      }
+      
+      return { ok: false, message: `HTTP ${response.status}: ${errorText || response.statusText}` };
     }
-    return { ok: false, message: "No response received." };
+
+    // Parse JSON response
+    let data: any;
+    try {
+      const responseText = await response.text();
+      console.log(`📋 Raw Response: ${responseText.slice(0, 200)}...`);
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('❌ Failed to parse JSON response:', e);
+      return { ok: false, message: "Invalid JSON response from API" };
+    }
+
+    // Provider-specific validation
+    switch (provider) {
+      case "OpenAI":
+      case "Perplexity":
+      case "Groq":
+      case "Mistral":
+        if (data.error) {
+          return { ok: false, message: data.error.message || JSON.stringify(data.error) };
+        }
+        if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+          return { ok: false, message: "No choices in response" };
+        }
+        if (!data.choices[0].message?.content) {
+          return { ok: false, message: "No content in response" };
+        }
+        break;
+
+      case "Anthropic":
+        if (data.error) {
+          return { ok: false, message: data.error.message || JSON.stringify(data.error) };
+        }
+        if (!data.content || !Array.isArray(data.content) || data.content.length === 0) {
+          return { ok: false, message: "No content array in response" };
+        }
+        if (!data.content[0].text) {
+          return { ok: false, message: "No text in content" };
+        }
+        break;
+
+      case "Gemini":
+        if (data.error) {
+          return { ok: false, message: data.error.message || JSON.stringify(data.error) };
+        }
+        if (!data.candidates || !Array.isArray(data.candidates) || data.candidates.length === 0) {
+          return { ok: false, message: "No candidates in response" };
+        }
+        break;
+
+      case "Cohere":
+        if (data.error) {
+          return { ok: false, message: data.error || JSON.stringify(data) };
+        }
+        if (!data.text) {
+          return { ok: false, message: "No text in response" };
+        }
+        break;
+
+      case "HuggingFace":
+        if (data.error) {
+          return { ok: false, message: data.error };
+        }
+        if (Array.isArray(data) && data.length > 0 && data[0].generated_text) {
+          // Valid response format
+          break;
+        }
+        if (data.generated_text) {
+          // Alternative valid format
+          break;
+        }
+        return { ok: false, message: "Unexpected response format" };
+
+      default:
+        break;
+    }
+
+    console.log(`✅ API test successful for ${provider}`);
+    return { ok: true, message: "Connection test successful!" };
+
   } catch (e: any) {
-    return { ok: false, message: (e?.message || "Unknown error") };
+    console.error(`💥 API test failed for ${provider}:`, e);
+    return { ok: false, message: e?.message || "Network error occurred" };
   }
 }
