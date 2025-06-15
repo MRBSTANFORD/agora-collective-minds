@@ -18,11 +18,35 @@ export const PROVIDERS_WITH_MODELS = {
     description: "Claude 3 & 4 (Paid)",
     tier: "💎",
   },
+  GoogleGemini: {
+    label: "Google Gemini (Freemium)",
+    value: "GoogleGemini",
+    description: "Gemini Pro & Flash models (Free tier available)",
+    tier: "🆓",
+  },
+  Cohere: {
+    label: "Cohere (Freemium)",
+    value: "Cohere",
+    description: "Command models with free tier",
+    tier: "🆓",
+  },
+  MistralAI: {
+    label: "Mistral AI (Freemium)",
+    value: "MistralAI",
+    description: "Open-source and commercial models",
+    tier: "⚡",
+  },
   Groq: {
     label: "Groq (Freemium)",
     value: "Groq",
     description: "Supports free API, fast inference (Premium for heavy use)",
     tier: "⚡",
+  },
+  Perplexity: {
+    label: "Perplexity (Freemium)",
+    value: "Perplexity",
+    description: "Online search-powered responses with free tier",
+    tier: "🆓",
   },
 };
 

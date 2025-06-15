@@ -1,5 +1,5 @@
 
-import { callOpenAI, callAnthropic, callPerplexity, callGroq, callHuggingFaceWithFallback } from './aiProviders';
+import { callOpenAI, callAnthropic, callPerplexity, callGroq, callHuggingFaceWithFallback, callGoogleGemini, callCohere, callMistralAI } from './aiProviders';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
 
 // Clean API keys to fix malformed prefixes
@@ -30,6 +30,12 @@ const validateApiKey = (apiKey: string, provider: string): boolean => {
       return cleanKey.startsWith('sk-');
     case 'Anthropic':
       return cleanKey.startsWith('sk-ant-');
+    case 'GoogleGemini':
+      return cleanKey.length > 10; // Google API keys are typically long strings
+    case 'Cohere':
+      return cleanKey.length > 10; // Cohere API keys are typically long strings
+    case 'MistralAI':
+      return cleanKey.length > 10; // Mistral API keys are typically long strings
     case 'HuggingFace':
       return cleanKey.startsWith('hf_') || cleanKey === '';
     case 'Groq':
@@ -98,6 +104,30 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
           response = await callAnthropic(prompt, cleanedApiKey);
+          break;
+
+        case 'GoogleGemini':
+          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+            console.log(`🔑 Google Gemini requires API key, falling back for ${expertId}`);
+            return generatePersonalizedFallbackResponse(expertId, prompt);
+          }
+          response = await callGoogleGemini(prompt, cleanedApiKey);
+          break;
+
+        case 'Cohere':
+          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+            console.log(`🔑 Cohere requires API key, falling back for ${expertId}`);
+            return generatePersonalizedFallbackResponse(expertId, prompt);
+          }
+          response = await callCohere(prompt, cleanedApiKey);
+          break;
+
+        case 'MistralAI':
+          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+            console.log(`🔑 Mistral AI requires API key, falling back for ${expertId}`);
+            return generatePersonalizedFallbackResponse(expertId, prompt);
+          }
+          response = await callMistralAI(prompt, cleanedApiKey);
           break;
           
         case 'Perplexity':
