@@ -293,12 +293,12 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Enhanced Header with AGORA Branding */}
         <div className="bg-white">
-          <div className="flex items-center justify-between mb-4 bg-[#23566b]">
+          <div className="flex items-center justify-between mb-4 bg-[#c1a80d]/50">
             <div className="flex items-center space-x-4">
               
               <div>
                 <h1 className="text-2xl font-extrabold">AGORA Discussion</h1>
-                <p className="text-indigo-100">Collective Minds & Wisdom in Action</p>
+                <p className="text-gray-700">Collective Minds & Wisdom in Action</p>
               </div>
             </div>
             
