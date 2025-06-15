@@ -1,3 +1,4 @@
+import { getApiKeyStatus } from '../utils/secureLogging';
 
 export type ProviderApiStatus = 'idle' | 'testing' | 'success' | 'error';
 
@@ -11,7 +12,7 @@ export async function testApiConnection({
   apiKey: string;
 }): Promise<{ ok: boolean; message: string }> {
   try {
-    console.log(`🧪 Testing API connection for ${provider} with key: ${apiKey ? apiKey.slice(0, 8) + '...' : 'NO KEY'}`);
+    console.log(`🧪 Testing API connection for ${provider} with key status: ${getApiKeyStatus(apiKey)}`);
     
     // Clean and validate API key
     const cleanApiKey = apiKey?.trim() || '';

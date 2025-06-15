@@ -1,3 +1,4 @@
+import { getApiKeyStatus } from '../utils/secureLogging';
 
 export interface AIProvider {
   name: string;
@@ -197,7 +198,7 @@ export async function callPerplexity(prompt: string, apiKey: string, model: stri
 }
 
 export async function callGroq(prompt: string, apiKey: string, model: string = 'llama3-8b-8192'): Promise<string> {
-  console.log('🟡 Calling Groq API with key:', apiKey ? `${apiKey.slice(0, 8)}...` : 'NO KEY');
+  console.log('🟡 Calling Groq API with key status:', getApiKeyStatus(apiKey));
   
   if (!apiKey || apiKey.trim() === '') {
     throw new Error('Groq API key is required but not provided');
@@ -240,7 +241,7 @@ export async function callGroq(prompt: string, apiKey: string, model: string = '
 
 // Enhanced HuggingFace integration with real model discovery
 export async function callHuggingFaceWithFallback(prompt: string, expertId: string, apiKey?: string, model?: string): Promise<string> {
-  console.log(`🤗 Calling HuggingFace API for expert ${expertId}, has API key: ${!!apiKey}, model: ${model}`);
+  console.log(`🤗 Calling HuggingFace API for expert ${expertId}, key status: ${getApiKeyStatus(apiKey)}, model: ${model}`);
   
   // Use the provided model or fallback to a working one
   const modelToUse = model || 'microsoft/DialoGPT-large';

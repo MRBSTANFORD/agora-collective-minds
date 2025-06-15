@@ -1,6 +1,7 @@
 
 import { callOpenAI, callAnthropic, callPerplexity, callGroq, callHuggingFaceWithFallback, callGoogleGemini, callCohere, callMistralAI } from './aiProviders';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
+import { getApiKeyStatus, validateKeyFormat, createSecureApiKeyLog } from '../utils/secureLogging';
 
 // Clean API keys to fix malformed prefixes
 const cleanApiKey = (apiKey: string): string => {
@@ -9,7 +10,7 @@ const cleanApiKey = (apiKey: string): string => {
   
   // Fix duplicate prefixes like "hf hf_"
   if (cleaned.startsWith('hf hf_')) {
-    console.log(`🔧 Cleaning malformed API key: ${cleaned.slice(0, 10)}... -> ${cleaned.replace('hf ', '').slice(0, 10)}...`);
+    console.log(`🔧 Cleaning malformed API key format`);
     return cleaned.replace('hf ', '');
   }
   
@@ -23,27 +24,7 @@ const validateApiKey = (apiKey: string, provider: string): boolean => {
   }
   
   const cleanKey = cleanApiKey(apiKey);
-  
-  switch (provider) {
-    case 'OpenAI':
-      return cleanKey.startsWith('sk-');
-    case 'Anthropic':
-      return cleanKey.startsWith('sk-ant-');
-    case 'GoogleGemini':
-      return cleanKey.length > 10;
-    case 'Cohere':
-      return cleanKey.length > 10;
-    case 'MistralAI':
-      return cleanKey.length > 10;
-    case 'HuggingFace':
-      return cleanKey.startsWith('hf_') || cleanKey === '';
-    case 'Groq':
-      return cleanKey.startsWith('gsk_');
-    case 'Perplexity':
-      return cleanKey.startsWith('pplx-');
-    default:
-      return true;
-  }
+  return validateKeyFormat(cleanKey, provider) === 'VALID';
 };
 
 // Generate AI response with enhanced error handling and fallbacks
@@ -51,8 +32,7 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
   console.log(`🤖 Generating response for expert ${expertId}:`, { 
     provider, 
     model,
-    hasApiKey: !!apiKey && apiKey.trim() !== '', 
-    apiKeyPrefix: apiKey ? apiKey.slice(0, 8) + '...' : 'none'
+    keyInfo: createSecureApiKeyLog(provider, apiKey)
   });
   
   // Clean the API key first
@@ -75,7 +55,7 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
       
       switch (provider) {
         case 'OpenAI':
-          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+          if (getApiKeyStatus(cleanedApiKey) === 'MISSING') {
             console.log(`🔑 OpenAI requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
@@ -83,7 +63,7 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
           break;
           
         case 'Anthropic':
-          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+          if (getApiKeyStatus(cleanedApiKey) === 'MISSING') {
             console.log(`🔑 Anthropic requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
@@ -91,7 +71,7 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
           break;
 
         case 'GoogleGemini':
-          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+          if (getApiKeyStatus(cleanedApiKey) === 'MISSING') {
             console.log(`🔑 Google Gemini requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
@@ -99,7 +79,7 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
           break;
 
         case 'Cohere':
-          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+          if (getApiKeyStatus(cleanedApiKey) === 'MISSING') {
             console.log(`🔑 Cohere requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
@@ -107,7 +87,7 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
           break;
 
         case 'MistralAI':
-          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+          if (getApiKeyStatus(cleanedApiKey) === 'MISSING') {
             console.log(`🔑 Mistral AI requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
@@ -115,7 +95,7 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
           break;
           
         case 'Perplexity':
-          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+          if (getApiKeyStatus(cleanedApiKey) === 'MISSING') {
             console.log(`🔑 Perplexity requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
@@ -123,11 +103,11 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
           break;
           
         case 'Groq':
-          if (!cleanedApiKey || cleanedApiKey.trim() === '') {
+          if (getApiKeyStatus(cleanedApiKey) === 'MISSING') {
             console.log(`🔑 Groq requires API key, falling back for ${expertId}`);
             return generatePersonalizedFallbackResponse(expertId, prompt);
           }
-          console.log(`🟡 Calling Groq for ${expertId} with cleaned API key: ${cleanedApiKey.slice(0, 8)}...`);
+          console.log(`🟡 Calling Groq for ${expertId} with ${createSecureApiKeyLog('Groq', cleanedApiKey)}`);
           response = await callGroq(prompt, cleanedApiKey);
           break;
           

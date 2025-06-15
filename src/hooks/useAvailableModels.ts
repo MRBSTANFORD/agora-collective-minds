@@ -1,6 +1,6 @@
-
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { discoverAllModelsWithCache, DiscoveredModel } from "@/services/modelDiscovery";
+import { getApiKeyStatus } from "@/utils/secureLogging";
 
 export type LLMModel = {
   value: string;
@@ -72,7 +72,12 @@ export function useAvailableModels(
     }
 
     console.log('🔍 Starting model discovery for providers:', stableProviders);
-    console.log('🔑 API keys available for:', Object.keys(stableApiKeys));
+    
+    // Log API key status securely
+    const keyStatuses = Object.entries(stableApiKeys).map(([provider, key]) => 
+      `${provider}: ${getApiKeyStatus(key)}`
+    ).join(', ');
+    console.log('🔑 API key statuses:', keyStatuses);
     
     setLoading(true);
     setError(null);

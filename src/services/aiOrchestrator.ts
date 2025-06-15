@@ -2,6 +2,7 @@ import { ExpertConfig } from '@/components/ExpertCardList';
 import { generateAIResponse } from './responseGenerator';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
 import { EnhancedMetaPromptService } from './enhancedMetaPromptService';
+import { createSecureApiKeyLog } from '../utils/secureLogging';
 
 export interface DiscussionMessage {
   speaker: string;
@@ -32,10 +33,7 @@ export class DiscussionOrchestrator {
     if (experts && experts.length > 0) {
       console.log('🏗️ Expert configurations:');
       experts.forEach(expert => {
-        const keyStatus = expert.apiKey ? 
-          (expert.apiKey.trim() ? `${expert.apiKey.slice(0, 8)}...` : 'empty') : 
-          'none';
-        console.log(`  - ${expert.name} (${expert.id}): ${expert.provider}, API Key: ${keyStatus}`);
+        console.log(`  - ${expert.name} (${expert.id}): ${createSecureApiKeyLog(expert.provider || 'Unknown', expert.apiKey)}`);
       });
     }
     
@@ -83,7 +81,7 @@ export class DiscussionOrchestrator {
       for (let i = 0; i < this.experts.length; i++) {
         const expert = this.experts[i];
         console.log(`🔮 [${i + 1}/${this.experts.length}] Generating response for expert: ${expert.name} (${expert.id}) - Round ${this.currentRound}`);
-        console.log(`🔧 Expert config: Provider=${expert.provider}, API Key=${expert.apiKey ? expert.apiKey.slice(0, 8) + '...' : 'none'}`);
+        console.log(`🔧 Expert config: ${createSecureApiKeyLog(expert.provider || 'Unknown', expert.apiKey)}`);
         
         try {
           // Use the enhanced MetaPromptService for prompt generation
