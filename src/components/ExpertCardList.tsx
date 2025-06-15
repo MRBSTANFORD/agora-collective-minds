@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -9,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Info, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { testApiConnection, ProviderApiStatus } from "@/services/apiTester";
 import { useAvailableModels, LLMModel } from "@/hooks/useAvailableModels";
+import { PROVIDERS_WITH_MODELS, traitDocs } from "@/config/providerConfig";
 
 export type ExpertConfig = {
   id: string;
