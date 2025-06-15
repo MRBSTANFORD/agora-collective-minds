@@ -122,7 +122,7 @@ export default function UserGuide() {
         {/* EXPERTS */}
         <TabsContent value="experts">
           <section className="space-y-2">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2 py-[20px]">
               <Users className="w-5 h-5 text-amber-400" /> Meet the Eight Immortal Minds
             </h2>
             <p>
@@ -147,7 +147,7 @@ export default function UserGuide() {
         {/* SYMPOSIUM */}
         <TabsContent value="symposium">
           <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2 py-[20px]">
               <Flame className="w-5 h-5 text-amber-600" /> Symposium Process
             </h2>
             <ol className="list-decimal pl-5 space-y-1">
@@ -178,7 +178,7 @@ export default function UserGuide() {
         {/* API SETUP */}
         <TabsContent value="api">
           <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2 py-[20px]">
               <Cog className="w-5 h-5 text-amber-700" /> API Setup & Provider Configuration
             </h2>
             <div>
@@ -193,7 +193,7 @@ export default function UserGuide() {
         {/* REPORTS */}
         <TabsContent value="reports">
           <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2 py-[20px]">
               <Scroll className="w-5 h-5 text-slate-600" /> Reports & Insights
             </h2>
             <div>
