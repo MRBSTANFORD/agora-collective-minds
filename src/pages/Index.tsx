@@ -246,11 +246,6 @@ const Index = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/api-setup-guide" className="hover:text-amber-300 transition-colors">
-                    API Setup Guide
-                  </Link>
-                </li>
-                <li>
                   <Link to="/eight-immortal-minds" className="hover:text-amber-300 transition-colors">
                     Eight Immortal Minds
                   </Link>

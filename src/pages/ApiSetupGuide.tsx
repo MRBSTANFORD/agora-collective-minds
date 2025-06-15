@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -88,6 +87,29 @@ const PROVIDER_GUIDES = [
   },
 ];
 
+export function ApiSetupGuideContent() {
+  return (
+    <div className="space-y-8">
+      {PROVIDER_GUIDES.map(({ provider, free, steps }) => (
+        <Card key={provider}>
+          <CardHeader>
+            <CardTitle>
+              {provider} <span className={free ? "text-green-600" : "text-amber-600"}>{free ? "🆓 Free" : "💎 Paid"}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ol className="list-decimal pl-5 space-y-1">
+              {steps.map((step, idx) => (
+                <li key={idx}>{step}</li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function ApiSetupGuide() {
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
@@ -95,24 +117,7 @@ export default function ApiSetupGuide() {
       <div className="mb-6 text-slate-700">
         This guide explains how to find and set up free API keys for the top LLM providers. Models labeled <span className="font-bold text-green-600">🆓 Free</span> can be used at zero cost (rate limits may apply). Paid providers are marked as <span className="font-bold text-amber-600">💎 Paid</span>.
       </div>
-      <div className="space-y-8">
-        {PROVIDER_GUIDES.map(({ provider, free, steps }) => (
-          <Card key={provider}>
-            <CardHeader>
-              <CardTitle>
-                {provider} <span className={free ? "text-green-600" : "text-amber-600"}>{free ? "🆓 Free" : "💎 Paid"}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ol className="list-decimal pl-5 space-y-1">
-                {steps.map((step, idx) => (
-                  <li key={idx}>{step}</li>
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <ApiSetupGuideContent />
     </div>
   );
 }
