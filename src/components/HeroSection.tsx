@@ -56,31 +56,31 @@ const HeroSection = () => {
           </span>
         </p>
 
-        {/* Privacy-First Badge - Prominent */}
+        {/* Enhanced Privacy-First Badge */}
         <div className="mb-8">
-          <Badge className="bg-green-100 text-green-800 border-green-300 px-6 py-3 text-lg font-medium">
-            <Shield className="w-5 h-5 mr-3" />
-            100% Private • No Data Collection • Your Insights Stay Yours
+          <Badge className="bg-green-100 text-green-800 border-green-300 px-8 py-4 text-xl font-medium shadow-lg">
+            <Shield className="w-6 h-6 mr-3" />
+            100% Private • Zero Data Collection • Your Insights Stay Yours
           </Badge>
         </div>
 
-        {/* Enhanced benefits section with privacy emphasis */}
+        {/* Enhanced benefits section with improved trust indicators */}
         <div className="grid md:grid-cols-4 gap-6 mb-12 max-w-5xl mx-auto">
-          <div className="flex items-center justify-center space-x-3 bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-slate-200">
-            <Clock className="w-6 h-6 text-amber-600" />
-            <span className="text-slate-700 font-medium">Minutes, not months</span>
+          <div className="flex items-center justify-center space-x-3 bg-white/90 backdrop-blur-sm rounded-lg p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <Clock className="w-7 h-7 text-amber-600" />
+            <span className="text-slate-700 font-medium text-lg">Minutes, not months</span>
           </div>
-          <div className="flex items-center justify-center space-x-3 bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-slate-200">
-            <Users className="w-6 h-6 text-slate-600" />
-            <span className="text-slate-700 font-medium">8 expert perspectives</span>
+          <div className="flex items-center justify-center space-x-3 bg-white/90 backdrop-blur-sm rounded-lg p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <Users className="w-7 h-7 text-slate-600" />
+            <span className="text-slate-700 font-medium text-lg">8 expert perspectives</span>
           </div>
-          <div className="flex items-center justify-center space-x-3 bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-slate-200">
-            <Target className="w-6 h-6 text-amber-600" />
-            <span className="text-slate-700 font-medium">Clear action plans</span>
+          <div className="flex items-center justify-center space-x-3 bg-white/90 backdrop-blur-sm rounded-lg p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <Target className="w-7 h-7 text-amber-600" />
+            <span className="text-slate-700 font-medium text-lg">Clear action plans</span>
           </div>
-          <div className="flex items-center justify-center space-x-3 bg-green-50 backdrop-blur-sm rounded-lg p-4 border border-green-200">
-            <Shield className="w-6 h-6 text-green-600" />
-            <span className="text-green-700 font-medium">Privacy-first design</span>
+          <div className="flex items-center justify-center space-x-3 bg-green-50 backdrop-blur-sm rounded-lg p-5 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+            <Shield className="w-7 h-7 text-green-600" />
+            <span className="text-green-700 font-medium text-lg">Privacy-first design</span>
           </div>
         </div>
         
@@ -90,16 +90,37 @@ const HeroSection = () => {
             { icon: Lightbulb, label: 'Creative Solutions', color: 'amber' },
             { icon: BookOpen, label: 'Historical Wisdom', color: 'slate' }
           ].map((feature, index) => (
-            <Badge key={index} variant="secondary" className={`px-6 py-3 bg-${feature.color}-50 text-${feature.color}-700 border border-${feature.color}-200 font-light tracking-wide`}>
+            <Badge key={index} variant="secondary" className={`px-6 py-3 bg-${feature.color}-50 text-${feature.color}-700 border border-${feature.color}-200 font-light tracking-wide hover:shadow-md transition-shadow`}>
               <feature.icon className="w-5 h-5 mr-3" />
               {feature.label}
             </Badge>
           ))}
         </div>
 
-        {/* RF Strategy Attribution */}
-        <div className="mt-12 text-slate-500 text-sm">
-          <p>Developed by <a href="https://www.razaofinal.com/" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 font-medium">RF Strategy</a> • Empowering strategic thinking for everyone</p>
+        {/* Enhanced RF Strategy Attribution with trust indicators */}
+        <div className="mt-16 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 shadow-lg">
+          <div className="text-center">
+            <p className="text-slate-600 text-lg mb-4">
+              Developed by <a href="https://www.razaofinal.com/" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:text-amber-700 font-semibold">RF Strategy</a>
+            </p>
+            <p className="text-slate-500 text-base">
+              Empowering strategic thinking for everyone • Trusted by businesses worldwide
+            </p>
+            <div className="flex justify-center items-center space-x-6 mt-6 text-sm text-slate-500">
+              <div className="flex items-center">
+                <Shield className="w-4 h-4 mr-2 text-green-600" />
+                Privacy-first approach
+              </div>
+              <div className="flex items-center">
+                <Target className="w-4 h-4 mr-2 text-amber-600" />
+                Strategic consulting expertise
+              </div>
+              <div className="flex items-center">
+                <Brain className="w-4 h-4 mr-2 text-slate-600" />
+                AI innovation leadership
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

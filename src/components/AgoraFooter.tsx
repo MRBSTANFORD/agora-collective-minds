@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
@@ -76,10 +75,15 @@ const AgoraFooter: React.FC = () => {
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Legal & Security */}
           <div>
-            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Legal</h4>
+            <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">Legal & Security</h4>
             <ul className="space-y-3 text-slate-300 font-light">
+              <li>
+                <Link to="/security-privacy" className="hover:text-amber-300 transition-colors">
+                  Security & Privacy
+                </Link>
+              </li>
               <li>
                 <Link to="/privacy-policy" className="hover:text-amber-300 transition-colors">
                   Privacy Policy

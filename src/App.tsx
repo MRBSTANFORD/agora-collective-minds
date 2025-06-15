@@ -16,6 +16,7 @@ import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import FAQ from "./pages/FAQ";
+import SecurityPrivacy from "./pages/SecurityPrivacy";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/security-privacy" element={<SecurityPrivacy />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/eight-immortal-minds" element={<EightImmortalMinds />} />
           <Route path="/iterative-discourse" element={<IterativeDiscourse />} />
