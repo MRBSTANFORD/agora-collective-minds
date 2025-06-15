@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -146,29 +147,106 @@ export default function UserGuide() {
 
         {/* SYMPOSIUM */}
         <TabsContent value="symposium">
-          <section className="space-y-4">
+          <section className="space-y-6">
             <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2 py-[20px]">
               <Flame className="w-5 h-5 text-amber-600" /> Symposium Process
             </h2>
-            <ol className="list-decimal pl-5 space-y-1">
-              <li>
-                <span className="font-semibold">Invocation:</span> State your challenge and assemble the minds.
-              </li>
-              <li>
-                <span className="font-semibold">Dialectic:</span> Watch experts debate and iterate in multiple rounds.
-              </li>
-              <li>
-                <span className="font-semibold">Synthesis:</span> AGORA's AI generates multi-layered wisdom and actionable reports.
-              </li>
-            </ol>
-            <div>
+            
+            {/* High-Level Overview */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-slate-700 border-b border-slate-200 pb-2">Overview</h3>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li>
+                  <span className="font-semibold">Invocation:</span> State your challenge and assemble the minds.
+                </li>
+                <li>
+                  <span className="font-semibold">Dialectic:</span> Watch experts debate and iterate in multiple rounds.
+                </li>
+                <li>
+                  <span className="font-semibold">Synthesis:</span> AGORA's AI generates multi-layered wisdom and actionable reports.
+                </li>
+              </ol>
+            </div>
+
+            {/* How the Discussion Engine Works */}
+            <div className="space-y-4 bg-slate-50 p-6 rounded-lg border border-slate-100">
+              <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                <Cog className="w-5 h-5 text-amber-600" />
+                How the Discussion Engine Works
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-slate-700 mb-2">🧠 Dynamic Prompt Evolution</h4>
+                  <p className="text-sm text-slate-600 mb-2">
+                    Each expert receives uniquely crafted prompts that evolve throughout the discussion:
+                  </p>
+                  <ul className="list-disc pl-6 text-sm text-slate-600 space-y-1">
+                    <li><strong>Round 1:</strong> Base expert personality + original challenge</li>
+                    <li><strong>Round 2+:</strong> Expert personality + challenge + previous round insights + collective patterns</li>
+                    <li><strong>Final Rounds:</strong> Enhanced with breakthrough detection and synthesis preparation</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-slate-700 mb-2">🔄 Collective Memory System</h4>
+                  <p className="text-sm text-slate-600 mb-2">
+                    AGORA maintains a sophisticated memory architecture:
+                  </p>
+                  <ul className="list-disc pl-6 text-sm text-slate-600 space-y-1">
+                    <li><strong>Message History:</strong> All previous expert contributions are preserved and analyzed</li>
+                    <li><strong>Pattern Recognition:</strong> AI identifies emerging themes, agreements, and contradictions</li>
+                    <li><strong>Context Evolution:</strong> Each round builds upon collective insights from all previous rounds</li>
+                    <li><strong>Wisdom Cascading:</strong> Conclusions from round N become input for round N+1</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-slate-700 mb-2">📊 Intelligence Metrics</h4>
+                  <p className="text-sm text-slate-600 mb-2">
+                    The system tracks sophisticated discussion intelligence:
+                  </p>
+                  <ul className="list-disc pl-6 text-sm text-slate-600 space-y-1">
+                    <li><strong>Wisdom Momentum:</strong> How insights build and accelerate across rounds</li>
+                    <li><strong>Paradigm Shift Potential:</strong> Detection of breakthrough ideas and novel connections</li>
+                    <li><strong>Cross-Disciplinary Resonance:</strong> How different expert domains intersect and amplify</li>
+                    <li><strong>Consensus Formation:</strong> Tracking agreement and synthesis emergence</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-slate-700 mb-2">🎭 Adaptive Discussion Phases</h4>
+                  <p className="text-sm text-slate-600 mb-2">
+                    Discussion phases adapt based on round count and content:
+                  </p>
+                  <ul className="list-disc pl-6 text-sm text-slate-600 space-y-1">
+                    <li><strong>Early Rounds (1-2):</strong> Exploration and perspective establishment</li>
+                    <li><strong>Middle Rounds (3-4):</strong> Deep dialectic, challenge assumptions, build connections</li>
+                    <li><strong>Later Rounds (5+):</strong> Synthesis preparation, breakthrough seeking, wisdom distillation</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-slate-700 mb-2">⚡ The Cascade Effect</h4>
+                  <p className="text-sm text-slate-600">
+                    Each round doesn't just respond to the original challenge—it responds to the <em>evolved understanding</em> 
+                    that has emerged from all previous expert interactions. This creates a cascading intelligence effect where 
+                    later rounds contain exponentially richer context and more nuanced perspectives.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Practical Features */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-slate-700 border-b border-slate-200 pb-2">Features & Control</h3>
               <ul className="list-disc pl-8">
                 <li>Real-time expert message flow & typing indicators</li>
                 <li>Configurable rounds for in-depth dialogue</li>
                 <li>Pause, resume, or reset symposium anytime</li>
                 <li>Adjust expert panel and their cognitive style per discussion</li>
               </ul>
-              <p className="mt-2">
+              <p className="mt-2 text-sm text-slate-600">
                 <strong>Note:</strong> To change settings mid-discussion, reset the symposium and start a new session.
               </p>
             </div>
