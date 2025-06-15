@@ -15,7 +15,6 @@ import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 import BrandedReportHeader from '@/components/reports/BrandedReportHeader';
 import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 import { ExpertConfig } from '@/components/ExpertCardList';
-
 interface ReportsModuleProps {
   discussionMessages?: DiscussionMessage[];
   challenge?: string;
@@ -26,76 +25,67 @@ interface ReportsModuleProps {
 }
 
 // Memoized static report types configuration
-const REPORT_TYPES = [
-  {
-    id: 'summary',
-    title: 'Discussion Summary',
-    description: 'Comprehensive overview of all expert perspectives and key insights',
-    icon: FileText,
-    color: 'bg-blue-100 text-blue-700',
-  },
-  {
-    id: 'consensus',
-    title: 'Consensus & Shared Ideas',
-    description: 'Areas of agreement and common ground among experts',
-    icon: Users,
-    color: 'bg-green-100 text-green-700',
-  },
-  {
-    id: 'divergent',
-    title: 'Divergent & Dissenting Opinions',
-    description: 'Contrasting viewpoints and creative tensions in the discussion',
-    icon: BarChart3,
-    color: 'bg-orange-100 text-orange-700',
-  },
-  {
-    id: 'innovative',
-    title: 'Innovative & Creative Solutions',
-    description: 'Novel approaches and breakthrough ideas from the collective wisdom',
-    icon: Lightbulb,
-    color: 'bg-yellow-100 text-yellow-700',
-  },
-  {
-    id: 'practical',
-    title: 'Practical Recommendations',
-    description: 'Actionable steps and implementation strategies',
-    icon: CheckCircle,
-    color: 'bg-indigo-100 text-indigo-700',
-  },
-  {
-    id: 'ethical',
-    title: 'Ethical & Societal Implications',
-    description: 'Moral considerations and broader social impact analysis',
-    icon: Shield,
-    color: 'bg-purple-100 text-purple-700',
-  },
-  {
-    id: 'historical',
-    title: 'Historical & Contextual Analysis',
-    description: 'Lessons from history and contextual frameworks',
-    icon: History,
-    color: 'bg-amber-100 text-amber-700',
-  },
-  {
-    id: 'personal',
-    title: 'Personalized Action Plan',
-    description: 'Customized recommendations based on your specific context',
-    icon: User,
-    color: 'bg-pink-100 text-pink-700',
-  }
-];
-
-const ReportsModule = React.memo<ReportsModuleProps>(({ 
-  discussionMessages = [], 
-  challenge = 'Sample Challenge', 
+const REPORT_TYPES = [{
+  id: 'summary',
+  title: 'Discussion Summary',
+  description: 'Comprehensive overview of all expert perspectives and key insights',
+  icon: FileText,
+  color: 'bg-blue-100 text-blue-700'
+}, {
+  id: 'consensus',
+  title: 'Consensus & Shared Ideas',
+  description: 'Areas of agreement and common ground among experts',
+  icon: Users,
+  color: 'bg-green-100 text-green-700'
+}, {
+  id: 'divergent',
+  title: 'Divergent & Dissenting Opinions',
+  description: 'Contrasting viewpoints and creative tensions in the discussion',
+  icon: BarChart3,
+  color: 'bg-orange-100 text-orange-700'
+}, {
+  id: 'innovative',
+  title: 'Innovative & Creative Solutions',
+  description: 'Novel approaches and breakthrough ideas from the collective wisdom',
+  icon: Lightbulb,
+  color: 'bg-yellow-100 text-yellow-700'
+}, {
+  id: 'practical',
+  title: 'Practical Recommendations',
+  description: 'Actionable steps and implementation strategies',
+  icon: CheckCircle,
+  color: 'bg-indigo-100 text-indigo-700'
+}, {
+  id: 'ethical',
+  title: 'Ethical & Societal Implications',
+  description: 'Moral considerations and broader social impact analysis',
+  icon: Shield,
+  color: 'bg-purple-100 text-purple-700'
+}, {
+  id: 'historical',
+  title: 'Historical & Contextual Analysis',
+  description: 'Lessons from history and contextual frameworks',
+  icon: History,
+  color: 'bg-amber-100 text-amber-700'
+}, {
+  id: 'personal',
+  title: 'Personalized Action Plan',
+  description: 'Customized recommendations based on your specific context',
+  icon: User,
+  color: 'bg-pink-100 text-pink-700'
+}];
+const ReportsModule = React.memo<ReportsModuleProps>(({
+  discussionMessages = [],
+  challenge = 'Sample Challenge',
   isDiscussionComplete = false,
   experts = [],
   currentRound = 0,
   maxRounds = 5
 }) => {
   usePerformanceMonitor('ReportsModule', 100);
-  
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [generatingReports, setGeneratingReports] = useState(false);
   const [reportStatuses, setReportStatuses] = useState<ReportGenerationStatus>({});
   const [generatedReports, setGeneratedReports] = useState<Record<string, ReportData>>({});
@@ -109,22 +99,19 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
 
   // Memoized providers array for stable dependencies
   const providers = useMemo(() => [selectedAiProvider], [selectedAiProvider]);
-  
-  const { models: availableModels } = useAvailableModels(providers);
+  const {
+    models: availableModels
+  } = useAvailableModels(providers);
 
   // Memoized model options
-  const modelOptionsForSelectedProvider = useMemo(() =>
-    availableModels[selectedAiProvider]?.map(m => ({
-      label: m.label + (m.free ? " (Free)" : " (Paid)"),
-      value: m.value,
-    })) || [],
-    [availableModels, selectedAiProvider]
-  );
+  const modelOptionsForSelectedProvider = useMemo(() => availableModels[selectedAiProvider]?.map(m => ({
+    label: m.label + (m.free ? " (Free)" : " (Paid)"),
+    value: m.value
+  })) || [], [availableModels, selectedAiProvider]);
 
   // Set default model when provider changes
   useEffect(() => {
-    if (modelOptionsForSelectedProvider.length && 
-        !modelOptionsForSelectedProvider.find(m => m.value === selectedAiModel)) {
+    if (modelOptionsForSelectedProvider.length && !modelOptionsForSelectedProvider.find(m => m.value === selectedAiModel)) {
       setSelectedAiModel(modelOptionsForSelectedProvider[0].value);
     }
   }, [selectedAiProvider, modelOptionsForSelectedProvider, selectedAiModel]);
@@ -135,7 +122,7 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
       console.log('📊 Initializing ReportGenerator with discussion data');
       const generator = new ReportGenerator(discussionMessages, challenge);
       setReportGenerator(generator);
-      
+
       // Reset statuses
       const initialStatuses: ReportGenerationStatus = {};
       REPORT_TYPES.forEach(type => {
@@ -145,75 +132,72 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
       setGeneratedReports({});
     }
   }, [discussionMessages, challenge, reportGenerator]);
-
   useEffect(() => {
     initializeReportGenerator();
   }, [initializeReportGenerator]);
-
   const generateAllReports = useCallback(async () => {
     if (!reportGenerator) {
       toast({
         title: "No Discussion Data",
         description: "Please complete a discussion first to generate reports.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     if (!isDiscussionComplete) {
       toast({
         title: "Discussion Not Complete",
         description: "Please wait for the discussion to complete before generating reports.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setGeneratingReports(true);
     console.log('🔄 Starting report generation...');
-
     try {
       // Generate reports with timeout protection
       for (const reportType of REPORT_TYPES) {
-        setReportStatuses(prev => ({ ...prev, [reportType.id]: 'generating' }));
-
+        setReportStatuses(prev => ({
+          ...prev,
+          [reportType.id]: 'generating'
+        }));
         try {
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Report generation timeout')), 30000)
-          );
-
-          const reportPromise = reportGenerator.generateReport(
-            reportType.id,
-            {
-              useAiEnhancement,
-              model: selectedAiModel,
-              provider: selectedAiProvider,
-            }
-          );
-
-          const report = await Promise.race([reportPromise, timeoutPromise]) as ReportData;
-          
-          setGeneratedReports(prev => ({ ...prev, [reportType.id]: report }));
-          setReportStatuses(prev => ({ ...prev, [reportType.id]: 'completed' }));
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Report generation timeout')), 30000));
+          const reportPromise = reportGenerator.generateReport(reportType.id, {
+            useAiEnhancement,
+            model: selectedAiModel,
+            provider: selectedAiProvider
+          });
+          const report = (await Promise.race([reportPromise, timeoutPromise])) as ReportData;
+          setGeneratedReports(prev => ({
+            ...prev,
+            [reportType.id]: report
+          }));
+          setReportStatuses(prev => ({
+            ...prev,
+            [reportType.id]: 'completed'
+          }));
         } catch (error) {
           console.error(`❌ Failed to generate ${reportType.title}:`, error);
-          setReportStatuses(prev => ({ ...prev, [reportType.id]: 'error' }));
+          setReportStatuses(prev => ({
+            ...prev,
+            [reportType.id]: 'error'
+          }));
         }
 
         // Small delay between reports
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-
       toast({
         title: "Reports Generated",
-        description: "All available reports have been generated successfully.",
+        description: "All available reports have been generated successfully."
       });
     } catch (error) {
       console.error('💥 Error during report generation:', error);
       toast({
         title: "Generation Error",
         description: "Some reports could not be generated. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setGeneratingReports(false);
@@ -227,11 +211,10 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
       toast({
         title: "Report Not Available",
         description: "This report hasn't been generated yet.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     try {
       // Create enhanced report with branding
       const enhancedReport = {
@@ -271,27 +254,24 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
           </div>
         `
       };
-
       let blob: Blob;
       if (format === 'pdf') {
         blob = await FileGenerator.generatePDF(enhancedReport);
       } else {
         blob = await FileGenerator.generateHTML(enhancedReport);
       }
-
       const filename = `AGORA_${report.title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}`;
       FileGenerator.downloadFile(blob, filename, format);
-
       toast({
         title: "Download Started",
-        description: `${report.title} is being downloaded as ${format.toUpperCase()}.`,
+        description: `${report.title} is being downloaded as ${format.toUpperCase()}.`
       });
     } catch (error) {
       console.error(`💥 Error downloading report:`, error);
       toast({
         title: "Download Error",
         description: "Could not download the report. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   }, [generatedReports, discussionMessages, challenge, toast]);
@@ -313,79 +293,37 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
   }, [reportStatuses]);
 
   // Memoized calculations
-  const completedReportsCount = useMemo(() => 
-    Object.values(reportStatuses).filter(status => status === 'completed').length,
-    [reportStatuses]
-  );
-
-  const uniqueExpertCount = useMemo(() => 
-    new Set(discussionMessages.map(m => m.speaker)).size,
-    [discussionMessages]
-  );
-
-  const canGenerate = useMemo(() => 
-    reportGenerator && isDiscussionComplete && !generatingReports,
-    [reportGenerator, isDiscussionComplete, generatingReports]
-  );
-
-  return (
-    <ErrorBoundary>
+  const completedReportsCount = useMemo(() => Object.values(reportStatuses).filter(status => status === 'completed').length, [reportStatuses]);
+  const uniqueExpertCount = useMemo(() => new Set(discussionMessages.map(m => m.speaker)).size, [discussionMessages]);
+  const canGenerate = useMemo(() => reportGenerator && isDiscussionComplete && !generatingReports, [reportGenerator, isDiscussionComplete, generatingReports]);
+  return <ErrorBoundary>
       <div className="space-y-6">
         {/* Enhanced Header with Branding */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg border border-indigo-100 p-6 text-white">
-          <BrandedReportHeader
-            title="Comprehensive Reports"
-            subtitle="AI-generated insights from expert discussions"
-            generatedAt={new Date()}
-            expertCount={new Set(discussionMessages.map(m => m.speaker)).size}
-            messageCount={discussionMessages.length}
-          />
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg border border-indigo-100 p-6 text-white bg-zinc-50">
+          <BrandedReportHeader title="Comprehensive Reports" subtitle="AI-generated insights from expert discussions" generatedAt={new Date()} expertCount={new Set(discussionMessages.map(m => m.speaker)).size} messageCount={discussionMessages.length} />
           
           <div className="mt-6 flex flex-col md:flex-row gap-3 items-center justify-between">
-            <Button 
-              onClick={generateAllReports}
-              disabled={!canGenerate}
-              className="bg-white text-indigo-600 hover:bg-indigo-50 disabled:opacity-50"
-            >
+            <Button onClick={generateAllReports} disabled={!canGenerate} className="bg-white text-indigo-600 hover:bg-indigo-50 disabled:opacity-50">
               {generatingReports ? 'Generating...' : 'Generate All Reports'}
             </Button>
 
             {/* AI Enhancement Controls */}
             <div className="flex flex-col md:flex-row gap-3 items-center">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useAiEnhancement}
-                  onChange={e => setUseAiEnhancement(e.target.checked)}
-                  className="form-checkbox"
-                />
+                <input type="checkbox" checked={useAiEnhancement} onChange={e => setUseAiEnhancement(e.target.checked)} className="form-checkbox" />
                 <span className="text-sm font-medium">Enable AI Enhancement</span>
               </label>
 
-              {useAiEnhancement && (
-                <div className="flex items-center gap-2">
+              {useAiEnhancement && <div className="flex items-center gap-2">
                   <span className="text-xs font-medium">Provider:</span>
-                  <select
-                    className="text-sm border rounded px-2 py-1 text-gray-800"
-                    value={selectedAiProvider}
-                    onChange={e => setSelectedAiProvider(e.target.value)}
-                  >
-                    {Object.keys(availableModels).map(provider => (
-                      <option key={provider} value={provider}>{provider}</option>
-                    ))}
+                  <select className="text-sm border rounded px-2 py-1 text-gray-800" value={selectedAiProvider} onChange={e => setSelectedAiProvider(e.target.value)}>
+                    {Object.keys(availableModels).map(provider => <option key={provider} value={provider}>{provider}</option>)}
                   </select>
                   <span className="text-xs font-medium">Model:</span>
-                  <select
-                    className="text-sm border rounded px-2 py-1 text-gray-800"
-                    value={selectedAiModel}
-                    onChange={e => setSelectedAiModel(e.target.value)}
-                  >
-                    {modelOptionsForSelectedProvider.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
+                  <select className="text-sm border rounded px-2 py-1 text-gray-800" value={selectedAiModel} onChange={e => setSelectedAiModel(e.target.value)}>
+                    {modelOptionsForSelectedProvider.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                   </select>
-                </div>
-              )}
+                </div>}
             </div>
           </div>
         </div>
@@ -399,13 +337,11 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {!isDiscussionComplete && (
-              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            {!isDiscussionComplete && <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-amber-800 text-sm">
                   Reports will be available after completing a discussion with experts.
                 </p>
-              </div>
-            )}
+              </div>}
 
             {/* Stats Grid */}
             <div className="grid md:grid-cols-4 gap-4">
@@ -429,19 +365,12 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
 
             {/* Reports Grid */}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {REPORT_TYPES.map((report) => {
-                const IconComponent = report.icon;
-                const status = reportStatuses[report.id] || 'pending';
-                const isCompleted = status === 'completed';
-                const reportData = generatedReports[report.id];
-                
-                return (
-                  <Card 
-                    key={report.id} 
-                    className={`border border-indigo-100 hover:shadow-lg transition-all duration-300 ${
-                      isCompleted ? 'hover:border-indigo-300' : 'opacity-75'
-                    }`}
-                  >
+              {REPORT_TYPES.map(report => {
+              const IconComponent = report.icon;
+              const status = reportStatuses[report.id] || 'pending';
+              const isCompleted = status === 'completed';
+              const reportData = generatedReports[report.id];
+              return <Card key={report.id} className={`border border-indigo-100 hover:shadow-lg transition-all duration-300 ${isCompleted ? 'hover:border-indigo-300' : 'opacity-75'}`}>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${report.color}`}>
@@ -456,56 +385,33 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
                         {report.description}
                       </CardDescription>
                       
-                      {isCompleted && reportData ? (
-                        <div className="flex space-x-1">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50"
-                            onClick={() => downloadReport(report.id, 'pdf')}
-                          >
+                      {isCompleted && reportData ? <div className="flex space-x-1">
+                          <Button size="sm" variant="outline" className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50" onClick={() => downloadReport(report.id, 'pdf')}>
                             <Download className="w-3 h-3 mr-1" />
                             PDF
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50"
-                            onClick={() => downloadReport(report.id, 'html')}
-                          >
+                          <Button size="sm" variant="outline" className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50" onClick={() => downloadReport(report.id, 'html')}>
                             <FileText className="w-3 h-3 mr-1" />
                             HTML
                           </Button>
-                        </div>
-                      ) : (
-                        <div className="text-center">
+                        </div> : <div className="text-center">
                           <div className="text-xs text-gray-400">
-                            {status === 'generating' ? 'Generating...' : 
-                             status === 'error' ? 'Generation failed' :
-                             'Available after generation'}
+                            {status === 'generating' ? 'Generating...' : status === 'error' ? 'Generation failed' : 'Available after generation'}
                           </div>
-                        </div>
-                      )}
+                        </div>}
                     </CardContent>
-                  </Card>
-                );
-              })}
+                  </Card>;
+            })}
             </div>
           </TabsContent>
 
           <TabsContent value="analytics">
-            <AnalyticsDashboard
-              messages={discussionMessages}
-              experts={experts}
-              currentRound={currentRound}
-              maxRounds={maxRounds}
-            />
+            <AnalyticsDashboard messages={discussionMessages} experts={experts} currentRound={currentRound} maxRounds={maxRounds} />
           </TabsContent>
 
           <TabsContent value="preview">
             {/* Report Preview */}
-            {completedReportsCount > 0 ? (
-              <Card className="border-indigo-100">
+            {completedReportsCount > 0 ? <Card className="border-indigo-100">
                 <CardHeader>
                   <CardTitle className="text-lg text-indigo-900">Report Preview</CardTitle>
                   <CardDescription>Sample content from completed reports</CardDescription>
@@ -513,48 +419,33 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
                 <CardContent>
                   <Tabs defaultValue={Object.keys(generatedReports)[0] || 'summary'}>
                     <TabsList className="grid w-full grid-cols-2">
-                      {Object.keys(generatedReports).slice(0, 2).map(reportId => (
-                        <TabsTrigger key={reportId} value={reportId}>
+                      {Object.keys(generatedReports).slice(0, 2).map(reportId => <TabsTrigger key={reportId} value={reportId}>
                           {REPORT_TYPES.find(t => t.id === reportId)?.title || reportId}
-                        </TabsTrigger>
-                      ))}
+                        </TabsTrigger>)}
                     </TabsList>
-                    {Object.entries(generatedReports).slice(0, 2).map(([reportId, report]) => (
-                      <TabsContent key={reportId} value={reportId} className="mt-4">
+                    {Object.entries(generatedReports).slice(0, 2).map(([reportId, report]) => <TabsContent key={reportId} value={reportId} className="mt-4">
                         <ScrollArea className="h-64 w-full border rounded-lg p-4">
                           <div className="prose prose-sm max-w-none">
-                            <BrandedReportHeader
-                              title={report.title}
-                              generatedAt={report.generatedAt}
-                              expertCount={new Set(discussionMessages.map(m => m.speaker)).size}
-                              messageCount={discussionMessages.length}
-                            />
+                            <BrandedReportHeader title={report.title} generatedAt={report.generatedAt} expertCount={new Set(discussionMessages.map(m => m.speaker)).size} messageCount={discussionMessages.length} />
                             <div className="mt-4 whitespace-pre-line text-gray-700">
                               {report.content.slice(0, 1500)}...
                             </div>
                           </div>
                         </ScrollArea>
-                      </TabsContent>
-                    ))}
+                      </TabsContent>)}
                   </Tabs>
                 </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-indigo-100">
+              </Card> : <Card className="border-indigo-100">
                 <CardContent className="p-8 text-center">
                   <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No Reports Available</h3>
                   <p className="text-gray-600">Generate reports from a completed discussion to see previews here.</p>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </TabsContent>
         </Tabs>
       </div>
-    </ErrorBoundary>
-  );
+    </ErrorBoundary>;
 });
-
 ReportsModule.displayName = 'ReportsModule';
-
 export default ReportsModule;
