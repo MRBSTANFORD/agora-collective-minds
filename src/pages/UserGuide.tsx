@@ -218,7 +218,7 @@ export default function UserGuide() {
         {/* ADVANCED & TIPS */}
         <TabsContent value="advanced">
           <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center gap-2 my-0 py-[20px]">
               <HelpCircle className="w-5 h-5 text-amber-500" /> Advanced Tips & Troubleshooting
             </h2>
             <ul className="list-disc pl-7 mb-4">
