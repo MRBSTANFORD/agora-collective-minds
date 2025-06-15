@@ -10,6 +10,7 @@ import IterativeDiscourse from "./pages/IterativeDiscourse";
 import SynthesisOfWisdom from "./pages/SynthesisOfWisdom";
 import TranscendentInsights from "./pages/TranscendentInsights";
 import ApiSetupGuide from "./pages/ApiSetupGuide";
+import UserGuide from "./pages/UserGuide";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/transcendent-insights" element={<TranscendentInsights />} />
           {/* API setup help page */}
           <Route path="/api-setup-guide" element={<ApiSetupGuide />} />
+          <Route path="/user-guide" element={<UserGuide />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

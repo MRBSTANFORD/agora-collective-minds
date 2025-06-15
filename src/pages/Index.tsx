@@ -238,8 +238,18 @@ const Index = () => {
             </div>
             
             <div>
-              <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">The Assembly</h4>
+              <h4 className="text-lg font-light tracking-wide mb-6 text-amber-300">User Resources</h4>
               <ul className="space-y-3 text-slate-300 font-light">
+                <li>
+                  <Link to="/user-guide" className="hover:text-amber-300 transition-colors">
+                    AGORA User Guide
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/api-setup-guide" className="hover:text-amber-300 transition-colors">
+                    API Setup Guide
+                  </Link>
+                </li>
                 <li>
                   <Link to="/eight-immortal-minds" className="hover:text-amber-300 transition-colors">
                     Eight Immortal Minds
