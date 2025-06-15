@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,7 @@ const REPORT_TYPES = [{
   icon: User,
   color: 'bg-pink-100 text-pink-700'
 }];
+
 const ReportsModule = React.memo<ReportsModuleProps>(({
   discussionMessages = [],
   challenge = 'Sample Challenge',
@@ -109,6 +111,22 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
     getFinalConfig
   } = useReportAIConfig(experts);
 
+  // Memoized calculations - moved before callbacks that use them
+  const completedReportsCount = useMemo(() => 
+    Object.values(reportStatuses).filter(status => status === 'completed').length, 
+    [reportStatuses]
+  );
+  
+  const uniqueExpertCount = useMemo(() => 
+    new Set(discussionMessages.map(m => m.speaker)).size, 
+    [discussionMessages]
+  );
+  
+  const canGenerate = useMemo(() => 
+    reportGenerator && isDiscussionComplete && !generatingReports, 
+    [reportGenerator, isDiscussionComplete, generatingReports]
+  );
+
   // Initialize report generator - memoized to prevent recreation
   const initializeReportGenerator = useCallback(() => {
     if (discussionMessages.length > 0 && challenge && !reportGenerator) {
@@ -125,9 +143,11 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
       setGeneratedReports({});
     }
   }, [discussionMessages, challenge, reportGenerator]);
+
   useEffect(() => {
     initializeReportGenerator();
   }, [initializeReportGenerator]);
+
   const generateAllReports = useCallback(async () => {
     if (!reportGenerator) {
       toast({
@@ -326,22 +346,6 @@ const ReportsModule = React.memo<ReportsModuleProps>(({
         return <Badge variant="outline">Pending</Badge>;
     }
   }, [reportStatuses]);
-
-  // Memoized calculations
-  const completedReportsCount = useMemo(() => 
-    Object.values(reportStatuses).filter(status => status === 'completed').length, 
-    [reportStatuses]
-  );
-  
-  const uniqueExpertCount = useMemo(() => 
-    new Set(discussionMessages.map(m => m.speaker)).size, 
-    [discussionMessages]
-  );
-  
-  const canGenerate = useMemo(() => 
-    reportGenerator && isDiscussionComplete && !generatingReports, 
-    [reportGenerator, isDiscussionComplete, generatingReports]
-  );
 
   return (
     <ErrorBoundary>
