@@ -72,8 +72,20 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
   const discussionState = useDiscussionState(discussionConfig.rounds);
   const [orchestrator, setOrchestrator] = useState<DiscussionOrchestrator | null>(null);
 
+  const startFreshDiscussion = useCallback(() => {
+    console.log('🔄 Starting fresh discussion - resetting all state');
+    discussionState.resetState();
+    setOrchestrator(null);
+  }, [discussionState]);
+
   const startDiscussion = useCallback(async () => {
     console.log('🚀 Start discussion button clicked');
+    console.log('📊 Current state before start:', {
+      isRunning: discussionState.isRunning,
+      isRunningRef: discussionState.isRunningRef.current,
+      currentRound: discussionState.currentRound,
+      messagesCount: discussionState.messages.length
+    });
     
     // Prevent multiple simultaneous starts
     if (discussionState.isRunningRef.current) {
@@ -113,26 +125,39 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
 
     console.log(`✅ Starting discussion with ${validExperts.length} valid experts`);
 
-    discussionState.setIsRunning(true);
-    discussionState.isRunningRef.current = true;
-    discussionState.setHasError(false);
-
-    // Only reset state if starting fresh (round 0)
-    if (discussionState.currentRound === 0) {
-      console.log('🔄 Resetting state for fresh discussion');
-      discussionState.resetState();
+    // Only reset if this is a completely fresh start (no existing messages)
+    if (discussionState.currentRound === 0 && discussionState.messages.length === 0) {
+      console.log('🔄 Fresh start detected - starting clean');
+      startFreshDiscussion();
     } else {
       console.log(`⏯️ Resuming discussion from round ${discussionState.currentRound}`);
     }
 
+    // Set running state AFTER any reset operations
+    discussionState.setIsRunning(true);
+    discussionState.setHasError(false);
+
+    console.log('📊 State after setting isRunning:', {
+      isRunning: discussionState.isRunning,
+      isRunningRef: discussionState.isRunningRef.current,
+      currentRound: discussionState.currentRound
+    });
+
     try {
       // Create orchestrator only once or if starting fresh
       let currentOrchestrator = orchestrator;
-      if (!currentOrchestrator || discussionState.currentRound === 0) {
+      if (!currentOrchestrator || (discussionState.currentRound === 0 && discussionState.messages.length === 0)) {
         console.log('🔧 Creating new orchestrator with validated experts');
         currentOrchestrator = new DiscussionOrchestrator(validExperts, challenge, discussionConfig.rounds);
         setOrchestrator(currentOrchestrator);
       }
+
+      console.log('🎯 About to enter discussion loop:', {
+        isRunningRef: discussionState.isRunningRef.current,
+        currentRound: discussionState.currentRound,
+        maxRounds: discussionConfig.rounds,
+        canEnterLoop: discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds
+      });
 
       // Run the discussion rounds with improved loop logic
       while (discussionState.isRunningRef.current && discussionState.currentRound < discussionConfig.rounds) {
@@ -140,11 +165,16 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
         console.log(`🎯 Starting round ${nextRound}/${discussionConfig.rounds}`);
         
         discussionState.setIsGenerating(true);
-        discussionState.isGeneratingRef.current = true;
         discussionState.setCurrentSpeaker(null);
 
         try {
           const newMessages = await currentOrchestrator.generateRound();
+          
+          // Check if we're still supposed to be running (user might have paused)
+          if (!discussionState.isRunningRef.current) {
+            console.log('⏸️ Discussion was paused during round generation');
+            break;
+          }
           
           if (newMessages && newMessages.length > 0) {
             console.log(`✅ Round ${nextRound} generated ${newMessages.length} messages`);
@@ -178,7 +208,6 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           break; // Stop the discussion on error
         } finally {
           discussionState.setIsGenerating(false);
-          discussionState.isGeneratingRef.current = false;
           discussionState.setCurrentSpeaker(null);
         }
 
@@ -201,29 +230,25 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
       });
     } finally {
       discussionState.setIsRunning(false);
-      discussionState.isRunningRef.current = false;
       console.log('🛑 Discussion process completed');
     }
-  }, [discussionConfig, challenge, orchestrator, discussionState, toast, onDiscussionUpdate]);
+  }, [discussionConfig, challenge, orchestrator, discussionState, toast, onDiscussionUpdate, startFreshDiscussion]);
 
   const pauseDiscussion = useCallback(() => {
     console.log('⏸️ Pausing discussion');
     discussionState.setIsRunning(false);
-    discussionState.isRunningRef.current = false;
     discussionState.setIsGenerating(false);
-    discussionState.isGeneratingRef.current = false;
   }, [discussionState]);
 
   const resetDiscussion = useCallback(() => {
     console.log('🔄 Resetting discussion state completely');
-    discussionState.resetState();
-    setOrchestrator(null);
+    startFreshDiscussion();
     
     toast({
       title: "Discussion Reset",
       description: "Discussion has been reset. You can start a new discussion now.",
     });
-  }, [discussionState, toast]);
+  }, [startFreshDiscussion, toast]);
 
   // Mobile interface takes precedence on mobile devices
   if (isMobile) {
@@ -286,7 +311,7 @@ const DiscussionInterface: React.FC<DiscussionInterfaceProps> = ({
           )}
         </div>
 
-        {/* Simplified Tabs Navigation - Removed Experts Tab */}
+        {/* Simplified Tabs Navigation - 4 tabs total */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="discussion" className="flex items-center gap-2">
