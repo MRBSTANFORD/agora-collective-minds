@@ -1,7 +1,7 @@
 import { ExpertConfig } from '@/components/ExpertCardList';
 import { generateAIResponse } from './responseGenerator';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
-import { MetaPromptService } from './metaPromptService';
+import { EnhancedMetaPromptService } from './enhancedMetaPromptService';
 
 export interface DiscussionMessage {
   speaker: string;
@@ -12,17 +12,17 @@ export interface DiscussionMessage {
 
 export type { AIProvider } from './aiProviders';
 
-// Main discussion orchestrator with enhanced prompting and dynamic round support
+// Main discussion orchestrator with transcendent prompting and real-time synthesis
 export class DiscussionOrchestrator {
   private experts: ExpertConfig[];
   private challenge: string;
   private maxRounds: number;
   private messages: DiscussionMessage[];
   private currentRound: number;
-  private metaPromptService: MetaPromptService;
+  private enhancedMetaPromptService: EnhancedMetaPromptService;
 
   constructor(experts: ExpertConfig[], challenge: string, maxRounds: number) {
-    console.log('🏗️ Creating DiscussionOrchestrator with enhanced prompting:', { 
+    console.log('🏗️ Creating DiscussionOrchestrator with transcendent capabilities:', { 
       experts: experts?.length || 0, 
       challenge: challenge?.slice(0, 50) || 'No challenge', 
       maxRounds 
@@ -41,7 +41,7 @@ export class DiscussionOrchestrator {
     this.maxRounds = maxRounds || 5;
     this.messages = [];
     this.currentRound = 0;
-    this.metaPromptService = new MetaPromptService();
+    this.enhancedMetaPromptService = new EnhancedMetaPromptService();
     
     // Validate inputs
     if (!this.experts.length) {
@@ -51,11 +51,11 @@ export class DiscussionOrchestrator {
       console.warn('⚠️ DiscussionOrchestrator created with empty challenge');
     }
     
-    console.log(`✅ DiscussionOrchestrator created with ${maxRounds} rounds support`);
+    console.log(`✅ DiscussionOrchestrator created with transcendent prompting for ${maxRounds} rounds`);
   }
 
   async generateRound(): Promise<DiscussionMessage[]> {
-    console.log(`🎬 Starting round ${this.currentRound + 1} of ${this.maxRounds} with enhanced prompting`);
+    console.log(`🎬 Starting transcendent round ${this.currentRound + 1} of ${this.maxRounds}`);
     this.currentRound++;
     const roundMessages: DiscussionMessage[] = [];
 
@@ -64,25 +64,25 @@ export class DiscussionOrchestrator {
       return [];
     }
 
-    console.log(`👥 Processing ${this.experts.length} experts for round ${this.currentRound}`);
+    console.log(`👥 Processing ${this.experts.length} experts for transcendent round ${this.currentRound}`);
 
     // Process experts sequentially to avoid rate limiting
     for (let i = 0; i < this.experts.length; i++) {
       const expert = this.experts[i];
-      console.log(`🎯 [${i + 1}/${this.experts.length}] Generating enhanced response for expert: ${expert.name} (${expert.id})`);
+      console.log(`🔮 [${i + 1}/${this.experts.length}] Generating transcendent response for expert: ${expert.name} (${expert.id})`);
       console.log(`🔧 Expert config: Provider=${expert.provider}, API Key=${expert.apiKey ? expert.apiKey.slice(0, 8) + '...' : 'none'}`);
       
       try {
-        // Use the new MetaPromptService for sophisticated prompt generation
-        const expertPrompt = this.metaPromptService.generateExpertPrompt(
+        // Use the enhanced MetaPromptService for transcendent prompt generation
+        const transcendentPrompt = this.enhancedMetaPromptService.generateTranscendentPrompt(
           expert,
           this.challenge,
           this.currentRound,
           this.maxRounds,
-          this.messages.map(m => ({ speaker: m.speaker, content: m.content }))
+          this.messages
         );
         
-        console.log(`📝 Generated enhanced prompt for ${expert.name}: ${expertPrompt.slice(0, 100)}...`);
+        console.log(`🌟 Generated transcendent prompt for ${expert.name}: ${transcendentPrompt.slice(0, 100)}...`);
         
         // Validate expert configuration before making API call
         if (!expert.provider) {
@@ -93,7 +93,7 @@ export class DiscussionOrchestrator {
         // Add timeout wrapper for AI response generation
         const response = await Promise.race([
           generateAIResponse(
-            expertPrompt,
+            transcendentPrompt,
             expert.provider || 'HuggingFace',
             expert.apiKey || '',
             expert.id
@@ -116,7 +116,7 @@ export class DiscussionOrchestrator {
 
         roundMessages.push(message);
         this.messages.push(message);
-        console.log(`✅ Expert ${expert.name} enhanced response generated successfully: ${response.slice(0, 50)}...`);
+        console.log(`✨ Expert ${expert.name} transcendent response generated successfully: ${response.slice(0, 50)}...`);
         
         // Small delay between experts to avoid overwhelming APIs
         if (i < this.experts.length - 1) {
@@ -124,7 +124,7 @@ export class DiscussionOrchestrator {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       } catch (error) {
-        console.error(`💥 Error generating response for expert ${expert.name} (${expert.provider}):`, error);
+        console.error(`💥 Error generating transcendent response for expert ${expert.name} (${expert.provider}):`, error);
         
         // Add fallback message even on error to keep discussion flowing
         const fallbackContent = generatePersonalizedFallbackResponse(expert.id, this.challenge);
@@ -141,7 +141,7 @@ export class DiscussionOrchestrator {
       }
     }
 
-    console.log(`🏁 Round ${this.currentRound} completed with ${roundMessages.length} messages`);
+    console.log(`🏁 Transcendent round ${this.currentRound} completed with ${roundMessages.length} messages`);
     
     if (roundMessages.length === 0) {
       console.error('❌ No messages generated in this round - this should not happen with fallbacks');
