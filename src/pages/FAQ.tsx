@@ -37,6 +37,10 @@ const FAQ = () => {
         answer: "AGORA excels with strategic decisions, creative problems, ethical dilemmas, business challenges, and complex situations requiring multiple perspectives. Examples: 'How should I restructure my team?', 'What's the best go-to-market strategy?', 'How do I balance innovation with risk?'"
       },
       {
+        question: "What is Bring Your Own Key (BYOK)?",
+        answer: "AGORA uses a BYOK model - you provide your own API keys from AI providers (OpenAI, Anthropic, Google Gemini, etc.). This means you have full control and privacy: your keys never leave your browser, you pay providers directly at their rates, and you can test different LLM models to find the best fit for your needs. BYOK gives you flexibility, transparency, and maximum data privacy."
+      },
+      {
         question: "How long does a typical discussion take?",
         answer: "Most discussions complete in 15-45 minutes, depending on complexity and number of rounds. You can customize the number of discussion rounds (typically 3-7 rounds work well)."
       }
@@ -74,7 +78,7 @@ const FAQ = () => {
       },
       {
         question: "Which AI providers do you support?",
-        answer: "Currently: OpenAI (GPT-4, GPT-3.5), Anthropic (Claude), Google (Gemini), and others. Each expert can use a different provider, so you can mix and match based on your preferences and budget."
+        answer: "We support OpenAI (GPT-4, GPT-3.5), Anthropic (Claude), Google Gemini, HuggingFace, Cohere, Groq, Mistral AI, and Perplexity. With our BYOK approach, each expert can use a different provider and model. This lets you test different LLM models side-by-side to compare quality, speed, and cost for your specific needs."
       },
       {
         question: "Can I set spending limits?",
@@ -82,7 +86,7 @@ const FAQ = () => {
       },
       {
         question: "What if I don't have API keys?",
-        answer: "You can't run discussions without API keys, but you can explore the interface and see how AGORA works. Getting API keys is usually quick: create accounts with AI providers, add payment methods, and generate keys."
+        answer: "You can start with HuggingFace which works without API keys (free tier with rate limits). For full access to all providers and models, getting API keys is quick: create accounts with AI providers, add payment methods, and generate keys. Our BYOK approach means you're in complete control - test any provider or model you want!"
       }
     ],
     'technical': [

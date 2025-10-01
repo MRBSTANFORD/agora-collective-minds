@@ -113,9 +113,15 @@ export function ApiSetupGuideContent() {
 export default function ApiSetupGuide() {
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-6 text-slate-800">🌟 API Setup Guide for Free & Paid LLM Providers</h1>
+      <h1 className="text-2xl font-bold mb-6 text-slate-800">🔑 API Setup Guide - BYOK (Bring Your Own Key)</h1>
       <div className="mb-6 text-slate-700">
-        This guide explains how to find and set up free API keys for the top LLM providers. Models labeled <span className="font-bold text-green-600">🆓 Free</span> can be used at zero cost (rate limits may apply). Paid providers are marked as <span className="font-bold text-amber-600">💎 Paid</span>.
+        <p className="mb-4">
+          AGORA uses a <strong>BYOK (Bring Your Own Key)</strong> approach - you provide your own API keys from AI providers. 
+          This gives you <strong>maximum flexibility, privacy, and control</strong>. Test any LLM model you want!
+        </p>
+        <p className="mb-4">
+          This guide explains how to find and set up API keys for top LLM providers. Models labeled <span className="font-bold text-green-600">🆓 Free</span> can be used at zero cost (rate limits may apply). Paid providers are marked as <span className="font-bold text-amber-600">💎 Paid</span>.
+        </p>
       </div>
       <ApiSetupGuideContent />
     </div>

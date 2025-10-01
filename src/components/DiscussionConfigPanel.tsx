@@ -164,7 +164,8 @@ export function DiscussionConfigPanel({
           <DrawerTitle>Symposium Configuration</DrawerTitle>
           <DrawerDescription>
             Configure the discussion rounds and each expert's cognitive profile, AI provider, and API credentials.<br />
-            <span className="text-blue-600">💡 HuggingFace works without API keys (free tier) but may be slower. Other providers require API keys.</span>
+            <span className="text-blue-600">🔑 BYOK (Bring Your Own Key): Test any LLM model with your own API keys for maximum flexibility and privacy.</span><br />
+            <span className="text-green-600">💡 HuggingFace works without API keys (free tier) but may be slower. Other providers require API keys.</span>
           </DrawerDescription>
         </DrawerHeader>
         
@@ -197,8 +198,9 @@ export function DiscussionConfigPanel({
                 <CardHeader>
                   <CardTitle className="text-lg text-slate-800">Expert Configuration</CardTitle>
                   <CardDescription>
-                    Customize each expert's cognitive traits and AI provider settings. 
-                    <strong className="text-green-600"> HuggingFace is recommended for testing without API keys.</strong>
+                    Customize each expert's cognitive traits and AI provider settings with BYOK approach.<br />
+                    <strong className="text-blue-600">🔑 Test different models from OpenAI, Anthropic, Google Gemini, and more!</strong><br />
+                    <strong className="text-green-600">💡 HuggingFace works without API keys for quick testing.</strong>
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

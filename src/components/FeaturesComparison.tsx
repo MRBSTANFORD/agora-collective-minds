@@ -11,8 +11,9 @@ const FeaturesComparison = () => {
       items: [
         { feature: "No Data Collection", agora: true, traditional: false, other: false },
         { feature: "Local Storage Only", agora: true, traditional: false, other: false },
-        { feature: "Your API Keys Stay Private", agora: true, traditional: false, other: false },
-        { feature: "Zero Registration Required", agora: true, traditional: false, other: true }
+        { feature: "BYOK - Your API Keys Stay Private", agora: true, traditional: false, other: false },
+        { feature: "Zero Registration Required", agora: true, traditional: false, other: true },
+        { feature: "Test Any LLM Model", agora: true, traditional: false, other: false }
       ]
     },
     {
@@ -51,7 +52,7 @@ const FeaturesComparison = () => {
       color: "bg-gradient-to-br from-slate-700 to-amber-600",
       textColor: "text-white",
       icon: Brain,
-      highlights: ["100% Private", "8 Expert Perspectives", "Historical Wisdom", "Pay-per-use"]
+      highlights: ["100% Private", "8 Expert Perspectives", "BYOK - Any Model", "Pay-per-use"]
     },
     {
       name: "Traditional Consulting",

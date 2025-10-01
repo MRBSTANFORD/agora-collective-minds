@@ -50,6 +50,11 @@ const HowItWorksSection = () => {
         <p className="text-slate-600 font-light text-lg max-w-3xl mx-auto">
           Experience structured collaboration with history's greatest minds through our AI-powered discussion platform
         </p>
+        <div className="mt-4">
+          <Badge className="bg-blue-100 text-blue-800 border-blue-300 px-4 py-2 text-sm">
+            🔑 BYOK: Bring Your Own Keys - Test any LLM model you want
+          </Badge>
+        </div>
       </div>
 
       {/* Expert Types Preview */}

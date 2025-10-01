@@ -77,7 +77,7 @@ const HeroSection = () => {
           </div>
           <div className="flex flex-col md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-3 bg-white/90 backdrop-blur-sm rounded-lg p-3 md:p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
             <Target className="w-5 h-5 md:w-7 md:h-7 text-amber-600" />
-            <span className="text-slate-700 font-medium text-sm md:text-lg text-center md:text-left">Clear action plans</span>
+            <span className="text-slate-700 font-medium text-sm md:text-lg text-center md:text-left">BYOK - Test any model</span>
           </div>
           <div className="flex flex-col md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-3 bg-green-50 backdrop-blur-sm rounded-lg p-3 md:p-5 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
             <Shield className="w-5 h-5 md:w-7 md:h-7 text-green-600" />
