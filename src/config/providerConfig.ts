@@ -1,5 +1,11 @@
 
 export const PROVIDERS_WITH_MODELS = {
+  LLM7: {
+    label: "LLM7.io (Free - No Key Required)",
+    value: "LLM7",
+    description: "Free unified API gateway - works without API key! Get a token at token.llm7.io for higher limits.",
+    tier: "🆓",
+  },
   HuggingFace: {
     label: "HuggingFace (Free/Paid)",
     value: "HuggingFace",

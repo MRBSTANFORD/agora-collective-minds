@@ -97,17 +97,18 @@ export class DiscussionOrchestrator {
           
           // Validate expert configuration before making API call
           if (!expert.provider) {
-            console.warn(`⚠️ Expert ${expert.name} has no provider, defaulting to HuggingFace`);
-            expert.provider = 'HuggingFace';
+            console.warn(`⚠️ Expert ${expert.name} has no provider, defaulting to LLM7`);
+            expert.provider = 'LLM7';
           }
           
           // Add timeout wrapper for AI response generation (30 seconds)
           const response = await Promise.race([
             generateAIResponse(
               transcendentPrompt,
-              expert.provider || 'HuggingFace',
+              expert.provider || 'LLM7',
               expert.apiKey || '',
-              expert.id
+              expert.id,
+              expert.model
             ),
             new Promise<string>((_, reject) => 
               setTimeout(() => reject(new Error('Response timeout after 30 seconds')), 30000)

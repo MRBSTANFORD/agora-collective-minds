@@ -320,6 +320,41 @@ export async function discoverPerplexityModels(apiKey?: string): Promise<Discove
   return [];
 }
 
+export async function discoverLLM7Models(): Promise<DiscoveredModel[]> {
+  console.log('🔍 Discovering LLM7 models...');
+  
+  // LLM7 has predefined routing options - always available without API key
+  return [
+    {
+      id: 'default',
+      name: 'Default (Balanced)',
+      provider: 'LLM7',
+      free: true,
+      available: true,
+      contextLength: 4096,
+      note: 'First available model with balanced quality and speed'
+    },
+    {
+      id: 'fast',
+      name: 'Fast (Low Latency)',
+      provider: 'LLM7',
+      free: true,
+      available: true,
+      contextLength: 4096,
+      note: 'Routes to fastest available option'
+    },
+    {
+      id: 'pro',
+      name: 'Pro (Highest Quality)',
+      provider: 'LLM7',
+      free: false,
+      available: true,
+      contextLength: 8192,
+      note: 'Targets most capable models (may require paid token)'
+    }
+  ];
+}
+
 export async function discoverHuggingFaceModels(apiKey?: string): Promise<DiscoveredModel[]> {
   console.log('🔍 Discovering HuggingFace models...');
   
@@ -377,8 +412,9 @@ export async function discoverAllModels(apiKeys: Record<string, string> = {}): P
   
   const results: Record<string, DiscoveredModel[]> = {};
   
-  // Run all discoveries in parallel
+  // Run all discoveries in parallel (LLM7 first as default)
   const discoveries = await Promise.allSettled([
+    discoverLLM7Models(),
     discoverOpenAIModels(apiKeys.OpenAI),
     discoverAnthropicModels(apiKeys.Anthropic),
     discoverGoogleGeminiModels(apiKeys.GoogleGemini),
@@ -389,7 +425,7 @@ export async function discoverAllModels(apiKeys: Record<string, string> = {}): P
     discoverHuggingFaceModels(apiKeys.HuggingFace)
   ]);
 
-  const providers = ['OpenAI', 'Anthropic', 'GoogleGemini', 'Cohere', 'MistralAI', 'Groq', 'Perplexity', 'HuggingFace'];
+  const providers = ['LLM7', 'OpenAI', 'Anthropic', 'GoogleGemini', 'Cohere', 'MistralAI', 'Groq', 'Perplexity', 'HuggingFace'];
   
   discoveries.forEach((result, index) => {
     const provider = providers[index];

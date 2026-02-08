@@ -3,6 +3,17 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const PROVIDER_GUIDES = [
   {
+    provider: "LLM7.io (Default - Recommended)",
+    free: true,
+    steps: [
+      "LLM7.io works WITHOUT any API key - just start using AGORA immediately!",
+      "Free tier includes: 100 requests/hour, 20 requests/minute.",
+      "For higher limits, visit https://token.llm7.io to get a personal token.",
+      "If you have a token, paste it in the API Key field for higher rate limits.",
+      "Models available: 'default' (balanced), 'fast' (low latency), 'pro' (highest quality)."
+    ]
+  },
+  {
     provider: "HuggingFace",
     free: true,
     steps: [

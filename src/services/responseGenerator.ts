@@ -1,5 +1,5 @@
 
-import { callOpenAI, callAnthropic, callPerplexity, callGroq, callHuggingFaceWithFallback, callGoogleGemini, callCohere, callMistralAI } from './aiProviders';
+import { callOpenAI, callAnthropic, callPerplexity, callGroq, callHuggingFaceWithFallback, callGoogleGemini, callCohere, callMistralAI, callLLM7 } from './aiProviders';
 import { generatePersonalizedFallbackResponse } from './fallbackResponses';
 import { getApiKeyStatus, validateKeyFormat, createSecureApiKeyLog } from '../utils/secureLogging';
 
@@ -19,8 +19,9 @@ const cleanApiKey = (apiKey: string): string => {
 
 // Validate API key format for different providers
 const validateApiKey = (apiKey: string, provider: string): boolean => {
+  // LLM7 and HuggingFace work without API keys
   if (!apiKey || apiKey.trim() === '') {
-    return provider === 'HuggingFace';
+    return provider === 'LLM7' || provider === 'HuggingFace';
   }
   
   const cleanKey = cleanApiKey(apiKey);
@@ -54,6 +55,12 @@ export async function generateAIResponse(prompt: string, provider: string, apiKe
       let response: string;
       
       switch (provider) {
+        case 'LLM7':
+          // LLM7 works without API key
+          console.log(`🌐 Calling LLM7 for ${expertId} (no API key required)`);
+          response = await callLLM7(prompt, cleanedApiKey, model);
+          break;
+          
         case 'OpenAI':
           if (getApiKeyStatus(cleanedApiKey) === 'MISSING') {
             console.log(`🔑 OpenAI requires API key, falling back for ${expertId}`);
