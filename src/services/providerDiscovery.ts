@@ -18,6 +18,7 @@ export interface ProviderDiscoveryResult {
 
 // Standardized provider names (fixing inconsistencies)
 export const STANDARD_PROVIDERS = [
+  'LLM7',
   'OpenAI',
   'Anthropic', 
   'GoogleGemini',
@@ -38,6 +39,22 @@ async function testProviderConnectivity(provider: StandardProvider, apiKey?: str
     let response: Response;
     
     switch (provider) {
+      case 'LLM7':
+        // LLM7 works without API key - test with minimal request
+        response = await fetch('https://api.llm7.io/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer unused',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'default',
+            messages: [{ role: 'user', content: 'test' }],
+            max_tokens: 1
+          })
+        });
+        break;
+        
       case 'OpenAI':
         // Test with models endpoint
         response = await fetch('https://api.openai.com/v1/models', {
@@ -148,13 +165,13 @@ export async function discoverAvailableProviders(apiKeys: Record<string, string>
     const apiKey = apiKeys[provider];
     const { available, error, responseTime } = await testProviderConnectivity(provider, apiKey);
     
-    // Determine if provider offers free models - fix the boolean logic
-    const freeModelsAvailable = provider === 'HuggingFace' || (provider === 'Groq' && Boolean(apiKey));
+    // Determine if provider offers free models - LLM7 is always free without key
+    const freeModelsAvailable = provider === 'LLM7' || provider === 'HuggingFace' || (provider === 'Groq' && Boolean(apiKey));
     
     results[provider] = {
       name: provider,
       available,
-      requiresApiKey: !['HuggingFace'].includes(provider),
+      requiresApiKey: !['LLM7', 'HuggingFace'].includes(provider),
       freeModelsAvailable,
       error,
       responseTime,

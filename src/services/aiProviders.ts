@@ -239,6 +239,42 @@ export async function callGroq(prompt: string, apiKey: string, model: string = '
   return content;
 }
 
+// LLM7.io API - Free unified gateway (no API key required for basic usage)
+export async function callLLM7(prompt: string, apiKey?: string, model: string = 'default'): Promise<string> {
+  console.log('🌐 Calling LLM7.io API...', { model, hasKey: !!apiKey });
+  
+  // LLM7 works without API key - use "unused" as placeholder for free tier
+  const authToken = apiKey && apiKey.trim() !== '' ? apiKey : 'unused';
+  
+  const response = await fetch('https://api.llm7.io/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${authToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
+      temperature: 0.8,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ LLM7 API error:', response.status, errorText);
+    throw new Error(`LLM7 API error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error('No content in LLM7 response');
+  }
+  console.log('✅ LLM7 response received:', content.slice(0, 50) + '...');
+  return content;
+}
+
 // Enhanced HuggingFace integration with real model discovery
 export async function callHuggingFaceWithFallback(prompt: string, expertId: string, apiKey?: string, model?: string): Promise<string> {
   console.log(`🤗 Calling HuggingFace API for expert ${expertId}, key status: ${getApiKeyStatus(apiKey)}, model: ${model}`);
