@@ -1,6 +1,6 @@
 
 import { ExpertConfig } from '@/components/ExpertCardList';
-import { EXPERT_PROMPTS, applyCognitiveTraits } from './expertConfig';
+import { EXPERT_PROMPTS, applyCognitiveTraits, getExpertPrompt } from './expertConfig';
 import { DiscussionMessage } from './aiOrchestrator';
 
 export interface DiscussionIntelligence {
@@ -66,7 +66,7 @@ export class EnhancedMetaPromptService {
     this.updateAdaptiveContext(previousMessages, currentRound, totalRounds);
     
     // Get enhanced base prompt
-    const basePrompt = EXPERT_PROMPTS[expert.id] || "You are a transcendent expert.";
+    const basePrompt = getExpertPrompt(expert.id) || "You are a transcendent expert.";
     const cognitivelyEnhanced = applyCognitiveTraits(basePrompt, expert.cognitive);
     
     return this.buildTranscendentPrompt(

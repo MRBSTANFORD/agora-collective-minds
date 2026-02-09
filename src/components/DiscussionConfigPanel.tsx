@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import ExpertSwapDialog from './ExpertSwapDialog';
+import { AlternativeExpert } from '@/config/alternativeMinds';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -141,6 +143,31 @@ export function DiscussionConfigPanel({
 
   const handleRounds = (value: number) => setRounds(value);
 
+  const [swapIndex, setSwapIndex] = useState<number | null>(null);
+
+  const handleSwapExpert = (index: number) => {
+    setSwapIndex(index);
+  };
+
+  const handleSwapSelect = (alt: AlternativeExpert) => {
+    if (swapIndex !== null) {
+      setExperts(current => {
+        const next = [...current];
+        const old = next[swapIndex];
+        next[swapIndex] = {
+          id: alt.id,
+          name: alt.name,
+          cognitive: { ...alt.traits },
+          apiKey: old?.apiKey || '',
+          provider: old?.provider || 'LLM7',
+          model: old?.model || 'default',
+        };
+        return next;
+      });
+      setSwapIndex(null);
+    }
+  };
+
   const handleSave = () => {
     console.log('💾 Saving symposium configuration:', {
       rounds,
@@ -218,7 +245,18 @@ export function DiscussionConfigPanel({
                     onApiKeyChange={handleApiKey}
                     onProviderChange={handleProvider}
                     onModelChange={handleModel}
+                    onSwapExpert={handleSwapExpert}
                   />
+
+                  {swapIndex !== null && (
+                    <ExpertSwapDialog
+                      open
+                      onOpenChange={(open) => { if (!open) setSwapIndex(null); }}
+                      onSelect={handleSwapSelect}
+                      currentExpertName={experts[swapIndex]?.name || ''}
+                      excludeIds={experts.map(e => e.id)}
+                    />
+                  )}
                 </CardContent>
               </Card>
 
