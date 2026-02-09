@@ -1,6 +1,6 @@
 
 import { ExpertConfig } from '@/components/ExpertCardList';
-import { EXPERT_PROMPTS, applyCognitiveTraits } from './expertConfig';
+import { EXPERT_PROMPTS, applyCognitiveTraits, getExpertPrompt } from './expertConfig';
 
 export interface DiscussionPhase {
   name: string;
@@ -313,7 +313,7 @@ export class MetaPromptService {
     previousMessages: Array<{ speaker: string; content: string }>
   ): string {
     // Get base expert prompt and apply cognitive traits
-    const basePrompt = EXPERT_PROMPTS[expert.id] || "You are a thoughtful expert providing insights on complex challenges.";
+    const basePrompt = getExpertPrompt(expert.id) || "You are a thoughtful expert providing insights on complex challenges.";
     const enhancedBasePrompt = applyCognitiveTraits(basePrompt, expert.cognitive);
     
     const phase = this.getCurrentPhase(currentRound, totalRounds);

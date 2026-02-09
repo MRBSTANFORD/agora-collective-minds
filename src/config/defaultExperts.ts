@@ -1,5 +1,6 @@
 
 import { DiscussionConfig } from "@/components/DiscussionConfigPanel";
+import { alternativeMinds } from '@/config/alternativeMinds';
 
 export const defaultExperts = [
   {
@@ -67,6 +68,24 @@ export const defaultExperts = [
     model: "default",
   }
 ];
+
+/** Look up any expert by ID across defaults and alternatives */
+export function getExpertById(id: string) {
+  const def = defaultExperts.find(e => e.id === id);
+  if (def) return def;
+  const alt = alternativeMinds.find(m => m.id === id);
+  if (alt) {
+    return {
+      id: alt.id,
+      name: alt.name,
+      cognitive: { ...alt.traits },
+      apiKey: "",
+      provider: "LLM7",
+      model: "default",
+    };
+  }
+  return undefined;
+}
 
 export function createDefaultConfig(rounds: number): DiscussionConfig {
   return {

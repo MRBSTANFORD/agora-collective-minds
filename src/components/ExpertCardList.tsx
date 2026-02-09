@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info, CheckCircle2, AlertCircle, Loader2, RefreshCw, Zap } from "lucide-react";
+import { Info, CheckCircle2, AlertCircle, Loader2, RefreshCw, Zap, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { testApiConnection, ProviderApiStatus } from "@/services/apiTester";
@@ -32,11 +32,13 @@ type ExpertCardListProps = {
   onApiKeyChange: (id: string, value: string) => void;
   onProviderChange: (id: string, value: string) => void;
   onModelChange: (id: string, value: string) => void;
+  onSwapExpert?: (index: number) => void;
 };
 
 // Memoized individual expert card component
 const ExpertCard = React.memo<{
   expert: ExpertConfig;
+  index: number;
   onTraitChange: (trait: "creativity" | "skepticism" | "optimism", value: number) => void;
   onApiKeyChange: (value: string) => void;
   onProviderChange: (value: string) => void;
@@ -47,8 +49,10 @@ const ExpertCard = React.memo<{
   onTestApi: () => void;
   isModelsLoading: boolean;
   onRefreshModels: () => void;
-}>(({ 
-  expert, 
+  onSwap?: () => void;
+}>(({
+  expert,
+  index,
   onTraitChange, 
   onApiKeyChange, 
   onProviderChange, 
@@ -58,7 +62,8 @@ const ExpertCard = React.memo<{
   apiMessage,
   onTestApi,
   isModelsLoading,
-  onRefreshModels
+  onRefreshModels,
+  onSwap
 }) => {
   const providerMeta = PROVIDERS_WITH_MODELS[expert.provider as keyof typeof PROVIDERS_WITH_MODELS] || PROVIDERS_WITH_MODELS.HuggingFace;
 
@@ -68,6 +73,11 @@ const ExpertCard = React.memo<{
         <CardTitle className="text-base font-medium text-slate-800 flex items-center gap-2">
           <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
           {expert.name}
+          {onSwap && (
+            <Button variant="ghost" size="sm" className="ml-auto h-6 px-2 text-xs gap-1" onClick={onSwap}>
+              <ArrowLeftRight className="w-3 h-3" /> Swap
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -221,6 +231,7 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
   onApiKeyChange,
   onProviderChange,
   onModelChange,
+  onSwapExpert,
 }) => {
   // Memoize provider list to prevent unnecessary re-fetching
   const providerList = useMemo(() => 
@@ -278,13 +289,14 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
 
   // Memoize expert cards to prevent unnecessary re-renders
   const expertCards = useMemo(() => 
-    experts.map((expert) => {
+    experts.map((expert, idx) => {
       const modelOptions = availableModels[expert.provider || "HuggingFace"] || [];
       
       return (
         <ExpertCard
           key={expert.id}
           expert={expert}
+          index={idx}
           onTraitChange={(trait, value) => onTraitChange(expert.id, trait, value)}
           onApiKeyChange={(value) => onApiKeyChange(expert.id, value)}
           onProviderChange={(value) => {
@@ -301,10 +313,11 @@ const ExpertCardList: React.FC<ExpertCardListProps> = ({
           onTestApi={() => handleTestApi(expert)}
           isModelsLoading={modelsLoading}
           onRefreshModels={refreshDiscovery}
+          onSwap={onSwapExpert ? () => onSwapExpert(idx) : undefined}
         />
       );
     }),
-    [experts, availableModels, testingStatus, apiMessages, modelsLoading, onTraitChange, onApiKeyChange, onProviderChange, onModelChange, handleTestApi, refreshDiscovery]
+    [experts, availableModels, testingStatus, apiMessages, modelsLoading, onTraitChange, onApiKeyChange, onProviderChange, onModelChange, handleTestApi, refreshDiscovery, onSwapExpert]
   );
 
   return (

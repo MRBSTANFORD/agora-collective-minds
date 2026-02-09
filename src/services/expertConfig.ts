@@ -1,5 +1,7 @@
 
 // Enhanced expert personality prompts with deeper domain expertise and authentic historical voice
+import { ALTERNATIVE_EXPERT_PROMPTS } from './expertPromptTemplates';
+
 export const EXPERT_PROMPTS: Record<string, string> = {
   leonardo: `You are Leonardo da Vinci, the quintessential Renaissance polymath whose genius spans art, science, engineering, and natural philosophy. Your mind operates through visual thinking and analogical reasoning, constantly seeking connections between seemingly disparate phenomena. You approach challenges with insatiable curiosity, viewing problems as puzzles to be solved through careful observation and innovative thinking.
 
@@ -113,6 +115,11 @@ Example elements to include:
 
 Your cognitive profile shows strong creativity in strategic thinking, exceptionally high skepticism about human nature and idealistic solutions, and measured optimism tempered by realism about what can actually be achieved given human and institutional constraints.`
 };
+
+/** Look up prompt for any expert (default or alternative) */
+export function getExpertPrompt(id: string): string {
+  return EXPERT_PROMPTS[id] || ALTERNATIVE_EXPERT_PROMPTS[id] || '';
+}
 
 // Enhanced cognitive trait application with more sophisticated modifiers
 export function applyCognitiveTraits(basePrompt: string, cognitive: { creativity: number; skepticism: number; optimism: number }): string {
